@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
+        android:layout_width="match_parent"
+        android:layout_height="190dp"
+        android:background="@drawable/shape_rounded_elements"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/techzone"
+            android:layout_width="165.24dp"
+            android:layout_height="34.28dp"
+            android:gravity="center"
+            android:text="@string/app_name"
+            android:textAppearance="@style/techzone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="TechZone" />
+
+<!--        <androidx.coordinatorlayout.widget.CoordinatorLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:fitsSystemWindows="true">-->
+<!--            <com.google.android.material.appbar.AppBarLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:fitsSystemWindows="true"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent">-->
+
+<!--                <com.google.android.material.search.SearchBar-->
+<!--                    app:forceDefaultNavigationOnClickListener="true"-->
+<!--                    android:id="@+id/search_bar"-->
+<!--                    style="@style/Widget.Material3.SearchBar"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:hint="hallo"/>-->
+
+
+<!--            </com.google.android.material.appbar.AppBarLayout>-->
+<!--            <com.google.android.material.search.SearchView-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:hint="halo"-->
+<!--                app:layout_anchor="@id/search_bar">-->
+<!--                &lt;!&ndash; Search suggestions/results go here (ScrollView, RecyclerView, etc.). &ndash;&gt;-->
+<!--            </com.google.android.material.search.SearchView>-->
+<!--        </androidx.coordinatorlayout.widget.CoordinatorLayout>-->
+
+        <!--        <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--            android:id="@+id/linearLayout"-->
+<!--            android:layout_width="343dp"-->
+<!--            android:layout_height="56dp"-->
+<!--            android:layout_marginBottom="20dp"-->
+<!--            android:background="@drawable/shape_search_bar"-->
+<!--            android:orientation="horizontal"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintStart_toStartOf="parent">-->
+
+<!--            <ImageView-->
+<!--                android:id="@+id/ic_search"-->
+<!--                android:layout_width="24dp"-->
+<!--                android:layout_height="24dp"-->
+<!--                android:layout_gravity="center"-->
+<!--                android:layout_marginStart="14dp"-->
+<!--                android:background="@color/background_white"-->
+<!--                android:contentDescription="search button"-->
+<!--                android:src="@drawable/ic_search"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent" />-->
+
+<!--            <EditText-->
+<!--                android:id="@+id/editText"-->
+<!--                android:layout_width="248dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:alpha=".5"-->
+<!--                android:autofillHints="name"-->
+<!--                android:background="@android:color/transparent"-->
+<!--                android:labelFor="@+id/ic_search"-->
+<!--                android:text="Поиск в TechZone"-->
+<!--                android:textAppearance="@style/body_large"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent"/>-->
+
+<!--        </androidx.constraintlayout.widget.ConstraintLayout>-->
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!--        MAIN BLOCK-->
+<!--    <LinearLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="221dp"-->
+<!--        tools:layout_editor_absoluteX="30dp"-->
+<!--        tools:layout_editor_absoluteY="203dp">-->
+
+<!--    </LinearLayout>-->
+    <!--    <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="221dp"-->
+<!--        android:layout_marginBottom="472dp"-->
+
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.0"-->
+<!--        app:layout_constraintStart_toStartOf="parent">-->
+
+<!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
