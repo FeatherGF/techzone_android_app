@@ -17,7 +17,7 @@ private val MainColorScheme = lightColorScheme(
 
     background = BoxBackground,
     secondaryContainer = LightBlue,
-    scrim = DarkBlueText
+    scrim = DarkBlueText,
 )
 
 @Composable
