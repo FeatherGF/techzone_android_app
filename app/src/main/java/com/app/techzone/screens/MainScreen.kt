@@ -259,7 +259,8 @@ fun ProductCarousel(products: List<ProductCard> = bestSellerProducts) {
                                 titleBoxHeight = 48.dp
                                 Text(
                                     text = formatPrice(product.price),
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                                 )
                             }
                             Icon(imageVector = if (isFavoriteState) Icons.Filled.Favorite else {

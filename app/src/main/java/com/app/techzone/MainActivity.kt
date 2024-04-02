@@ -17,7 +17,7 @@ import com.app.techzone.screens.FavoriteScreen
 import com.app.techzone.screens.MainAppBar
 import com.app.techzone.screens.MainScreen
 import com.app.techzone.screens.ProfileScreen
-import com.app.techzone.screens.SearchScreen
+import com.app.techzone.screens.CatalogScreen
 import com.app.techzone.ui.theme.TechZoneTheme
 
 
@@ -61,7 +61,7 @@ fun Main(searchViewModel: SearchViewModel = SearchViewModel()) {
             }
             composable("search_screen") {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                SearchScreen()
+                CatalogScreen()
             }
             composable("cart_screen") {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
