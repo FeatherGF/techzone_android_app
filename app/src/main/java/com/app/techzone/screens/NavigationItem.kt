@@ -36,7 +36,7 @@ sealed class BottomItem(
             Icons.Filled.Search,
             Icons.Outlined.Search,
             null,
-            "search_screen"
+            "catalog_screen"
         )
 
     data object FavoriteScreen :

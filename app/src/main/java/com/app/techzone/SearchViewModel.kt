@@ -17,10 +17,10 @@ data class Suggestion(val id: Int, val name: String)
 
 class SearchViewModel : ViewModel() {
     var searchWidgetState by mutableStateOf(SearchWidgetState.CLOSED)
-        private set
 
     var searchTextState by mutableStateOf("")
-        private set
+
+    var categoryName by mutableStateOf("")
 
     fun updateSearchWidgetState(newValue: SearchWidgetState) {
         searchWidgetState = newValue
@@ -28,6 +28,10 @@ class SearchViewModel : ViewModel() {
 
     fun updateSearchTextState(newValue: String) {
         searchTextState = newValue
+    }
+
+    fun updateCategoryNameState(newValue: String) {
+        categoryName = newValue
     }
 
     private val suggestionFlow = flowOf(

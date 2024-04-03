@@ -31,6 +31,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.app.techzone.SearchViewModel
+import com.app.techzone.ui.theme.ForStroke
 
 
 data class Category(val id: Int, val imageVector: ImageVector, val name: String)
@@ -38,7 +42,10 @@ data class Category(val id: Int, val imageVector: ImageVector, val name: String)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Preview
 @Composable
-fun CatalogScreen(){
+fun CatalogScreen(
+    navController: NavController = rememberNavController(),
+    searchViewModel: SearchViewModel = SearchViewModel()
+) {
     val categories = listOf(
         Category(id = 1, imageVector = Icons.Outlined.Tv, name = "Телевизоры"),
         Category(id = 2, imageVector = Icons.Outlined.Laptop, name = "Ноутбуки"),
@@ -58,7 +65,7 @@ fun CatalogScreen(){
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp)
                 .border(
-                    color = MaterialTheme.colorScheme.scrim,
+                    color = ForStroke.copy(alpha = 0.1f),
                     width = 1.dp,
                     shape = RoundedCornerShape(4.dp)
                 )
@@ -74,7 +81,10 @@ fun CatalogScreen(){
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp)
-                            .clickable { }
+                            .clickable {
+                                navController.navigate("catalog_screen/${category.name}")
+                                searchViewModel.updateCategoryNameState(category.name)
+                            }
                     ) {
                         Row {
                             Icon(
@@ -95,7 +105,10 @@ fun CatalogScreen(){
                             modifier = Modifier.padding(end = 36.dp)
                         )
                     }
-                    HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
+                    // don't render divider after last, because border will do it
+                    if (index != categories.size - 1) {
+                        HorizontalDivider(color = ForStroke.copy(alpha = 0.1f))
+                    }
                 }
             )
         }

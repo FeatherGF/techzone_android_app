@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,11 +39,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.app.techzone.R
 import com.app.techzone.ui.theme.RoundBorder100
@@ -206,8 +211,6 @@ fun ProductCarousel(products: List<ProductCard> = bestSellerProducts) {
         ) { index ->
             val product = products[index]
             var titleBoxHeight = 64.dp
-            var isInCartState by remember { mutableStateOf(product.isInCart) }
-            var isFavoriteState by remember { mutableStateOf(product.isFavorite) }
 
             Box(
                 modifier = Modifier
@@ -248,14 +251,7 @@ fun ProductCarousel(products: List<ProductCard> = bestSellerProducts) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Column {
-                                product.crossedPrice?.let {
-                                    Text(
-                                        text = formatPrice(it),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.scrim,
-                                        textDecoration = TextDecoration.LineThrough
-                                    )
-                                }
+                                ProductCrossedPrice(product = product)
                                 titleBoxHeight = 48.dp
                                 Text(
                                     text = formatPrice(product.price),
@@ -263,18 +259,7 @@ fun ProductCarousel(products: List<ProductCard> = bestSellerProducts) {
                                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                                 )
                             }
-                            Icon(imageVector = if (isFavoriteState) Icons.Filled.Favorite else {
-                                Icons.Outlined.FavoriteBorder
-                            },
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .height(24.dp)
-                                    .height(28.dp)
-                                    .clickable {
-                                        isFavoriteState = !isFavoriteState
-                                        // TODO: add to favorite here
-                                    })
+                            ProductFavoriteIcon(product = product)
                         }
                         Text(
                             text = product.title,
@@ -290,78 +275,134 @@ fun ProductCarousel(products: List<ProductCard> = bestSellerProducts) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            product.rating?.let {
-                                Row {
-                                    Text(
-                                        text = it.toString(),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Outlined.StarOutline,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier
-                                            .height(14.dp)
-                                            .width(14.dp)
-                                    )
-                                }
-                            }
-                            product.reviewCount?.let {
-                                Text(
-                                    text = formatReview(it),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.scrim,
-                                )
-                            }
+                            ProductRating(product = product)
+                            ProductReviewCount(product = product)
                         }
                     }
-                    if (isInCartState) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(40.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                    shape = RoundBorder100,
-                                )
-                                .clickable {
-                                    isInCartState = false
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "В корзине",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(40.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shape = RoundBorder100
-                                )
-                                .clickable {
-                                    isInCartState = true
-                                    // TODO: add to cart here
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "В корзину",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.tertiary
-                            )
-                        }
-                    }
+                    ProductBuyButton(product = product)
                 }
             }
         }
     }
+}
+
+@Composable
+fun ProductBuyButton(product: ProductCard) {
+    var isInCartState by remember { mutableStateOf(product.isInCart)}
+    if (isInCartState) {
+        Box(
+            modifier = Modifier
+                .width(128.dp)
+                .height(40.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundBorder100,
+                )
+                .clickable {
+                    isInCartState = false
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "В корзине",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    } else {
+        Box(
+            modifier = Modifier
+                .width(128.dp)
+                .height(40.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundBorder100
+                )
+                .clickable {
+                    isInCartState = true
+                    // TODO: add to cart here
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "В корзину",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        }
+    }
+}
+
+@Composable
+fun ProductCrossedPrice(product: ProductCard) {
+    product.crossedPrice?.let {
+        Text(
+            text = formatPrice(it),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.scrim,
+            textDecoration = TextDecoration.LineThrough
+        )
+    }
+}
+
+
+@Composable
+fun ProductRating(
+    product: ProductCard,
+    textStyle: TextStyle = MaterialTheme.typography.bodySmall
+) {
+    product.rating?.let {
+        Row {
+            Text(
+                text = it.toString(),
+                style = textStyle,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Icon(
+                imageVector = Icons.Outlined.StarOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .height(14.dp)
+                    .width(14.dp)
+            )
+        }
+    }
+}
+
+
+@Composable
+fun ProductReviewCount(
+    product: ProductCard,
+    textStyle: TextStyle = MaterialTheme.typography.bodySmall
+) {
+    product.reviewCount?.let {
+        Text(
+            text = formatReview(it),
+            style = textStyle,
+            color = Color.Companion.Black.copy(alpha = 0.5f),
+        )
+    }
+}
+
+
+@Composable
+fun ProductFavoriteIcon(product: ProductCard, sizeDp: Dp = 24.dp) {
+    var isFavoriteState by remember { mutableStateOf(product.isFavorite) }
+    Icon(
+        imageVector = if (isFavoriteState) Icons.Filled.Favorite else {
+            Icons.Outlined.FavoriteBorder
+        },
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .size(sizeDp)
+            .clickable {
+                isFavoriteState = !isFavoriteState
+                // TODO: add to favorite here
+            }
+    )
+
 }
 
 
@@ -370,6 +411,7 @@ val benefits = listOf(
     Benefit(Icons.Outlined.ChangeCircle, "30 дней на обмен или возврат товара"),
     Benefit(Icons.Outlined.VerifiedUser, "Гарантия качества и страхование техники"),
 )
+
 
 @Composable
 @Preview

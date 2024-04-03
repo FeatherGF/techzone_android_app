@@ -36,17 +36,24 @@ fun BaseScreen(
     )
 
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry?.destination?.route
+    val currentRoute = backStackEntry?.destination?.route ?: ""
 
     Scaffold(
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
-        content = { Surface (modifier = Modifier.padding(it), content = content) },
+        content = {
+            Surface(
+                modifier = Modifier
+                    .padding(it)
+                    .background(MaterialTheme.colorScheme.background),
+                content = content
+            )
+        },
         topBar = { topAppBar() },
         bottomBar = {
             BottomAppBar(containerColor = MaterialTheme.colorScheme.tertiary) {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.tertiary) {
                     screens.forEach { screen ->
-                        val isSelected = currentRoute == screen.route
+                        val isSelected = currentRoute.startsWith(screen.route)
                         NavigationBarItem(
                             selected = isSelected,
                             onClick = { navController.navigate(screen.route) },

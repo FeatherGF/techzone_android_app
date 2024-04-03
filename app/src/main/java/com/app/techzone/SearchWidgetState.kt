@@ -4,5 +4,6 @@ enum class SearchWidgetState {
     OPENED,
     CLOSED,
     HIDDEN,
+    CATALOG_OPENED,
 }
 

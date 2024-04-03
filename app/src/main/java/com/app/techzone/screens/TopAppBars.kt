@@ -1,5 +1,6 @@
 package com.app.techzone.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Search
@@ -30,7 +33,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -71,10 +77,12 @@ fun MainAppBar(
     searchWidgetState: SearchWidgetState,
     searchTextState: String,
     searchSuggestions: List<Suggestion>,
+    categoryName: String,
     onTextChange: (String) -> Unit,
     onCloseClicked: () -> Unit,
     onSearchClicked: (String) -> Unit,
     onSearchTriggered: () -> Unit,
+    onBackClicked: () -> Unit
 ) {
     when (searchWidgetState) {
         SearchWidgetState.CLOSED -> {
@@ -82,6 +90,7 @@ fun MainAppBar(
                 onSearchClicked = onSearchTriggered
             )
         }
+
         SearchWidgetState.OPENED -> {
             SearchAppBar(
                 text = searchTextState,
@@ -91,6 +100,15 @@ fun MainAppBar(
                 onSearchClicked = onSearchClicked
             )
         }
+
+        SearchWidgetState.CATALOG_OPENED -> {
+            CatalogCategorySearchBar(
+                categoryName = categoryName,
+                onSearchTriggered = onSearchTriggered,
+                onBackClicked = onBackClicked
+            )
+        }
+
         SearchWidgetState.HIDDEN -> {}
     }
 }
@@ -121,7 +139,7 @@ fun DefaultAppBar(onSearchClicked: () -> Unit) {
             content = {},
             placeholder = {
                 Text(
-                    text = "Пописк в TechZone",
+                    text = "Поиск в TechZone",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.scrim
                 )
@@ -187,7 +205,7 @@ fun SearchAppBar(
                     verticalAlignment = Alignment.CenterVertically,
 
                     ) {
-                    if (text.isNotEmpty()){
+                    if (text.isNotEmpty()) {
                         Icon(
                             modifier = Modifier
                                 .padding(end = 25.dp)
@@ -259,5 +277,74 @@ fun SearchAppBar(
     }
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CatalogCategorySearchBar(
+    categoryName: String,
+    onSearchTriggered: () -> Unit,
+    onBackClicked: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .height(176.dp)
+            .fillMaxWidth(),
+        color = MaterialTheme.colorScheme.tertiary
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 52.dp, start = 16.dp, end = 16.dp)
+        ) {
+            Row(modifier = Modifier.padding(12.dp)) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null,
+                    tint = Color.Companion.Black,
+                    modifier = Modifier.clickable(onClick = onBackClicked)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        categoryName,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                    )
+                }
+            }
+            SearchBar(
+                shape = RoundBorder28,
+                query = "",
+                onQueryChange = {},
+                onSearch = { },
+                active = false,
+                onActiveChange = { onSearchTriggered() },
+                placeholder = {
+                    Text(
+                        text = "Поиск в TechZone",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.scrim
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = "Search Button",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                colors = SearchBarDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    dividerColor = Color.Gray.copy(alpha = 0.1f),
+                ),
+                content = {},
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
