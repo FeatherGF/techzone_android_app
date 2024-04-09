@@ -1,4 +1,4 @@
-package com.app.techzone.screens
+package com.app.techzone.ui.theme.profile
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
@@ -16,8 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.app.techzone.data.api.model.Photo
-import com.app.techzone.ui.photo_viewmodel.PhotoViewModel
+import com.app.techzone.data.remote.model.Photo
 
 
 @Composable

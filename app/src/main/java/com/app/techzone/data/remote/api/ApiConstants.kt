@@ -1,4 +1,4 @@
-package com.app.techzone.data.api
+package com.app.techzone.data.remote.api
 
 object ApiConstants {
     const val BASE_URL = "https://jsonplaceholder.typicode.com"

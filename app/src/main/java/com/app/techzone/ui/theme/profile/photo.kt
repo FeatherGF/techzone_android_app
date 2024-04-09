@@ -1,9 +1,9 @@
-package com.app.techzone.ui.photo_viewmodel
+package com.app.techzone.ui.theme.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.techzone.data.api.model.Photo
-import com.app.techzone.data.repository.PhotoRepo
+import com.app.techzone.data.remote.model.Photo
+import com.app.techzone.data.remote.repository.PhotoRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +21,7 @@ class PhotoViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // TODO: add exception handling
             val cat = photoRepo.getPhotos()
             _state.value = cat
         }

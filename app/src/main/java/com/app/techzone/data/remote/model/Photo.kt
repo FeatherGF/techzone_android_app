@@ -1,4 +1,4 @@
-package com.app.techzone.data.api.model
+package com.app.techzone.data.remote.model
 
 
 data class Photo (

@@ -1,6 +1,5 @@
-package com.app.techzone.screens
+package com.app.techzone.ui.theme.navigation
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
@@ -20,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun BaseScreen(
     navController: NavController,

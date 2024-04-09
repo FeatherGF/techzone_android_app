@@ -1,7 +1,7 @@
-package com.app.techzone.data.repository
+package com.app.techzone.data.remote.repository
 
-import com.app.techzone.data.api.PhotosApi
-import com.app.techzone.data.api.model.Photo
+import com.app.techzone.data.remote.api.PhotosApi
+import com.app.techzone.data.remote.model.Photo
 import javax.inject.Inject
 
 

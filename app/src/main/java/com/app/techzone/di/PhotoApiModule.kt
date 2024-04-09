@@ -1,7 +1,7 @@
 package com.app.techzone.di
 
-import com.app.techzone.data.api.ApiConstants
-import com.app.techzone.data.api.PhotosApi
+import com.app.techzone.data.remote.api.ApiConstants
+import com.app.techzone.data.remote.api.PhotosApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,10 +18,11 @@ object PhotoApiModule {
 
     @Provides
     @Singleton
-    fun provideApi(builder: Retrofit.Builder): PhotosApi{
+    fun provideApi(builder: Retrofit.Builder): PhotosApi {
         return builder.build().create(PhotosApi::class.java)
     }
 
+    // TODO: probably move out to `BaseModule`
     @Provides
     @Singleton
     fun provideRetrofit(): Retrofit.Builder{

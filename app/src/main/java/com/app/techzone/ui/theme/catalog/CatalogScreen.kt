@@ -1,6 +1,5 @@
-package com.app.techzone.screens
+package com.app.techzone.ui.theme.catalog
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,12 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.Laptop
-import androidx.compose.material.icons.outlined.Mouse
-import androidx.compose.material.icons.outlined.Smartphone
-import androidx.compose.material.icons.outlined.Tablet
-import androidx.compose.material.icons.outlined.Tv
-import androidx.compose.material.icons.outlined.Watch
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,32 +20,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.app.techzone.SearchViewModel
+import com.app.techzone.model.categories
+import com.app.techzone.ui.theme.app_bars.SearchViewModel
 import com.app.techzone.ui.theme.ForStroke
 
 
-data class Category(val id: Int, val imageVector: ImageVector, val name: String)
-
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Preview
 @Composable
 fun CatalogScreen(
-    navController: NavController = rememberNavController(),
-    searchViewModel: SearchViewModel = SearchViewModel()
+    navController: NavController,
+    searchViewModel: SearchViewModel
 ) {
-    val categories = listOf(
-        Category(id = 1, imageVector = Icons.Outlined.Tv, name = "Телевизоры"),
-        Category(id = 2, imageVector = Icons.Outlined.Laptop, name = "Ноутбуки"),
-        Category(id = 3, imageVector = Icons.Outlined.Tablet, name = "Планшеты"),
-        Category(id = 4, imageVector = Icons.Outlined.Smartphone, name = "Смартфоны"),
-        Category(id = 5, imageVector = Icons.Outlined.Watch, name = "Смарт-часы"),
-        Category(id = 6, imageVector = Icons.Outlined.Mouse, name = "Аксессуары"),
-    )
     Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
         Text(
             text = "Каталог",

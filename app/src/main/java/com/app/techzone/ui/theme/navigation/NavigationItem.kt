@@ -1,4 +1,4 @@
-package com.app.techzone.screens
+package com.app.techzone.ui.theme.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite

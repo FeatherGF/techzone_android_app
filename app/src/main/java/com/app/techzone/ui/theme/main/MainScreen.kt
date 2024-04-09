@@ -1,4 +1,4 @@
-package com.app.techzone.screens
+package com.app.techzone.ui.theme.main
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi

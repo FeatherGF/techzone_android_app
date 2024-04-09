@@ -1,6 +1,6 @@
-package com.app.techzone.data.api
+package com.app.techzone.data.remote.api
 
-import com.app.techzone.data.api.model.Photo
+import com.app.techzone.data.remote.model.Photo
 import retrofit2.http.GET
 
 

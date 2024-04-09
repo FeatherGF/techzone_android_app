@@ -1,4 +1,4 @@
-package com.app.techzone
+package com.app.techzone.ui.theme.app_bars
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

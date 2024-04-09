@@ -1,4 +1,4 @@
-package com.app.techzone.screens
+package com.app.techzone.ui.theme.favorite
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -9,8 +9,8 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun CartScreen(){
+fun FavoriteScreen() {
     Column {
-        Text(text = "Vadim Screen", modifier = Modifier.padding(24.dp))
+        Text(text = "Favorite Screen", modifier = Modifier.padding(24.dp))
     }
 }
