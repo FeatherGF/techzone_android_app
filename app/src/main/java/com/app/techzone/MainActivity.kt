@@ -24,6 +24,7 @@ import com.app.techzone.screens.ProfileScreen
 import com.app.techzone.screens.CatalogScreen
 import com.app.techzone.screens.CatalogViewModel
 import com.app.techzone.ui.theme.TechZoneTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 
 @Composable
@@ -110,6 +111,7 @@ fun Main() {
 }
 
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {

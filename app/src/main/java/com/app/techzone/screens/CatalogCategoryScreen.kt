@@ -77,7 +77,6 @@ data class Sorting (
 
 class CatalogViewModel : ViewModel() {
     var activeScreenState by mutableStateOf(CatalogScreenEnum.DEFAULT)
-        private set
 
     fun updateActiveState(newValue: CatalogScreenEnum){
         activeScreenState = newValue
