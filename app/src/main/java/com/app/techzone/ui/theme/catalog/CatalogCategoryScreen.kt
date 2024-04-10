@@ -24,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.app.techzone.model.PricePreset
+import com.app.techzone.model.ProductCard
+import com.app.techzone.model.newProducts
 import com.app.techzone.ui.theme.app_bars.SearchWidgetState
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
@@ -33,7 +35,6 @@ import com.app.techzone.ui.theme.main.ProductFavoriteIcon
 import com.app.techzone.ui.theme.main.ProductRating
 import com.app.techzone.ui.theme.main.ProductReviewCount
 import com.app.techzone.ui.theme.main.formatPrice
-import com.app.techzone.ui.theme.main.newProducts
 
 enum class CatalogScreenEnum {
     DEFAULT,
@@ -73,11 +74,17 @@ fun CatalogCategoryScreen(
     activeScreenState: CatalogScreenEnum,
     onChangeView: (SearchWidgetState) -> Unit,
     onChangeStateView: (CatalogScreenEnum) -> Unit,
+    addToFavorite: (ProductCard) -> Unit,
+    removeFromFavorite: (ProductCard) -> Unit,
 ) {
     when (activeScreenState) {
         CatalogScreenEnum.DEFAULT -> {
             onChangeView(SearchWidgetState.CATALOG_OPENED)
-            DefaultCatalogView(onChangeStateView = onChangeStateView)
+            DefaultCatalogView(
+                onChangeStateView = onChangeStateView,
+                addToFavorite = addToFavorite,
+                removeFromFavorite = removeFromFavorite,
+            )
         }
         CatalogScreenEnum.FILTERS -> {
             onChangeView(SearchWidgetState.HIDDEN)
@@ -91,7 +98,11 @@ fun CatalogCategoryScreen(
 
 
 @Composable
-fun DefaultCatalogView(onChangeStateView: (CatalogScreenEnum) -> Unit) {
+fun DefaultCatalogView(
+    onChangeStateView: (CatalogScreenEnum) -> Unit,
+    addToFavorite: (ProductCard) -> Unit,
+    removeFromFavorite: (ProductCard) -> Unit,
+) {
     Column(
         modifier = Modifier.background(color = MaterialTheme.colorScheme.background)
     ) {
@@ -167,7 +178,12 @@ fun DefaultCatalogView(onChangeStateView: (CatalogScreenEnum) -> Unit) {
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                ProductFavoriteIcon(product = product, sizeDp = 32.dp)
+                                ProductFavoriteIcon(
+                                    product = product,
+                                    sizeDp = 32.dp,
+                                    addToFavorite = addToFavorite,
+                                    removeFromFavorite
+                                )
                                 ProductBuyButton(product = product)
                             }
                         }

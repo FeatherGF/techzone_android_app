@@ -18,18 +18,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.app.techzone.model.ProductCard
 
 @Composable
 fun BaseScreen(
     navController: NavController,
+    favorites: List<ProductCard>,
     topAppBar: @Composable () -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val screens = listOf(
         BottomItem.MainScreen,
         BottomItem.SearchScreen,
         BottomItem.CartScreen,
-        BottomItem.FavoriteScreen,
+        BottomItem.FavoriteScreen.updateFavoriteCount(favorites.size),
         BottomItem.ProfileScreen,
     )
 

@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,24 +50,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.app.techzone.R
+import com.app.techzone.model.ProductCard
+import com.app.techzone.model.bestSellerProducts
+import com.app.techzone.model.newProducts
 import com.app.techzone.ui.theme.RoundBorder100
 import com.app.techzone.ui.theme.RoundBorder24
-import com.google.gson.annotations.SerializedName
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 
-
-data class ProductCard(
-    @SerializedName("image_id") val imageId: Int,
-    val title: String,
-    val price: Int,
-    @SerializedName("crossed_price") val crossedPrice: Int? = null,
-    @SerializedName("review_count") val reviewCount: Int? = null,
-    val rating: Float? = null,
-    val isInCart: Boolean = false,
-    val isFavorite: Boolean = false,
-)
 
 data class Benefit(val imageId: ImageVector, val text: String)
 
@@ -121,80 +113,13 @@ fun BannerCarousel() {
 }
 
 
-val newProducts = listOf(
-    ProductCard(
-        R.drawable.ic_iphone,
-        "Смартфон Apple iPhone 15 Pro 256GB Blue Titanium",
-        123999,
-        154999,
-        191,
-        4.75f,
-        true,
-    ),
-    ProductCard(
-        R.drawable.ic_tv,
-        "Телевизор Samsung Ultra HD (4K) LED 55",
-        77399,
-        85999,
-        25,
-        5.0f,
-        isFavorite = true
-    ),
-    ProductCard(
-        R.drawable.ic_macbook,
-        "Ноутбук Apple MacBook Air 13 M1/8/256GB Silver (MGN93)",
-        95999,
-        reviewCount = 114,
-        rating = 4.8f,
-        isInCart = true
-    ),
-    ProductCard(
-        R.drawable.ic_gaming_laptop,
-        "Ноутбук игровой MSI Katana 17 B11UCX-882XRU",
-        89999,
-        reviewCount = 22,
-        rating = 5.0f
-    ),
-)
-
-val bestSellerProducts = listOf(
-    ProductCard(
-        R.drawable.ic_sale,
-        "Телевизор Haier 55 Smart TV AX Pro",
-        price = 64_999,
-        rating = 4.9f,
-        reviewCount = 13,
-    ),
-    ProductCard(
-        R.drawable.ic_sale_2,
-        "Планшет Apple iPad 10.2 Wi-Fi 64GB Space Grey (MK2K3)",
-        price = 37_999,
-        crossedPrice = 39_999,
-        rating = 4.9f,
-        reviewCount = 156,
-    ),
-    ProductCard(
-        R.drawable.ic_sale_3,
-        "Смартфон Samsung Galaxy A54 128GB Awesome Graphite",
-        price = 34_999,
-        crossedPrice = 45_999,
-        rating = 4.8f,
-        reviewCount = 73,
-    ),
-    ProductCard(
-        R.drawable.ic_sale_4,
-        "Смарт-часы Xiaomi M2216W1 Ivory",
-        price = 7_999,
-        crossedPrice = 9_999,
-        rating = 4.75f,
-        reviewCount = 25,
-    ),
-)
-
 @OptIn(ExperimentalFoundationApi::class)
-@Preview
 @Composable
-fun ProductCarousel(products: List<ProductCard> = bestSellerProducts) {
+fun ProductCarousel(
+    products: List<ProductCard>,
+    addToFavorite: (ProductCard) -> Unit,
+    removeFromFavorite: (ProductCard) -> Unit,
+) {
     val pagerState = rememberPagerState(pageCount = { products.size })
     Box(
         modifier = Modifier
@@ -216,8 +141,7 @@ fun ProductCarousel(products: List<ProductCard> = bestSellerProducts) {
                     .height(336.dp)
                     .width(154.dp)
                     .background(
-                        color = MaterialTheme.colorScheme.tertiary,
-                        shape = RoundBorder24
+                        color = MaterialTheme.colorScheme.tertiary, shape = RoundBorder24
                     )
                     .border(
                         width = 1.dp,
@@ -258,7 +182,11 @@ fun ProductCarousel(products: List<ProductCard> = bestSellerProducts) {
                                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                                 )
                             }
-                            ProductFavoriteIcon(product = product)
+                            ProductFavoriteIcon(
+                                product = product,
+                                addToFavorite = addToFavorite,
+                                removeFromFavorite = removeFromFavorite
+                            )
                         }
                         Text(
                             text = product.title,
@@ -314,8 +242,7 @@ fun ProductBuyButton(product: ProductCard) {
                 .width(128.dp)
                 .height(40.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundBorder100
+                    color = MaterialTheme.colorScheme.primary, shape = RoundBorder100
                 )
                 .clickable {
                     isInCartState = true
@@ -386,8 +313,13 @@ fun ProductReviewCount(
 
 
 @Composable
-fun ProductFavoriteIcon(product: ProductCard, sizeDp: Dp = 24.dp) {
-    var isFavoriteState by remember { mutableStateOf(product.isFavorite) }
+fun ProductFavoriteIcon(
+    product: ProductCard,
+    sizeDp: Dp = 24.dp,
+    addToFavorite: (ProductCard) -> Unit,
+    removeFromFavorite: (ProductCard) -> Unit,
+) {
+    var isFavoriteState by rememberSaveable { mutableStateOf(product.isFavorite) }
     Icon(
         imageVector = if (isFavoriteState) Icons.Filled.Favorite else {
             Icons.Outlined.FavoriteBorder
@@ -397,8 +329,12 @@ fun ProductFavoriteIcon(product: ProductCard, sizeDp: Dp = 24.dp) {
         modifier = Modifier
             .size(sizeDp)
             .clickable {
+                if (isFavoriteState) {
+                    removeFromFavorite(product)
+                } else {
+                    addToFavorite(product)
+                }
                 isFavoriteState = !isFavoriteState
-                // TODO: add to favorite here
             }
     )
 
@@ -421,8 +357,7 @@ fun BenefitItem(benefit: Benefit = benefits[0]) {
             .fillMaxWidth()
             .height(140.dp)
             .background(
-                color = MaterialTheme.colorScheme.tertiary,
-                shape = RoundBorder24
+                color = MaterialTheme.colorScheme.tertiary, shape = RoundBorder24
             )
             .padding(start = 44.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -453,9 +388,13 @@ fun BenefitItem(benefit: Benefit = benefits[0]) {
     }
 }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    newProducts: List<ProductCard>,
+    bestSellerProducts: List<ProductCard>,
+    addToFavorite: (ProductCard) -> Unit,
+    removeFromFavorite: (ProductCard) -> Unit,
+) {
     LazyColumn(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
         item { BannerCarousel() }
 
@@ -466,7 +405,13 @@ fun MainScreen() {
                 style = MaterialTheme.typography.titleLarge,
             )
         }
-        item { ProductCarousel(products = newProducts) }
+        item {
+            ProductCarousel(
+                products = newProducts,
+                addToFavorite = addToFavorite,
+                removeFromFavorite = removeFromFavorite
+            )
+        }
 
         item {
             Text(
@@ -475,7 +420,13 @@ fun MainScreen() {
                 style = MaterialTheme.typography.titleLarge,
             )
         }
-        item { ProductCarousel(products = bestSellerProducts) }
+        item {
+            ProductCarousel(
+                products = bestSellerProducts,
+                addToFavorite = addToFavorite,
+                removeFromFavorite = removeFromFavorite
+            )
+        }
 
         items(benefits) { benefit ->
             BenefitItem(benefit)

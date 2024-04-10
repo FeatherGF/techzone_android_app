@@ -44,18 +44,28 @@ sealed class BottomItem(
             "Избранное",
             Icons.Filled.Favorite,
             Icons.Outlined.FavoriteBorder,
-            1,
+            null,
             "favorite_screen"
-        )
+        ) {
+            fun updateFavoriteCount(newValue: Int): BottomItem {
+                badgeCount = if (newValue == 0) null else newValue
+                return this
+            }
+        }
 
     data object CartScreen :
         BottomItem(
             "Корзина",
             Icons.Filled.ShoppingCart,
             Icons.Outlined.ShoppingCart,
-            1,
+            null,
             "cart_screen"
-        )
+        ) {
+            fun updateCartCount(newValue: Int): BottomItem {
+                badgeCount = if (newValue == 0) null else newValue
+                return this
+            }
+        }
 
     data object ProfileScreen :
         BottomItem(

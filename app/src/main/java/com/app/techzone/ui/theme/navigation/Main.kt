@@ -17,19 +17,27 @@ import com.app.techzone.ui.theme.catalog.CatalogCategoryScreen
 import com.app.techzone.ui.theme.catalog.CatalogScreen
 import com.app.techzone.ui.theme.catalog.CatalogViewModel
 import com.app.techzone.ui.theme.favorite.FavoriteScreen
+import com.app.techzone.ui.theme.favorite.FavoriteViewModel
 import com.app.techzone.ui.theme.main.MainScreen
+import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.ui.theme.profile.ProfileScreen
 
 @Composable
 fun Main() {
     val searchViewModel = viewModel<SearchViewModel>()
     val catalogViewModel = viewModel<CatalogViewModel>()
+    val favoriteViewModel = viewModel<FavoriteViewModel>()
+    val productViewModel = viewModel<ProductViewModel>()
 
     val searchSuggestions by searchViewModel.searchSuggestions.collectAsStateWithLifecycle()
+    val favorites by favoriteViewModel.favorites.collectAsStateWithLifecycle()
+    val bestSellerProducts by productViewModel.bestSellerProducts.collectAsStateWithLifecycle()
+    val newProducts by productViewModel.newProducts.collectAsStateWithLifecycle()
     val navController = rememberNavController()
 
     BaseScreen(
         navController,
+        favorites = favorites,
         topAppBar = {
             MainAppBar(
                 searchWidgetState = searchViewModel.searchWidgetState,
@@ -68,7 +76,12 @@ fun Main() {
         NavHost(navController = navController, startDestination = "main_screen") {
             composable("main_screen") {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                MainScreen()
+                MainScreen(
+                    addToFavorite = favoriteViewModel::addToFavorite,
+                    removeFromFavorite = favoriteViewModel::removeFromFavorite,
+                    newProducts = newProducts,
+                    bestSellerProducts = bestSellerProducts
+                )
             }
             composable("catalog_screen") {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
@@ -84,7 +97,9 @@ fun Main() {
                     category = category,
                     activeScreenState = catalogViewModel.activeScreenState,
                     onChangeView = searchViewModel::updateSearchWidgetState,
-                    onChangeStateView = catalogViewModel::updateActiveState
+                    onChangeStateView = catalogViewModel::updateActiveState,
+                    addToFavorite = favoriteViewModel::addToFavorite,
+                    removeFromFavorite = favoriteViewModel::removeFromFavorite,
                 )
             }
             composable("cart_screen") {
@@ -93,7 +108,7 @@ fun Main() {
             }
             composable("favorite_screen") {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                FavoriteScreen()
+                FavoriteScreen(navController = navController, favorites)
             }
             composable("profile_screen") {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)

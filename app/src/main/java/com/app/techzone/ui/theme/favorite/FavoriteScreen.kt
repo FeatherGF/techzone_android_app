@@ -6,11 +6,31 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.app.techzone.model.ProductCard
+import kotlinx.coroutines.flow.StateFlow
 
 
 @Composable
-fun FavoriteScreen() {
-    Column {
-        Text(text = "Favorite Screen", modifier = Modifier.padding(24.dp))
+fun FavoriteScreen(
+    navController: NavController,
+    favorites: List<ProductCard>
+) {
+    if (favorites.isEmpty()) {
+        EmptyFavoriteScreen()
+    } else {
+        FavoriteList()
     }
+}
+
+
+@Composable
+fun EmptyFavoriteScreen() {
+    
+}
+
+
+@Composable
+fun FavoriteList() {
+
 }
