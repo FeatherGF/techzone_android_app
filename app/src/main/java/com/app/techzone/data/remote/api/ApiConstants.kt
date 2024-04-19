@@ -1,10 +1,22 @@
 package com.app.techzone.data.remote.api
 
 object ApiConstants {
-    const val BASE_URL = "https://jsonplaceholder.typicode.com"
+    const val BASE_URL = "http://wis-techzone.ru/api/v1/"
 
     object Endpoints {
-        const val photos = "/photos"
+        const val products = "products"
+        const val product_type = "products/type/{id_product}"
+
+        const val smartphones = "smartphones"
+        const val smartphoneDetail = "smartphones/{id_smartphone}"
+        const val tablets = "tablets"
+        const val tabletDetail = "tablets/{id_tablet}"
+        const val accessories = "accessories"
+        const val accessoryDetail = "accessories/{id_accessory}"
+        const val laptops = "laptops"
+        const val laptopDetail = "laptops/{id_laptop}"
+        const val smartwatches = "smartwatches"
+        const val smartwatchDetail = "smartwatches/{id_smartwatch}"
     }
 
 }

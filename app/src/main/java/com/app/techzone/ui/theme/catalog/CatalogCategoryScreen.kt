@@ -1,7 +1,6 @@
 package com.app.techzone.ui.theme.catalog
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -19,13 +19,18 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.model.PricePreset
 import com.app.techzone.model.ProductCard
-import com.app.techzone.model.newProducts
 import com.app.techzone.ui.theme.app_bars.SearchWidgetState
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
@@ -34,7 +39,8 @@ import com.app.techzone.ui.theme.main.ProductCrossedPrice
 import com.app.techzone.ui.theme.main.ProductFavoriteIcon
 import com.app.techzone.ui.theme.main.ProductRating
 import com.app.techzone.ui.theme.main.ProductReviewCount
-import com.app.techzone.ui.theme.main.formatPrice
+import com.app.techzone.calculateDiscount
+import com.app.techzone.formatPrice
 
 enum class CatalogScreenEnum {
     DEFAULT,
@@ -46,6 +52,7 @@ enum class CatalogScreenEnum {
 const val MAX_PRICE = 250_000  // TODO: получать значения с бека
 const val MIN_PRICE = 5_000
 val UNSELECTED_PRICING = PricePreset("", 0, 0)
+
 
 @Composable
 fun PriceRangeField(placeholderText: String, text: String, onValueChange: (String) -> Unit) {
@@ -68,19 +75,26 @@ fun PriceRangeField(placeholderText: String, text: String, onValueChange: (Strin
     )
 }
 
+
 @Composable
 fun CatalogCategoryScreen(
-    category: String = "Телевизоры",
+    category: String,  // ApiConstant.Endpoints strings
+    navigateToDetail: (productId: Int) -> Unit,
     activeScreenState: CatalogScreenEnum,
     onChangeView: (SearchWidgetState) -> Unit,
     onChangeStateView: (CatalogScreenEnum) -> Unit,
     addToFavorite: (ProductCard) -> Unit,
     removeFromFavorite: (ProductCard) -> Unit,
 ) {
+    val catalogViewModel = hiltViewModel<CatalogViewModel>()
+    catalogViewModel.loadByCategory(category)
+    val products by catalogViewModel.products.collectAsStateWithLifecycle()
     when (activeScreenState) {
         CatalogScreenEnum.DEFAULT -> {
             onChangeView(SearchWidgetState.CATALOG_OPENED)
             DefaultCatalogView(
+                products = products.items,
+                navigateToDetail = navigateToDetail,
                 onChangeStateView = onChangeStateView,
                 addToFavorite = addToFavorite,
                 removeFromFavorite = removeFromFavorite,
@@ -99,6 +113,8 @@ fun CatalogCategoryScreen(
 
 @Composable
 fun DefaultCatalogView(
+    products: List<BaseProduct>,
+    navigateToDetail: (productId: Int) -> Unit,
     onChangeStateView: (CatalogScreenEnum) -> Unit,
     addToFavorite: (ProductCard) -> Unit,
     removeFromFavorite: (ProductCard) -> Unit,
@@ -118,29 +134,31 @@ fun DefaultCatalogView(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(
-                count = newProducts.size,
-                key = { index -> newProducts[index].imageId }
+                count = products.size,
+                key = { index -> products[index].id }
             ) {index ->
-                val product = newProducts[index]
+                val product = products[index]
                 Surface(
                     modifier = Modifier
-                        .height(202.dp)
+                        .wrapContentHeight()
                         .fillMaxWidth()
-                        .clickable { },
+                        .clickable { navigateToDetail(product.id) },
                     shape = RoundBorder24,
                     color = MaterialTheme.colorScheme.tertiary,
                     border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp), // inside the container
+                        modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Image(
-                                painter = painterResource(id = product.imageId),
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(product.photos[0].url)
+                                    .build(),
                                 contentDescription = null,
                                 modifier = Modifier.size(110.dp)
                             )
@@ -148,7 +166,7 @@ fun DefaultCatalogView(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    product.title,
+                                    product.name,
                                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
@@ -158,10 +176,9 @@ fun DefaultCatalogView(
                                 }
                             }
                         }
-                        val priceLineHeight = if (product.crossedPrice != null) 50.dp else 40.dp
                         Row (
                             modifier = Modifier
-                                .height(priceLineHeight)
+                                .height(40.dp)
                                 .fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -169,22 +186,23 @@ fun DefaultCatalogView(
                             Column{
                                 ProductCrossedPrice(product = product)
                                 Text(
-                                    formatPrice(product.price),
+                                    formatPrice(
+                                        calculateDiscount(
+                                            product.price,
+                                            product.discountPercentage
+                                        )
+                                    ),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                                 )
                             }
                             Row (
+                                modifier = Modifier.width(190.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                ProductFavoriteIcon(
-                                    product = product,
-                                    sizeDp = 32.dp,
-                                    addToFavorite = addToFavorite,
-                                    removeFromFavorite
-                                )
-                                ProductBuyButton(product = product)
+                                ProductFavoriteIcon(product = product, sizeDp = 32.dp)
+                                ProductBuyButton()
                             }
                         }
                     }

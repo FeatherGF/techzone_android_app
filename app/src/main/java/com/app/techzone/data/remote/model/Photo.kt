@@ -1,10 +1,7 @@
 package com.app.techzone.data.remote.model
 
 
-data class Photo (
-    val albumId: Int,
+data class Photo(
     val id: Int,
-    val title: String,
-    val url: String,
-    val thumbnailUrl: String
+    val url: String
 )

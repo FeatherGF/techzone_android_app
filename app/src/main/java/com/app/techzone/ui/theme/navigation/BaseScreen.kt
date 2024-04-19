@@ -1,6 +1,7 @@
 package com.app.techzone.ui.theme.navigation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -16,9 +17,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.app.techzone.model.ProductCard
+import com.app.techzone.ui.theme.ForStroke
 
 @Composable
 fun BaseScreen(
@@ -39,7 +42,6 @@ fun BaseScreen(
     val currentRoute = backStackEntry?.destination?.route ?: ""
 
     Scaffold(
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         content = {
             Surface(
                 modifier = Modifier
@@ -50,7 +52,10 @@ fun BaseScreen(
         },
         topBar = { topAppBar() },
         bottomBar = {
-            BottomAppBar(containerColor = MaterialTheme.colorScheme.tertiary) {
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f))
+            ) {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.tertiary) {
                     screens.forEach { screen ->
                         val isSelected = currentRoute.startsWith(screen.route)

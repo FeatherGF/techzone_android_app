@@ -1,6 +1,5 @@
 package com.app.techzone.ui.theme.main
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,11 +23,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.ChangeCircle
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Percent
 import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,44 +38,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.app.techzone.R
+import com.app.techzone.calculateDiscount
+import com.app.techzone.data.remote.model.BaseProduct
+import com.app.techzone.data.remote.model.IBaseProduct
+import com.app.techzone.formatPrice
+import com.app.techzone.formatReview
+import com.app.techzone.model.Benefit
 import com.app.techzone.model.ProductCard
-import com.app.techzone.model.bestSellerProducts
-import com.app.techzone.model.newProducts
+import com.app.techzone.model.benefits
 import com.app.techzone.ui.theme.RoundBorder100
 import com.app.techzone.ui.theme.RoundBorder24
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
-import java.util.Locale
-
-
-data class Benefit(val imageId: ImageVector, val text: String)
-
-fun formatPrice(price: Int): String {
-    val dec = DecimalFormat("###,###,###,###,### ₽", DecimalFormatSymbols(Locale.ENGLISH))
-    return dec.format(price).replace(",", " ")
-}
-
-fun formatReview(reviewCount: Int): String {
-    when (reviewCount.mod(100)) {
-        11, 12, 13, 14 -> { return "$reviewCount отзывов"}
-    }
-
-    val review: String = when (reviewCount.mod(10)) {
-        1 -> {"отзыв"}
-        2, 3, 4 -> {"отзыва"}
-        else -> {"отзывов"}
-    }
-    return "$reviewCount $review"
-}
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -92,7 +71,7 @@ fun BannerCarousel() {
     val pagerState = rememberPagerState(pageCount = { bannerSlides.size })
     Box(
         modifier = Modifier
-            .padding(start = 16.dp, top = 16.dp)
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp)
             .fillMaxWidth()
             .height(205.dp)
             .background(color = MaterialTheme.colorScheme.background)
@@ -116,7 +95,8 @@ fun BannerCarousel() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductCarousel(
-    products: List<ProductCard>,
+    navigateToDetail: (productId: Int) -> Unit,
+    products: List<BaseProduct>,
     addToFavorite: (ProductCard) -> Unit,
     removeFromFavorite: (ProductCard) -> Unit,
 ) {
@@ -129,13 +109,11 @@ fun ProductCarousel(
     ) {
         HorizontalPager(
             state = pagerState,
-            key = { products[it].imageId },
+            key = { products[it].id },
             pageSize = PageSize.Fixed(154.dp),
             pageSpacing = 8.dp,
         ) { index ->
             val product = products[index]
-            var titleBoxHeight = 64.dp
-
             Box(
                 modifier = Modifier
                     .height(336.dp)
@@ -148,6 +126,7 @@ fun ProductCarousel(
                         color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.1f),
                         shape = RoundBorder24
                     )
+                    .clickable { navigateToDetail(product.id) }
             ) {
                 Column(
                     modifier = Modifier
@@ -156,10 +135,12 @@ fun ProductCarousel(
                         )
                         .width(128.dp),
                 ) {
-                    Image(
-                        modifier = Modifier.padding(),
-                        painter = painterResource(id = product.imageId),
-                        contentDescription = product.title
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(product.photos[0].url)
+//                            .size(130)
+                            .build(),
+                        contentDescription = null
                     )
                     Column(
                         modifier = Modifier
@@ -175,25 +156,29 @@ fun ProductCarousel(
                         ) {
                             Column {
                                 ProductCrossedPrice(product = product)
-                                titleBoxHeight = 48.dp
                                 Text(
-                                    text = formatPrice(product.price),
+                                    text = formatPrice(
+                                        calculateDiscount(
+                                            product.price,
+                                            product.discountPercentage
+                                        )
+                                    ),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                                 )
                             }
                             ProductFavoriteIcon(
                                 product = product,
-                                addToFavorite = addToFavorite,
-                                removeFromFavorite = removeFromFavorite
+//                                addToFavorite = addToFavorite,
+//                                removeFromFavorite = removeFromFavorite
                             )
                         }
                         Text(
-                            text = product.title,
+                            text = product.name,
                             style = MaterialTheme.typography.labelMedium,
                             modifier = Modifier
                                 .padding(top = 4.dp)
-                                .height(titleBoxHeight)
+                                .height(48.dp)
                         )
                         Row(
                             modifier = Modifier
@@ -213,13 +198,14 @@ fun ProductCarousel(
     }
 }
 
+
 @Composable
-fun ProductBuyButton(product: ProductCard) {
-    var isInCartState by remember { mutableStateOf(product.isInCart)}
+fun ProductBuyButton(product: BaseProduct? = null) {
+    var isInCartState by remember { mutableStateOf(false)}
     if (isInCartState) {
         Box(
             modifier = Modifier
-                .width(128.dp)
+                .fillMaxWidth()
                 .height(40.dp)
                 .background(
                     color = MaterialTheme.colorScheme.secondaryContainer,
@@ -239,10 +225,11 @@ fun ProductBuyButton(product: ProductCard) {
     } else {
         Box(
             modifier = Modifier
-                .width(128.dp)
+                .fillMaxWidth()
                 .height(40.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primary, shape = RoundBorder100
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundBorder100
                 )
                 .clickable {
                     isInCartState = true
@@ -259,11 +246,12 @@ fun ProductBuyButton(product: ProductCard) {
     }
 }
 
+
 @Composable
-fun ProductCrossedPrice(product: ProductCard) {
-    product.crossedPrice?.let {
+fun ProductCrossedPrice(product: IBaseProduct) {
+    if (product.discountPercentage > 0){
         Text(
-            text = formatPrice(it),
+            text = formatPrice(product.price),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.scrim,
             textDecoration = TextDecoration.LineThrough
@@ -274,24 +262,27 @@ fun ProductCrossedPrice(product: ProductCard) {
 
 @Composable
 fun ProductRating(
-    product: ProductCard,
-    textStyle: TextStyle = MaterialTheme.typography.bodySmall
+    product: IBaseProduct,
+    textStyle: TextStyle = MaterialTheme.typography.bodySmall,
+    isStarFilled: Boolean = false
 ) {
-    product.rating?.let {
-        Row {
-            Text(
-                text = it.toString(),
-                style = textStyle,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Icon(
-                imageVector = Icons.Outlined.StarOutline,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .height(14.dp)
-                    .width(14.dp)
-            )
+    product.rating?.let{rating ->
+        if (rating > 0) {
+            Row {
+                Text(
+                    text = product.rating.toString(),
+                    style = textStyle,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Icon(
+                    imageVector = if (isStarFilled) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .height(14.dp)
+                        .width(14.dp)
+                )
+            }
         }
     }
 }
@@ -299,12 +290,12 @@ fun ProductRating(
 
 @Composable
 fun ProductReviewCount(
-    product: ProductCard,
+    product: IBaseProduct,
     textStyle: TextStyle = MaterialTheme.typography.bodySmall
 ) {
-    product.reviewCount?.let {
+    if (product.reviewsCount > 0){
         Text(
-            text = formatReview(it),
+            text = formatReview(product.reviewsCount),
             style = textStyle,
             color = Color.Companion.Black.copy(alpha = 0.5f),
         )
@@ -314,10 +305,10 @@ fun ProductReviewCount(
 
 @Composable
 fun ProductFavoriteIcon(
-    product: ProductCard,
+    product: IBaseProduct,
     sizeDp: Dp = 24.dp,
-    addToFavorite: (ProductCard) -> Unit,
-    removeFromFavorite: (ProductCard) -> Unit,
+//    addToFavorite: (ProductCard) -> Unit,
+//    removeFromFavorite: (ProductCard) -> Unit,
 ) {
     var isFavoriteState by rememberSaveable { mutableStateOf(product.isFavorite) }
     Icon(
@@ -329,11 +320,11 @@ fun ProductFavoriteIcon(
         modifier = Modifier
             .size(sizeDp)
             .clickable {
-                if (isFavoriteState) {
-                    removeFromFavorite(product)
-                } else {
-                    addToFavorite(product)
-                }
+//               } if (isFavoriteState) {
+////                    removeFromFavorite(product)
+////                } else {
+////                    addToFavorite(product)
+////
                 isFavoriteState = !isFavoriteState
             }
     )
@@ -341,16 +332,8 @@ fun ProductFavoriteIcon(
 }
 
 
-val benefits = listOf(
-    Benefit(Icons.Outlined.Percent, "Скидки до -50% на весь ассортимент"),
-    Benefit(Icons.Outlined.ChangeCircle, "30 дней на обмен или возврат товара"),
-    Benefit(Icons.Outlined.VerifiedUser, "Гарантия качества и страхование техники"),
-)
-
-
 @Composable
-@Preview
-fun BenefitItem(benefit: Benefit = benefits[0]) {
+fun BenefitItem(benefit: Benefit) {
     Row(
         modifier = Modifier
             .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
@@ -390,8 +373,9 @@ fun BenefitItem(benefit: Benefit = benefits[0]) {
 
 @Composable
 fun MainScreen(
-    newProducts: List<ProductCard>,
-    bestSellerProducts: List<ProductCard>,
+    navigateToDetail: (productId: Int) -> Unit,
+    newProducts: List<BaseProduct>,
+    bestSellerProducts: List<BaseProduct>,
     addToFavorite: (ProductCard) -> Unit,
     removeFromFavorite: (ProductCard) -> Unit,
 ) {
@@ -407,6 +391,7 @@ fun MainScreen(
         }
         item {
             ProductCarousel(
+                navigateToDetail = navigateToDetail,
                 products = newProducts,
                 addToFavorite = addToFavorite,
                 removeFromFavorite = removeFromFavorite
@@ -422,6 +407,7 @@ fun MainScreen(
         }
         item {
             ProductCarousel(
+                navigateToDetail = navigateToDetail,
                 products = bestSellerProducts,
                 addToFavorite = addToFavorite,
                 removeFromFavorite = removeFromFavorite

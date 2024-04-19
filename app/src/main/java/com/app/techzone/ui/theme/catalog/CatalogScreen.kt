@@ -47,6 +47,7 @@ fun CatalogScreen(
                     width = 1.dp,
                     shape = RoundedCornerShape(4.dp)
                 )
+                .background(color = MaterialTheme.colorScheme.tertiary)
         ) {
             items(
                 count = categories.size,
@@ -60,7 +61,7 @@ fun CatalogScreen(
                             .fillMaxWidth()
                             .height(56.dp)
                             .clickable {
-                                navController.navigate("catalog_screen/${category.name}")
+                                navController.navigate("catalog/${category.endpoint}")
                                 searchViewModel.updateCategoryNameState(category.name)
                             }
                     ) {

@@ -1,7 +1,10 @@
 package com.app.techzone.ui.theme.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -20,6 +23,7 @@ import com.app.techzone.ui.theme.favorite.FavoriteScreen
 import com.app.techzone.ui.theme.favorite.FavoriteViewModel
 import com.app.techzone.ui.theme.main.MainScreen
 import com.app.techzone.ui.theme.main.ProductViewModel
+import com.app.techzone.ui.theme.product_detail.ProductDetailScreen
 import com.app.techzone.ui.theme.profile.ProfileScreen
 
 @Composable
@@ -27,13 +31,18 @@ fun Main() {
     val searchViewModel = viewModel<SearchViewModel>()
     val catalogViewModel = viewModel<CatalogViewModel>()
     val favoriteViewModel = viewModel<FavoriteViewModel>()
-    val productViewModel = viewModel<ProductViewModel>()
+    val productViewModel = hiltViewModel<ProductViewModel>()
 
     val searchSuggestions by searchViewModel.searchSuggestions.collectAsStateWithLifecycle()
     val favorites by favoriteViewModel.favorites.collectAsStateWithLifecycle()
-    val bestSellerProducts by productViewModel.bestSellerProducts.collectAsStateWithLifecycle()
-    val newProducts by productViewModel.newProducts.collectAsStateWithLifecycle()
+//    val bestSellerProducts by productViewModel.bestSellerProducts.collectAsStateWithLifecycle()
+//    val newProducts by productViewModel.newProducts.collectAsStateWithLifecycle()
+    val allProducts by productViewModel.allProducts.collectAsStateWithLifecycle()
     val navController = rememberNavController()
+
+    fun navigateToDetail(productId: Int) {
+        navController.navigate("catalog/$productId")
+    }
 
     BaseScreen(
         navController,
@@ -50,7 +59,7 @@ fun Main() {
                 onCloseClicked = {
                     searchViewModel.updateSearchTextState("")
                     val searchWidgetState = if (
-                        navController.currentBackStackEntry?.destination?.route?.startsWith("catalog_screen/")!!
+                        navController.currentBackStackEntry?.destination?.route?.startsWith("catalog")!!
                     ) SearchWidgetState.CATALOG_OPENED else SearchWidgetState.CLOSED
 
                     searchViewModel.updateSearchWidgetState(searchWidgetState)
@@ -61,7 +70,7 @@ fun Main() {
                         searchViewModel.updateSearchWidgetState(SearchWidgetState.CATALOG_OPENED)
                         searchViewModel.updateCategoryNameState(searchViewModel.searchTextState)
                         navController.navigate(
-                            "catalog_screen/${searchViewModel.searchTextState}"
+                            "catalog/${searchViewModel.searchTextState}"
                         )
                         searchViewModel.updateSearchTextState("")
                     }
@@ -73,27 +82,49 @@ fun Main() {
             )
         },
     ) {
-        NavHost(navController = navController, startDestination = "main_screen") {
-            composable("main_screen") {
+        NavHost(
+            navController = navController,
+            startDestination = ScreenRoutes.MAIN,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
+        ) {
+            composable(ScreenRoutes.MAIN) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
                 MainScreen(
+                    navigateToDetail = ::navigateToDetail,
                     addToFavorite = favoriteViewModel::addToFavorite,
                     removeFromFavorite = favoriteViewModel::removeFromFavorite,
-                    newProducts = newProducts,
-                    bestSellerProducts = bestSellerProducts
+                    newProducts = allProducts.items,
+                    bestSellerProducts = allProducts.items
                 )
             }
-            composable("catalog_screen") {
+            composable(ScreenRoutes.CATALOG) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
                 CatalogScreen(navController = navController, searchViewModel = searchViewModel)
             }
             composable(
-                "catalog_screen/{category}",
+                ScreenRoutes.PRODUCT_DETAIL,
+                arguments = listOf(navArgument("productId") { type = NavType.IntType})
+            ) {backStackEntry ->
+                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                val productId = backStackEntry.arguments?.getInt("productId")!!
+                ProductDetailScreen(
+                    productId = productId,
+                    navigateToDetail = ::navigateToDetail,
+                    onBackClicked = { navController.popBackStack() },
+                    addToFavorite = {}
+                )
+            }
+            composable(
+                ScreenRoutes.CATALOG_CATEGORY,
                 arguments = listOf(navArgument("category") { type = NavType.StringType })
             ) { backStackEntry ->
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CATALOG_OPENED)
                 val category = backStackEntry.arguments?.getString("category")!!
                 CatalogCategoryScreen(
+                    navigateToDetail = ::navigateToDetail,
                     category = category,
                     activeScreenState = catalogViewModel.activeScreenState,
                     onChangeView = searchViewModel::updateSearchWidgetState,
@@ -102,15 +133,15 @@ fun Main() {
                     removeFromFavorite = favoriteViewModel::removeFromFavorite,
                 )
             }
-            composable("cart_screen") {
+            composable(ScreenRoutes.CART) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
                 CartScreen()
             }
-            composable("favorite_screen") {
+            composable(ScreenRoutes.FAVORITE) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
                 FavoriteScreen(navController = navController, favorites)
             }
-            composable("profile_screen") {
+            composable(ScreenRoutes.PROFILE) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
                 ProfileScreen()
             }

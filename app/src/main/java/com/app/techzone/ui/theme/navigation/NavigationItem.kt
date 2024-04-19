@@ -27,7 +27,7 @@ sealed class BottomItem(
             Icons.Filled.Home,
             Icons.Outlined.Home,
             null,
-            "main_screen"
+            ScreenRoutes.MAIN
         )
 
     data object SearchScreen :
@@ -36,7 +36,7 @@ sealed class BottomItem(
             Icons.Filled.Search,
             Icons.Outlined.Search,
             null,
-            "catalog_screen"
+            ScreenRoutes.CATALOG
         )
 
     data object FavoriteScreen :
@@ -45,7 +45,7 @@ sealed class BottomItem(
             Icons.Filled.Favorite,
             Icons.Outlined.FavoriteBorder,
             null,
-            "favorite_screen"
+            ScreenRoutes.FAVORITE
         ) {
             fun updateFavoriteCount(newValue: Int): BottomItem {
                 badgeCount = if (newValue == 0) null else newValue
@@ -59,7 +59,7 @@ sealed class BottomItem(
             Icons.Filled.ShoppingCart,
             Icons.Outlined.ShoppingCart,
             null,
-            "cart_screen"
+            ScreenRoutes.CART
         ) {
             fun updateCartCount(newValue: Int): BottomItem {
                 badgeCount = if (newValue == 0) null else newValue
@@ -73,6 +73,6 @@ sealed class BottomItem(
             Icons.Filled.Person,
             Icons.Outlined.Person,
             null,
-            "profile_screen"
+            ScreenRoutes.PROFILE
         )
 }

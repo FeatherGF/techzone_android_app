@@ -1,7 +1,7 @@
 package com.app.techzone.di
 
 import com.app.techzone.data.remote.api.ApiConstants
-import com.app.techzone.data.remote.api.PhotosApi
+import com.app.techzone.data.remote.api.ProductApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,21 +11,19 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 
-
 @Module
 @InstallIn(SingletonComponent::class)
-object PhotoApiModule {
+object ProductApiModule {
 
     @Provides
     @Singleton
-    fun provideApi(builder: Retrofit.Builder): PhotosApi {
-        return builder.build().create(PhotosApi::class.java)
+    fun provideApi(builder: Retrofit.Builder): ProductApi {
+        return builder.build().create(ProductApi::class.java)
     }
 
-    // TODO: probably move out to `BaseModule`
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit.Builder{
+    fun provideRetrofit(): Retrofit.Builder {
         return Retrofit
             .Builder()
             .baseUrl(ApiConstants.BASE_URL)
