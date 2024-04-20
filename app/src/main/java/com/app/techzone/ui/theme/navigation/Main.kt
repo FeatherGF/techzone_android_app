@@ -24,7 +24,9 @@ import com.app.techzone.ui.theme.favorite.FavoriteViewModel
 import com.app.techzone.ui.theme.main.MainScreen
 import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.ui.theme.product_detail.ProductDetailScreen
+import com.app.techzone.ui.theme.profile.Auth.AuthViewModel
 import com.app.techzone.ui.theme.profile.ProfileScreen
+import com.app.techzone.ui.theme.profile.Authorization
 
 @Composable
 fun Main() {
@@ -32,6 +34,8 @@ fun Main() {
     val catalogViewModel = viewModel<CatalogViewModel>()
     val favoriteViewModel = viewModel<FavoriteViewModel>()
     val productViewModel = hiltViewModel<ProductViewModel>()
+    val authViewModel = hiltViewModel<AuthViewModel>()
+
 
     val searchSuggestions by searchViewModel.searchSuggestions.collectAsStateWithLifecycle()
     val favorites by favoriteViewModel.favorites.collectAsStateWithLifecycle()
@@ -142,8 +146,24 @@ fun Main() {
                 FavoriteScreen(navController = navController, favorites)
             }
             composable(ScreenRoutes.PROFILE) {
+                val authorized = false
+                if (authorized) {
+                    searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                } else {
+                    searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
+                }
+                ProfileScreen(
+                    authViewModel = authViewModel,
+                    navigateToAuth = { navController.navigate(ScreenRoutes.PROFILE_REGISTRATION) },
+                )
+            }
+            composable(ScreenRoutes.PROFILE_REGISTRATION){
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
-                ProfileScreen()
+                Authorization(
+                    authViewModel = authViewModel,
+                    onBackClicked = { navController.popBackStack() },
+                    navigateToProfile = { navController.navigate(ScreenRoutes.PROFILE) }
+                )
             }
         }
     }

@@ -4,18 +4,14 @@ package com.app.techzone.data.remote.model
 import com.google.gson.annotations.SerializedName
 
 data class User(
+    val id: Int,
+    val email: String,
     @SerializedName("date_created")
     val dateCreated: String,
-    @SerializedName("email")
-    val email: String,
     @SerializedName("first_name")
-    val firstName: String,
-    @SerializedName("id")
-    val id: Int,
-    @SerializedName("is_deleted")
-    val isDeleted: Boolean,
+    val firstName: String? = null,
     @SerializedName("last_name")
-    val lastName: String,
+    val lastName: String? = null,
     @SerializedName("phone_number")
-    val phoneNumber: String
+    val phoneNumber: String? = null
 )

@@ -68,6 +68,8 @@ dependencies {
     // Material design
     implementation("androidx.compose.material3:material3:1.2.1")
 
+    // data store for secret values
+    implementation("androidx.datastore:datastore-preferences:1.1.0")
 
     // Jetpack Compose
     val composeBom = platform("androidx.compose:compose-bom:2024.03.00")

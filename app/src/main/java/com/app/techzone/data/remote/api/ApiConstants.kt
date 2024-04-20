@@ -4,6 +4,8 @@ object ApiConstants {
     const val BASE_URL = "http://wis-techzone.ru/api/v1/"
 
     object Endpoints {
+
+        // products
         const val products = "products"
         const val product_type = "products/type/{id_product}"
 
@@ -17,6 +19,15 @@ object ApiConstants {
         const val laptopDetail = "laptops/{id_laptop}"
         const val smartwatches = "smartwatches"
         const val smartwatchDetail = "smartwatches/{id_smartwatch}"
+
+        // user
+        const val userDetail = "users/{id_user}"
+
+        // authentication
+        const val sendAuthCode = "users/send-authentication-code"
+        const val authorize = "users/authentication"
+        const val authenticate = "users/valid-token"
+
     }
 
 }
