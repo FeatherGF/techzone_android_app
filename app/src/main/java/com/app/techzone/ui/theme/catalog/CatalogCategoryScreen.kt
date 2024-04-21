@@ -14,15 +14,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,8 +42,9 @@ import com.app.techzone.ui.theme.main.ProductCrossedPrice
 import com.app.techzone.ui.theme.main.ProductFavoriteIcon
 import com.app.techzone.ui.theme.main.ProductRating
 import com.app.techzone.ui.theme.main.ProductReviewCount
-import com.app.techzone.calculateDiscount
+import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.formatPrice
+import com.app.techzone.utils.CurrencyVisualTransformation
 
 enum class CatalogScreenEnum {
     DEFAULT,
@@ -54,15 +58,21 @@ const val MIN_PRICE = 5_000
 val UNSELECTED_PRICING = PricePreset("", 0, 0)
 
 
+val priceMask = CurrencyVisualTransformation("RUB")
 @Composable
 fun PriceRangeField(placeholderText: String, text: String, onValueChange: (String) -> Unit) {
+
     val fieldShape = RoundedCornerShape(4.dp)
     OutlinedTextField(
         value = text,
         onValueChange = onValueChange,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal
+        ),
         textStyle = MaterialTheme.typography.bodyLarge,
         shape = fieldShape,
         singleLine = true,
+        visualTransformation = priceMask,
         placeholder = {
             Text(
                 placeholderText,
@@ -87,7 +97,9 @@ fun CatalogCategoryScreen(
     removeFromFavorite: (ProductCard) -> Unit,
 ) {
     val catalogViewModel = hiltViewModel<CatalogViewModel>()
-    catalogViewModel.loadByCategory(category)
+    LaunchedEffect(catalogViewModel){
+        catalogViewModel.loadByCategory(category)
+    }
     val products by catalogViewModel.products.collectAsStateWithLifecycle()
     when (activeScreenState) {
         CatalogScreenEnum.DEFAULT -> {

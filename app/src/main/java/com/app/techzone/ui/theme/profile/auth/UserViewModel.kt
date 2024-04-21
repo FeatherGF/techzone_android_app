@@ -1,4 +1,4 @@
-package com.app.techzone.ui.theme.profile.Auth
+package com.app.techzone.ui.theme.profile.auth
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,18 +7,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.User
-import com.app.techzone.data.remote.repository.AuthRepositoryImpl
+import com.app.techzone.data.remote.repository.UserRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepositoryImpl,
+class UserViewModel @Inject constructor(
+    private val userRepo: UserRepo,
 ): ViewModel() {
 
     private val resultChannel = Channel<AuthResult<Unit>>()
@@ -27,14 +28,51 @@ class AuthViewModel @Inject constructor(
     var state by mutableStateOf(AuthState())
 
     private val _user = MutableStateFlow<User?>(null)
-    val user: StateFlow<User?>
-        get() = _user
+    val user: StateFlow<User?> = _user.asStateFlow()
 
     init {
         authenticate()
+    }
+
+    fun logoutUser(){
         viewModelScope.launch {
-            _user.value = authRepository.getUser()
+            userRepo.logoutUser()
+            resultChannel.send(AuthResult.Unauthorized())
+            initialState = AuthResult.Unauthorized()
         }
+    }
+
+    fun deleteUser(){
+        viewModelScope.launch {
+            val result: AuthResult<Unit> =
+                if (userRepo.deleteUser())
+                    AuthResult.Unauthorized()
+                else AuthResult.UnknownError()
+            initialState = result
+            resultChannel.send(result)
+        }
+    }
+
+    fun updateUser(
+        firstName: String? = null,
+        lastName: String? = null,
+        phoneNumber: String? = null
+    ) {
+        viewModelScope.launch {
+            val result = userRepo.updateUser(
+                firstName, lastName, phoneNumber
+            )
+            initialState = result
+            resultChannel.send(result)
+        }
+    }
+
+    fun loadUser() {
+        state = state.copy(isLoading = true)
+        viewModelScope.launch{
+            _user.value = userRepo.getUser()
+        }
+        state = state.copy(isLoading = false)
     }
 
     fun onEvent(event: AuthUiEvent) {
@@ -58,7 +96,7 @@ class AuthViewModel @Inject constructor(
     private fun sendAuthCode(){
         viewModelScope.launch {
             state = state.copy(isLoading = true)
-            val result = authRepository.sendAuthenticationCode(
+            val result = userRepo.sendAuthenticationCode(
                 email = state.authEmail
             )
             resultChannel.send(result)
@@ -69,8 +107,7 @@ class AuthViewModel @Inject constructor(
     private fun verifyCode(){
         viewModelScope.launch {
             state = state.copy(isLoading = true)
-            println("${state.authEmail}, ${state.authCode}")
-            var result = authRepository.authorize(
+            var result = userRepo.authorize(
                 email = state.authEmail,
                 code = state.authCode.toInt()
             )
@@ -78,7 +115,9 @@ class AuthViewModel @Inject constructor(
                 result = AuthResult.CodeIncorrect()
             }
             resultChannel.send(result)
-            initialState = result
+            if (result is AuthResult.Authorized) {
+                initialState = result
+            }
             state = state.copy(isLoading = false)
         }
     }
@@ -86,7 +125,7 @@ class AuthViewModel @Inject constructor(
     private fun authenticate(){
         viewModelScope.launch {
             state = state.copy(isLoading = true)
-            val result = authRepository.authenticate()
+            val result = userRepo.authenticate()
             resultChannel.send(result)
             initialState = result
             state = state.copy(isLoading = false)

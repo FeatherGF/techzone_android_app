@@ -3,8 +3,8 @@ package com.app.techzone.model
 import com.google.gson.annotations.SerializedName
 
 data class AuthenticationRequest(
-    @SerializedName("access_token")
-    val accessToken: String,
-    @SerializedName("refresh_token")
+    @SerializedName("token_access")
+    val accessToken: String? = null,
+    @SerializedName("token_refresh")
     val refreshToken: String
 )

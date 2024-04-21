@@ -1,9 +1,10 @@
 package com.app.techzone.ui.theme.navigation
 
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -12,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.ui.theme.app_bars.MainAppBar
 import com.app.techzone.ui.theme.app_bars.SearchViewModel
 import com.app.techzone.ui.theme.app_bars.SearchWidgetState
@@ -24,9 +26,10 @@ import com.app.techzone.ui.theme.favorite.FavoriteViewModel
 import com.app.techzone.ui.theme.main.MainScreen
 import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.ui.theme.product_detail.ProductDetailScreen
-import com.app.techzone.ui.theme.profile.Auth.AuthViewModel
+import com.app.techzone.ui.theme.profile.auth.UserViewModel
 import com.app.techzone.ui.theme.profile.ProfileScreen
 import com.app.techzone.ui.theme.profile.Authorization
+import com.app.techzone.ui.theme.profile.EditUserProfile
 
 @Composable
 fun Main() {
@@ -34,23 +37,24 @@ fun Main() {
     val catalogViewModel = viewModel<CatalogViewModel>()
     val favoriteViewModel = viewModel<FavoriteViewModel>()
     val productViewModel = hiltViewModel<ProductViewModel>()
-    val authViewModel = hiltViewModel<AuthViewModel>()
-
+    val userViewModel = hiltViewModel<UserViewModel>()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val searchSuggestions by searchViewModel.searchSuggestions.collectAsStateWithLifecycle()
     val favorites by favoriteViewModel.favorites.collectAsStateWithLifecycle()
-//    val bestSellerProducts by productViewModel.bestSellerProducts.collectAsStateWithLifecycle()
-//    val newProducts by productViewModel.newProducts.collectAsStateWithLifecycle()
     val allProducts by productViewModel.allProducts.collectAsStateWithLifecycle()
     val navController = rememberNavController()
 
     fun navigateToDetail(productId: Int) {
-        navController.navigate("catalog/$productId")
+        navController.navigate("catalog/$productId"){
+            popUpTo(ScreenRoutes.PRODUCT_DETAIL)
+        }
     }
 
     BaseScreen(
         navController,
         favorites = favorites,
+        snackbarHostState = snackbarHostState,
         topAppBar = {
             MainAppBar(
                 searchWidgetState = searchViewModel.searchWidgetState,
@@ -86,14 +90,7 @@ fun Main() {
             )
         },
     ) {
-        NavHost(
-            navController = navController,
-            startDestination = ScreenRoutes.MAIN,
-            enterTransition = { EnterTransition.None },
-            exitTransition = { ExitTransition.None },
-            popEnterTransition = { EnterTransition.None },
-            popExitTransition = { ExitTransition.None },
-        ) {
+        NavHost(navController = navController, startDestination = ScreenRoutes.MAIN) {
             composable(ScreenRoutes.MAIN) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
                 MainScreen(
@@ -146,23 +143,36 @@ fun Main() {
                 FavoriteScreen(navController = navController, favorites)
             }
             composable(ScreenRoutes.PROFILE) {
-                val authorized = false
-                if (authorized) {
-                    searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
-                } else {
-                    searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                }
+                val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
+                searchViewModel.updateSearchWidgetState(
+                    if (authResultState is AuthResult.Authorized) SearchWidgetState.HIDDEN
+                    else SearchWidgetState.CLOSED
+                )
                 ProfileScreen(
-                    authViewModel = authViewModel,
-                    navigateToAuth = { navController.navigate(ScreenRoutes.PROFILE_REGISTRATION) },
+                    authResultState = authResultState,
+                    userViewModel = userViewModel,
+                    navController = navController,
+                )
+            }
+            composable(ScreenRoutes.EDIT_PROFILE){
+                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                EditUserProfile(
+                    navController = navController,
+                    snackbarHostState = snackbarHostState,
+                    userViewModel = userViewModel,
+                    onBackClicked = { navController.popBackStack() },
                 )
             }
             composable(ScreenRoutes.PROFILE_REGISTRATION){
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
                 Authorization(
-                    authViewModel = authViewModel,
+                    userViewModel = userViewModel,
                     onBackClicked = { navController.popBackStack() },
-                    navigateToProfile = { navController.navigate(ScreenRoutes.PROFILE) }
+                    navigateToProfile = {
+                        navController.navigate(ScreenRoutes.PROFILE) {
+                            popUpTo(ScreenRoutes.PROFILE)
+                        }
+                    }
                 )
             }
         }

@@ -18,6 +18,7 @@ private val MainColorScheme = lightColorScheme(
     background = BoxBackground,
     secondaryContainer = LightBlue,
     scrim = DarkBlueText,
+    onError = ErrorRed
 )
 
 @Composable
@@ -30,6 +31,7 @@ fun TechZoneTheme(
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = MainColorScheme.primary.toArgb()
+            window.navigationBarColor = MainColorScheme.tertiary.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }
     }

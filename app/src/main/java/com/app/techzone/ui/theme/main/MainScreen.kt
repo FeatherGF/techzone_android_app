@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.app.techzone.R
-import com.app.techzone.calculateDiscount
+import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.formatPrice

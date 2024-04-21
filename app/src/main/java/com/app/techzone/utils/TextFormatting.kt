@@ -3,18 +3,20 @@ package com.app.techzone
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
-import kotlin.math.roundToInt
 
 fun formatPrice(price: Int): String {
     val dec = DecimalFormat("###,###,###,###,### ₽", DecimalFormatSymbols(Locale.ENGLISH))
     return dec.format(price).replace(",", " ")
 }
 
-fun calculateDiscount(initialPrice: Int, discountPercentage: Int): Int {
-    return if (discountPercentage > 0)
-        initialPrice - ((initialPrice * discountPercentage).toFloat() / 100).roundToInt()
-    else
-        initialPrice
+/**
+ * @param phoneNumber phone number containing something like `79221110033`
+ * @return string representation of a phone number in specified format `+7 (922) 111-00-33`
+ */
+fun formatPhoneNumber(phoneNumber: String): String {
+    return "+${phoneNumber.first()} (${phoneNumber.substring(1, 4)}) ${
+        phoneNumber.substring(4, 7)
+    }-${phoneNumber.substring(7, 9)}-${phoneNumber.substring(9, 11)}"
 }
 
 fun formatReview(reviewCount: Int): String {

@@ -1,47 +1,99 @@
 package com.app.techzone.ui.theme.profile
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowColumn
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ExitToApp
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.app.techzone.data.remote.model.AuthResult
-import com.app.techzone.ui.theme.profile.Auth.AuthViewModel
-import kotlinx.coroutines.flow.collect
+import com.app.techzone.formatPhoneNumber
+import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.navigation.ScreenRoutes
+import com.app.techzone.ui.theme.profile.auth.UserViewModel
+import com.app.techzone.utils.MaskVisualTransformation
+import kotlinx.coroutines.launch
 
 
 @Composable
 fun ProfileScreen(
-    navigateToAuth: () -> Unit,
-    authViewModel: AuthViewModel
+    authResultState: AuthResult<Unit>,
+    navController: NavController,
+    userViewModel: UserViewModel
 ) {
-    val authResultState by authViewModel.authResults.collectAsStateWithLifecycle(authViewModel.initialState)
-    when (authResultState){
-        is AuthResult.Authorized ->{
-            UserProfile(authViewModel)
+    when (authResultState) {
+        is AuthResult.Authorized -> {
+            UserProfile(userViewModel, navController = navController)
         }
+
         is AuthResult.Unauthorized -> {
-            UnauthorizedScreen(navigateToAuth = navigateToAuth)
+            UnauthorizedScreen {
+                navController.navigate(ScreenRoutes.PROFILE_REGISTRATION) {
+                    popUpTo(ScreenRoutes.PROFILE_REGISTRATION)
+                }
+            }
         }
-        is AuthResult.UnknownError ->{
+
+        is AuthResult.UnknownError -> {
             Text("Unknown error occurred")
         }
         else -> {}
@@ -49,22 +101,495 @@ fun ProfileScreen(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditUserProfile(
+    navController: NavController,
+    snackbarHostState: SnackbarHostState,
+    userViewModel: UserViewModel,
+    onBackClicked: () -> Unit,
+) {
+    LaunchedEffect(userViewModel) { userViewModel.loadUser() }
+    BackHandler(onBack = onBackClicked)
+
+    val user by userViewModel.user.collectAsStateWithLifecycle()
+
+    var firstName by remember { mutableStateOf(user?.firstName ?: "") }
+    var lastName by remember { mutableStateOf(user?.lastName ?: "") }
+    var phoneNumber by remember { mutableStateOf(user?.phoneNumber ?: "") }
+    val coroutineScope = rememberCoroutineScope()
+
+    val phoneNumberVisualTransformation = MaskVisualTransformation("+# (###) ###-##-##")
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    fun saveUserChanges() {
+        if (firstName.any { !it.isLetter() }) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    "В поле имени оставьте только буквы без цифр и специальных символов"
+                )
+            }
+            return
+        }
+        if (lastName.any { !it.isLetter() }) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    "В поле фамилии оставьте только буквы без цифр и специальных символов"
+                )
+            }
+            return
+        }
+        if (phoneNumber.any { it.isLetter() }) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    "Введите корректный номер телефона"
+                )
+            }
+            return
+        }
+        userViewModel.updateUser(
+            firstName = firstName.takeIf { it.isNotBlank() },
+            lastName = lastName.takeIf { it.isNotBlank() },
+            phoneNumber = phoneNumber.takeIf { it.isNotBlank() }
+        )
+        navController.navigate(ScreenRoutes.PROFILE) {
+            popUpTo(ScreenRoutes.PROFILE)
+        }
+    }
+
+    // separate column needed in order to apply .weight(1f) and place `save` button at the bottom
+    Column {
+        Column(
+            modifier = Modifier
+                .background(color = MaterialTheme.colorScheme.background)
+                .weight(1f)
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.tertiary)
+                    .padding(top = 40.dp, bottom = 16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBackClicked) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        tint = Color.Black,
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "Изменить профиль",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .padding(start = 16.dp, top = 28.dp, end = 16.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.AccountCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(100.dp),
+                        tint = Color(0xFF272727).copy(alpha = 0.3f)
+                    )
+                    Icon(
+                        imageVector = Icons.Outlined.CameraAlt,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 26.dp),
+                    value = firstName,
+                    onValueChange = { firstName = it },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    ),
+                    placeholder = {
+                        Text("Имя", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
+                    },
+                    textStyle = MaterialTheme.typography.bodyLarge
+                )
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    value = lastName,
+                    onValueChange = { lastName = it },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                    ),
+                    placeholder = {
+                        Text("Фамилия", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
+                    },
+                    textStyle = MaterialTheme.typography.bodyLarge
+                )
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    value = phoneNumber,
+                    onValueChange = { textPhone ->
+                        if (textPhone.length < 12)
+                            phoneNumber = textPhone.filter { it.isDigit() }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Send
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSend = {
+                            saveUserChanges()
+                            // if text fields contained errors, hide keyboard to make snackbar visible
+                            keyboardController?.hide()
+                        }
+                    ),
+                    visualTransformation = phoneNumberVisualTransformation,
+                    placeholder = {
+                        Text("Телефон", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
+                    },
+                    textStyle = MaterialTheme.typography.bodyLarge
+                )
+                OutlinedTextField(
+                    value = user?.email!!,
+                    onValueChange = {},
+                    enabled = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                )
+
+                var isBottomSheetDeleteUserShown by remember { mutableStateOf(false) }
+                val sheetState = rememberModalBottomSheetState()
+                OutlinedButton(
+                    modifier = Modifier.padding(top = 16.dp),
+                    onClick = { isBottomSheetDeleteUserShown = true },
+                    border = null,
+                    contentPadding = PaddingValues(start = 12.dp, end = 16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onError,
+                            modifier = Modifier
+                                .size(26.dp)
+                                .padding(end = 8.dp)
+                        )
+                        Text(
+                            "Удалить профиль",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onError
+                        )
+                    }
+                }
+                if (isBottomSheetDeleteUserShown) {
+                    ModalBottomSheet(
+                        onDismissRequest = { isBottomSheetDeleteUserShown = false },
+                        sheetState = sheetState
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 23.dp, end = 23.dp, bottom = 23.dp),
+                        ) {
+                            Text(
+                                "Вы действительно хотите удалить свой профиль? " +
+                                        "Отменить это действие будет невозможно.",
+                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 12.dp, bottom = 8.dp)
+                                    .height(40.dp),
+                                onClick = { userViewModel.deleteUser() }
+                            ) {
+                                Text(
+                                    "Удалить",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.tertiary
+                                )
+                            }
+                            Button(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp),
+                                onClick = { isBottomSheetDeleteUserShown = false },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                )
+                            ) {
+                                Text(
+                                    "Отменить",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Surface(
+            Modifier
+                .fillMaxWidth()
+                .border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            contentColor = MaterialTheme.colorScheme.tertiary,
+        ) {
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = ::saveUserChanges
+            ) {
+                Text(
+                    "Сохранить изменения",
+                    color = Color.Companion.White,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun UserProfile(
-    authViewModel: AuthViewModel
+    userViewModel: UserViewModel,
+    navController: NavController,
 ) {
-    val user by authViewModel.user.collectAsStateWithLifecycle()
-    // TODO: доверстать
-    user?.let {
-        Text(it.email)
-        it.firstName?.let { firstName ->
-            Text(firstName)
+    LaunchedEffect(userViewModel) { userViewModel.loadUser() }
+    val user by userViewModel.user.collectAsStateWithLifecycle()
+    Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .background(color = MaterialTheme.colorScheme.tertiary)
+                .padding(top = 40.dp, bottom = 16.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                "Профиль",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+            )
         }
-        it.lastName?.let {lastName ->
-            Text(lastName)
+        val verticalSpacing =
+            if (user?.firstName == null && user?.lastName == null && user?.phoneNumber == null)
+                12.dp
+            else 24.dp
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(color = MaterialTheme.colorScheme.tertiary)
+                .border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f))
+                .padding(horizontal = 16.dp, vertical = verticalSpacing),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    modifier = Modifier.size(80.dp),
+                    imageVector = Icons.Rounded.AccountCircle,
+                    contentDescription = null,
+                    tint = ForStroke.copy(alpha = 0.1f)
+                )
+                FlowColumn(
+                    verticalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    user?.let {
+                        it.firstName?.let { firstName ->
+                            Row {
+                                Text(
+                                    firstName,
+                                    modifier = Modifier.height(28.dp),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                                )
+                                it.lastName?.let { lastName ->
+                                    Text(
+                                        " $lastName",
+                                        modifier = Modifier.height(28.dp),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                                    )
+                                }
+                            }
+                        }
+                        Text(
+                            it.email,
+                            modifier = Modifier.height(24.dp),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        it.phoneNumber?.let { phoneNumber ->
+                            Text(
+                                formatPhoneNumber(phoneNumber),
+                                modifier = Modifier.height(20.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                            )
+                        }
+                    }
+                }
+            }
+            // TODO: пройти по всему проекту и везде на кнопки поставить Button компонент
+            IconButton(
+                modifier = Modifier.padding(end = 12.dp),
+                onClick = {
+                    navController.navigate(ScreenRoutes.EDIT_PROFILE) {
+                        popUpTo(ScreenRoutes.EDIT_PROFILE)
+                    }
+                }
+            ) {
+                Icon(
+                    modifier = Modifier.size(30.dp),
+                    imageVector = Icons.Outlined.ChevronRight,
+                    // TODO: пройти по всему проекту и везде поставить описание компонентам
+                    contentDescription = null,
+                )
+            }
         }
-        it.phoneNumber?.let {phoneNumber ->
-            Text(phoneNumber)
+        val profileItems = listOf(
+            "Мои заказы",
+            "Избранное",
+            "Способ оплаты"
+        )
+        Column(
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(28.dp)
+        ) {
+            Column(
+                modifier = Modifier.border(
+                    width = 1.dp,
+                    color = ForStroke.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(4.dp)
+                )
+            ) {
+                profileItems.forEachIndexed { index, profileItem ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .clickable {
+
+                            }
+                            .padding(start = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            profileItem,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                        )
+                        IconButton(
+                            modifier = Modifier.padding(end = 36.dp),
+                            onClick = { /*TODO*/ }
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(30.dp),
+                                imageVector = Icons.Outlined.ChevronRight,
+                                // TODO: пройти по всему проекту и везде поставить описание компонентам
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                    if (index != profileItems.size - 1) {
+                        HorizontalDivider(color = ForStroke.copy(alpha = 0.1f))
+                    }
+                }
+            }
+            val magazineInfo = mapOf(
+                Icons.Outlined.Place to "Ростов-на-Дону, Пушкина, 1",
+                Icons.Outlined.Phone to "8 (800) 500-26-12",
+                Icons.Outlined.Email to "hello@techzone.ru"
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    "О магазине",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                )
+                Column(
+                    modifier = Modifier.border(
+                        width = 1.dp,
+                        color = ForStroke.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                ) {
+                    magazineInfo.forEach { (icon, text) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .padding(start = 28.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(end = 28.dp)
+                            )
+                            Text(
+                                text,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                            )
+                        }
+                        if (text != magazineInfo.values.last()) {
+                            HorizontalDivider(color = ForStroke.copy(alpha = 0.1f))
+                        }
+                    }
+                }
+            }
+        }
+        OutlinedButton(
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+            onClick = { userViewModel.logoutUser() },
+            border = null,
+            contentPadding = PaddingValues(start = 12.dp, end = 16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(26.dp)
+                        .padding(end = 8.dp)
+                )
+                Text(
+                    "Выйти из профиля",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
@@ -82,13 +607,15 @@ fun LoginText(paddingTop: Dp = 12.dp) {
 }
 
 @Composable
-fun UnauthorizedScreen(navigateToAuth: () -> Unit) {
+fun UnauthorizedScreen(
+    navigateToAuth: () -> Unit
+) {
     Column(
         modifier = Modifier
             .padding(start = 16.dp, top = 100.dp, end = 16.dp)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-    ){
+    ) {
         Icon(
             modifier = Modifier.size(80.dp),
             imageVector = Icons.Outlined.Person,

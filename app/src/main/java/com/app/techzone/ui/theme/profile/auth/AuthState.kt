@@ -1,4 +1,4 @@
-package com.app.techzone.ui.theme.profile.Auth
+package com.app.techzone.ui.theme.profile.auth
 
 data class AuthState(
     val isLoading: Boolean = false,

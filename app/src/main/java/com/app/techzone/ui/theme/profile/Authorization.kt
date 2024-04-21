@@ -1,7 +1,6 @@
 package com.app.techzone.ui.theme.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,13 +12,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,18 +29,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.R
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.ui.theme.RoundBorder100
-import com.app.techzone.ui.theme.profile.Auth.AuthState
-import com.app.techzone.ui.theme.profile.Auth.AuthUiEvent
-import com.app.techzone.ui.theme.profile.Auth.AuthViewModel
+import com.app.techzone.ui.theme.profile.auth.AuthState
+import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
+import com.app.techzone.ui.theme.profile.auth.UserViewModel
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -72,17 +74,16 @@ fun AuthTopBar(onBackClicked: () -> Unit) {
 
 @Composable
 fun EnterEmailAddress(
-    emailText: String,
+    state: AuthState,
     onEmailTextChange: (String) -> Unit,
     onEmailSendCode: () -> Unit,
 ) {
-//    var emailText by remember { mutableStateOf("")}
     var errorText by remember { (mutableStateOf("")) }
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 20.dp),
-        value = emailText,
+        value = state.authEmail,
         onValueChange = {
             onEmailTextChange(it)
             if (errorText.isNotBlank()){
@@ -102,18 +103,26 @@ fun EnterEmailAddress(
             .padding(top = 16.dp)
             .fillMaxWidth(),
         onClick = {
-            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailText).matches()) {
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(state.authEmail).matches()) {
                 errorText = "Email не действителен"
                 return@Button
             }
-            println("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
             onEmailSendCode()
-            /*TODO: viewModel.sendAuthCode or something like that*/
         },
         shape = RoundBorder100,
-        enabled = emailText.isNotBlank(),
+        enabled = state.authEmail.isNotBlank(),
     ) {
         Text("Получить код", style = MaterialTheme.typography.labelLarge)
+    }
+    if (state.isLoading){
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
     }
 }
 
@@ -177,25 +186,44 @@ fun EnterAuthCode(
         },
         isError = errorText.isNotBlank(),
     )
-    var resendAuthCodeCountDown by remember { mutableIntStateOf(60)}
-    if (resendAuthCodeCountDown > 0){
-        Text(
-            "Отправить повторно через $resendAuthCodeCountDown сек.",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-        )
-    } else {
-        Text(
-            "Отправить код повторно",
-            modifier = Modifier.clickable { onEmailResend() },
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
+    var resendAuthCodeCountDown by remember { mutableIntStateOf(60) }
     LaunchedEffect(Unit) {
         while (resendAuthCodeCountDown > 0){
             delay(1.seconds)
             resendAuthCodeCountDown--
+        }
+    }
+    if (resendAuthCodeCountDown > 0){
+        Text(
+            "Отправить повторно через $resendAuthCodeCountDown сек.",
+            modifier = Modifier.padding(top = 26.dp),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+        )
+    } else {
+        OutlinedButton(
+            modifier = Modifier.padding(top = 16.dp),
+            onClick = {
+                resendAuthCodeCountDown = 60
+                onEmailResend()
+            },
+            border = null,
+        ) {
+            Text(
+                "Отправить код повторно",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+    if (state.isLoading){
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
     }
 }
@@ -203,7 +231,7 @@ fun EnterAuthCode(
 @Composable
 fun Authorization(
     onBackClicked: () -> Unit,
-    authViewModel: AuthViewModel,
+    userViewModel: UserViewModel,
     navigateToProfile: () -> Unit,
 ) {
     Column(
@@ -214,18 +242,18 @@ fun Authorization(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AuthTopBar(onBackClicked)
-        val authResultState by authViewModel.authResults.collectAsStateWithLifecycle(initialValue = AuthResult.Unauthorized())
-        val state = authViewModel.state
+        val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
+        val state = userViewModel.state
         when (authResultState){
             is AuthResult.UnknownError -> {Text("Unknown error happened")}
             is AuthResult.Unauthorized ->{
                 EnterEmailAddress(
-                    emailText = state.authEmail,
+                    state = state,
                     onEmailSendCode = {
-                        authViewModel.onEvent(AuthUiEvent.SendAuthCode)
+                        userViewModel.onEvent(AuthUiEvent.SendAuthCode)
                     },
                     onEmailTextChange = {
-                        authViewModel.onEvent(AuthUiEvent.AuthEmailChanged(it))
+                        userViewModel.onEvent(AuthUiEvent.AuthEmailChanged(it))
                     }
                 )
             }
@@ -235,13 +263,13 @@ fun Authorization(
                     state = state,
                     authResultState = authResultState,
                     onCodeVerify = {
-                        authViewModel.onEvent(AuthUiEvent.VerifyCode)
+                        userViewModel.onEvent(AuthUiEvent.VerifyCode)
                     },
                     onAuthCodeChanged = {
-                        authViewModel.onEvent(AuthUiEvent.AuthCodeChanged(it))
+                        userViewModel.onEvent(AuthUiEvent.AuthCodeChanged(it))
                     },
                     onEmailResend = {
-                        authViewModel.onEvent(AuthUiEvent.SendAuthCode)
+                        userViewModel.onEvent(AuthUiEvent.SendAuthCode)
                     }
                 )
             }

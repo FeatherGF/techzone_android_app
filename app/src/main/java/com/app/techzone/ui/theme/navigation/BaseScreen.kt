@@ -2,6 +2,7 @@ package com.app.techzone.ui.theme.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -12,8 +13,12 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -26,6 +31,7 @@ import com.app.techzone.ui.theme.ForStroke
 @Composable
 fun BaseScreen(
     navController: NavController,
+    snackbarHostState: SnackbarHostState,
     favorites: List<ProductCard>,
     topAppBar: @Composable () -> Unit,
     content: @Composable () -> Unit,
@@ -42,6 +48,30 @@ fun BaseScreen(
     val currentRoute = backStackEntry?.destination?.route ?: ""
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.imePadding()
+            ){ data ->
+                Snackbar(
+                    modifier = Modifier.padding(16.dp),
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    action = {
+                        data.visuals.actionLabel?.let{
+                            TextButton(
+                                onClick = {  data.performAction() },
+                            ) { Text(it) }
+                        }
+                    }
+                ) {
+                    Text(
+                        data.visuals.message,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                    )
+                }
+            }
+        },
         content = {
             Surface(
                 modifier = Modifier

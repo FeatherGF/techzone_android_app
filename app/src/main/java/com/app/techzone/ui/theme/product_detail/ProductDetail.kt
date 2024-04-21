@@ -40,6 +40,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -72,7 +73,7 @@ import com.app.techzone.ui.theme.main.ProductFavoriteIcon
 import com.app.techzone.ui.theme.main.ProductRating
 import com.app.techzone.ui.theme.main.ProductReviewCount
 import com.app.techzone.ui.theme.main.ProductViewModel
-import com.app.techzone.calculateDiscount
+import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.formatPrice
 import com.app.techzone.ui.theme.product_detail.characteristics.ICharacteristic
 import com.app.techzone.ui.theme.product_detail.characteristics.getProductCharacteristics
@@ -85,10 +86,14 @@ fun ProductDetailScreen(
     onBackClicked: () -> Unit,
     addToFavorite: (product: ProductCard) -> Unit,
 ) {
+//    val window = (LocalContext.current as Activity).window
+//    window.statusBarColor = MaterialTheme.colorScheme.tertiary.toArgb()
     val detailProductViewModel = hiltViewModel<ProductDetailViewModel>()
     val recommendations = hiltViewModel<ProductViewModel>()
 
-    detailProductViewModel.loadProduct(productId)
+    LaunchedEffect(detailProductViewModel) {
+        detailProductViewModel.loadProduct(productId)
+    }
 
     val product by detailProductViewModel.product.collectAsStateWithLifecycle()
     val recommendedProducts by recommendations.allProducts.collectAsStateWithLifecycle()

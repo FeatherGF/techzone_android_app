@@ -1,4 +1,4 @@
-package com.app.techzone.ui.theme.profile.Auth
+package com.app.techzone.ui.theme.profile.auth
 
 sealed class AuthUiEvent {
     data class AuthEmailChanged(val value: String): AuthUiEvent()
