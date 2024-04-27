@@ -5,7 +5,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +32,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
@@ -59,7 +59,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.data.remote.model.IDetailedProduct
 import com.app.techzone.data.remote.model.Review
-import com.app.techzone.model.ProductCard
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder100
 import com.app.techzone.ui.theme.RoundBorder28
@@ -82,7 +81,6 @@ fun ProductDetailScreen(
     productId: Int,
     navigateToDetail: (productId: Int) -> Unit,
     onBackClicked: () -> Unit,
-    addToFavorite: (product: ProductCard) -> Unit,
 ) {
     val detailProductViewModel = hiltViewModel<ProductDetailViewModel>()
     val recommendations = hiltViewModel<ProductViewModel>()
@@ -113,27 +111,19 @@ fun ProductDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(64.dp)
-                                .background(color = MaterialTheme.colorScheme.tertiary),
+                                .background(color = MaterialTheme.colorScheme.tertiary)
+                                .padding(end = 28.dp, top = 20.dp, bottom = 20.dp, start = 28.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null,
-                                tint = Color.Black,
-                                modifier = Modifier
-                                    .clickable(onClick = onBackClicked)
-                                    .padding(start = 28.dp, top = 20.dp, bottom = 20.dp)
-                            )
-                            Box(
-                                modifier = Modifier.padding(
-                                    end = 28.dp,
-                                    top = 20.dp,
-                                    bottom = 20.dp
+                            IconButton(onClick = onBackClicked) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                                 )
-                            ) {
-                                ProductFavoriteIcon(product = it)
                             }
+                                ProductFavoriteIcon(product = it)
                         }
                     }
                     item {
@@ -203,7 +193,7 @@ fun ProductImagesPager(product: IDetailedProduct) {
     val pagerState = rememberPagerState(pageCount = { pageCount })
     Box(
         modifier = Modifier
-            .padding(start = 16.dp, top = 16.dp, end = 16.dp)
+            .padding(top = 16.dp)
             .fillMaxWidth()
             .height(205.dp)
             .background(color = MaterialTheme.colorScheme.background)
@@ -327,7 +317,7 @@ fun ProductVariantsAndPrice(product: IDetailedProduct) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    ProductCrossedPrice(product)
+                    ProductCrossedPrice(product, large = true)
                     Text(
                         text = formatPrice(
                             calculateDiscount(
@@ -345,7 +335,7 @@ fun ProductVariantsAndPrice(product: IDetailedProduct) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Скидка:",
+                            text = "Скидка",
                             style = MaterialTheme.typography.labelLarge,
                             color = mainTextColor
                         )
@@ -361,7 +351,7 @@ fun ProductVariantsAndPrice(product: IDetailedProduct) {
                         ) {
                             Text(
                                 text = "-${product.discountPercentage}%",
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                                 color = MaterialTheme.colorScheme.primary,
                             )
                         }

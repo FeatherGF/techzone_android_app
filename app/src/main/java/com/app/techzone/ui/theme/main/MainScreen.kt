@@ -1,14 +1,14 @@
 package com.app.techzone.ui.theme.main
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,8 +27,14 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -59,7 +65,6 @@ import com.app.techzone.utils.formatReview
 import com.app.techzone.model.Benefit
 import com.app.techzone.model.ProductCard
 import com.app.techzone.model.benefits
-import com.app.techzone.ui.theme.RoundBorder100
 import com.app.techzone.ui.theme.RoundBorder24
 
 
@@ -104,102 +109,83 @@ fun ProductCarousel(
     removeFromFavorite: (ProductCard) -> Unit,
 ) {
     val pagerState = rememberPagerState(pageCount = { products.size })
-    Box(
+    HorizontalPager(
+        state = pagerState,
+        key = { products[it].id },
+        pageSize = PageSize.Fixed(154.dp),
+        contentPadding = PaddingValues(end = 16.dp, start = 16.dp, top = 16.dp, bottom = 16.dp),
+        pageSpacing = 8.dp,
         modifier = Modifier
-            .padding(start = 16.dp, top = 8.dp, bottom = 24.dp)
             .fillMaxWidth()
             .background(color = MaterialTheme.colorScheme.background)
-    ) {
-        HorizontalPager(
-            state = pagerState,
-            key = { products[it].id },
-            pageSize = PageSize.Fixed(154.dp),
-            pageSpacing = 8.dp,
-        ) { index ->
-            val product = products[index]
-            Box(
-                modifier = Modifier
-                    .height(336.dp)
-                    .width(154.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.tertiary, shape = RoundBorder24
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.1f),
-                        shape = RoundBorder24
-                    )
-                    .clickable { navigateToDetail(product.id) }
+    ) { index ->
+        val product = products[index]
+        OutlinedCard(
+            onClick = { navigateToDetail(product.id) },
+            shape = RoundBorder24,
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.1f)
+            ),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+            ),
+            modifier = Modifier
+                .height(323.dp)
+                .fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier.padding(start = 14.dp, top = 12.dp, end = 14.dp)
             ) {
+                ProductImageOrPreview(product.photos, modifier = Modifier.size(127.dp))
                 Column(
                     modifier = Modifier
-                        .padding(
-                            start = 14.dp, top = 12.dp, end = 14.dp, bottom = 17.dp
-                        )
-                        .width(128.dp),
+                        .padding(top = 12.dp)
+                        .height(112.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    ProductImageOrPreview(product.photos, modifier = Modifier.size(130.dp))
-//                    if (product.photos.isNotEmpty()){
-//                        AsyncImage(
-//                            model = ImageRequest.Builder(LocalContext.current)
-//                                .data(product.photos[0].url)
-//                                .build(),
-//                            contentDescription = null
-//                        )
-//                    } else {
-//                        Image(painter = painterResource(id = R.drawable.ic_preview), contentDescription = null)
-//                    }
-                    Column(
+                    Row(
                         modifier = Modifier
-                            .padding(top = 12.dp, bottom = 9.dp)
-                            .height(114.dp)
+                            .fillMaxWidth()
+                            .height(32.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 12.dp)
-                                .height(30.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Column {
-                                ProductCrossedPrice(product = product)
-                                Text(
-                                    text = formatPrice(
-                                        calculateDiscount(
-                                            product.price,
-                                            product.discountPercentage
-                                        )
-                                    ),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                                )
-                            }
-                            ProductFavoriteIcon(
-                                product = product,
-//                                addToFavorite = addToFavorite,
-//                                removeFromFavorite = removeFromFavorite
+                        Column {
+                            ProductCrossedPrice(product = product)
+                            Text(
+                                text = formatPrice(
+                                    calculateDiscount(
+                                        product.price,
+                                        product.discountPercentage
+                                    )
+                                ),
+                                style = MaterialTheme.typography.titleMedium,
                             )
                         }
-                        Text(
-                            text = product.name,
-                            style = MaterialTheme.typography.labelMedium,
-                            modifier = Modifier
-                                .padding(top = 4.dp)
-                                .height(48.dp)
+                        ProductFavoriteIcon(
+                            product = product,
+//                                addToFavorite = addToFavorite,
+//                                removeFromFavorite = removeFromFavorite
                         )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 5.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            ProductRating(product = product)
-                            ProductReviewCount(product = product)
-                        }
                     }
-                    ProductBuyButton(product = product)
+                    Text(
+                        text = product.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.height(48.dp)
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ProductRating(product = product)
+                        ProductReviewCount(product = product)
+                    }
                 }
+                ProductBuyButton(product = product)
             }
         }
     }
@@ -235,59 +221,42 @@ fun ProductImageOrPreview(
 @Composable
 fun ProductBuyButton(product: BaseProduct? = null) {
     var isInCartState by remember { mutableStateOf(false)}
+    val text: String
+    val colors: ButtonColors
     if (isInCartState) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = RoundBorder100,
-                )
-                .clickable {
-                    isInCartState = false
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "В корзине",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0, 111, 238, 12),
+            contentColor = MaterialTheme.colorScheme.primary
+        )
+        text = "В корзине"
     } else {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundBorder100
-                )
-                .clickable {
-                    isInCartState = true
-                    // TODO: add to cart here
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "В корзину",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.tertiary
-            )
-        }
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.tertiary
+        )
+        text = "В корзину"
+    }
+    Button(
+        onClick = { isInCartState = !isInCartState },
+        modifier = Modifier.fillMaxWidth(),
+        colors = colors,
+    ) {
+        Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
 }
 
 
 @Composable
-fun ProductCrossedPrice(product: IBaseProduct) {
+fun ProductCrossedPrice(product: IBaseProduct, large: Boolean = false) {
     if (product.discountPercentage > 0){
+        val style = if (large) MaterialTheme.typography.labelLarge else
+            MaterialTheme.typography.labelSmall
         Text(
             text = formatPrice(product.price),
-            style = MaterialTheme.typography.labelSmall,
+            style = style,
             color = MaterialTheme.colorScheme.scrim,
-            textDecoration = TextDecoration.LineThrough
+            textDecoration = TextDecoration.LineThrough,
+            modifier = Modifier.padding(bottom = 2.dp)
         )
     }
 }
@@ -344,24 +313,19 @@ fun ProductFavoriteIcon(
 //    removeFromFavorite: (ProductCard) -> Unit,
 ) {
     var isFavoriteState by rememberSaveable { mutableStateOf(product.isFavorite) }
-    Icon(
-        imageVector = if (isFavoriteState) Icons.Filled.Favorite else {
-            Icons.Outlined.FavoriteBorder
-        },
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier
-            .size(sizeDp)
-            .clickable {
-//               } if (isFavoriteState) {
-////                    removeFromFavorite(product)
-////                } else {
-////                    addToFavorite(product)
-////
-                isFavoriteState = !isFavoriteState
-            }
-    )
-
+    IconButton(
+        onClick = { isFavoriteState = !isFavoriteState },
+        modifier = Modifier.size(sizeDp)
+    ) {
+        Icon(
+            imageVector = if (isFavoriteState) Icons.Filled.Favorite else {
+                Icons.Outlined.FavoriteBorder
+            },
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(sizeDp)
+        )
+    }
 }
 
 
