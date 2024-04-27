@@ -44,6 +44,7 @@ fun Main() {
     val favorites by favoriteViewModel.favorites.collectAsStateWithLifecycle()
     val allProducts by productViewModel.allProducts.collectAsStateWithLifecycle()
     val navController = rememberNavController()
+    val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
 
     fun navigateToDetail(productId: Int) {
         navController.navigate("catalog/$productId"){
@@ -115,7 +116,6 @@ fun Main() {
                     productId = productId,
                     navigateToDetail = ::navigateToDetail,
                     onBackClicked = { navController.popBackStack() },
-                    addToFavorite = {}
                 )
             }
             composable(
@@ -143,7 +143,6 @@ fun Main() {
                 FavoriteScreen(navController = navController, favorites)
             }
             composable(ScreenRoutes.PROFILE) {
-                val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
                 searchViewModel.updateSearchWidgetState(
                     if (authResultState is AuthResult.Authorized) SearchWidgetState.HIDDEN
                     else SearchWidgetState.CLOSED

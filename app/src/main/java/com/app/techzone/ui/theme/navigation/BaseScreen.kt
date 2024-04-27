@@ -80,7 +80,7 @@ fun BaseScreen(
                 content = content
             )
         },
-        topBar = { topAppBar() },
+        topBar = topAppBar,
         bottomBar = {
             BottomAppBar(
                 containerColor = MaterialTheme.colorScheme.tertiary,

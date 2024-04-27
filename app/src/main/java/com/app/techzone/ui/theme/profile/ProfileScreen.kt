@@ -168,8 +168,8 @@ fun EditUserProfile(
                 Modifier
                     .fillMaxWidth()
                     .background(color = MaterialTheme.colorScheme.tertiary)
-                    .padding(top = 40.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.Center,
+                    .padding(start = 20.dp, top = 40.dp, bottom = 16.dp, end = 28.dp),
+                horizontalArrangement = Arrangement.spacedBy(48.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBackClicked) {
@@ -179,16 +179,11 @@ fun EditUserProfile(
                         tint = Color.Black,
                     )
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        "Изменить профиль",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                    )
-                }
+                Text(
+                    "Изменить профиль",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
+                )
             }
             Column(
                 modifier = Modifier
@@ -457,7 +452,6 @@ fun UserProfile(
                     }
                 }
             }
-            // TODO: пройти по всему проекту и везде на кнопки поставить Button компонент
             IconButton(
                 modifier = Modifier.padding(end = 12.dp),
                 onClick = {
@@ -469,7 +463,6 @@ fun UserProfile(
                 Icon(
                     modifier = Modifier.size(30.dp),
                     imageVector = Icons.Outlined.ChevronRight,
-                    // TODO: пройти по всему проекту и везде поставить описание компонентам
                     contentDescription = null,
                 )
             }
@@ -514,7 +507,6 @@ fun UserProfile(
                             Icon(
                                 modifier = Modifier.size(30.dp),
                                 imageVector = Icons.Outlined.ChevronRight,
-                                // TODO: пройти по всему проекту и везде поставить описание компонентам
                                 contentDescription = null,
                             )
                         }

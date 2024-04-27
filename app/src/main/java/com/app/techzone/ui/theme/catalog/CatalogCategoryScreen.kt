@@ -2,7 +2,6 @@ package com.app.techzone.ui.theme.catalog
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,9 +14,10 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -148,13 +148,15 @@ fun DefaultCatalogView(
                 key = { index -> products[index].id }
             ) {index ->
                 val product = products[index]
-                Surface(
+                Card(
                     modifier = Modifier
                         .wrapContentHeight()
-                        .fillMaxWidth()
-                        .clickable { navigateToDetail(product.id) },
+                        .fillMaxWidth(),
+                    onClick = { navigateToDetail(product.id) },
                     shape = RoundBorder24,
-                    color = MaterialTheme.colorScheme.tertiary,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    ),
                     border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
                 ) {
                     Column(
@@ -188,7 +190,7 @@ fun DefaultCatalogView(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column{
-                                ProductCrossedPrice(product = product)
+                                ProductCrossedPrice(product = product, large = true)
                                 Text(
                                     formatPrice(
                                         calculateDiscount(
