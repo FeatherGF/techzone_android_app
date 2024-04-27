@@ -24,13 +24,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.model.PricePreset
 import com.app.techzone.model.ProductCard
@@ -43,7 +40,8 @@ import com.app.techzone.ui.theme.main.ProductFavoriteIcon
 import com.app.techzone.ui.theme.main.ProductRating
 import com.app.techzone.ui.theme.main.ProductReviewCount
 import com.app.techzone.utils.calculateDiscount
-import com.app.techzone.formatPrice
+import com.app.techzone.utils.formatPrice
+import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.utils.CurrencyVisualTransformation
 
 enum class CatalogScreenEnum {
@@ -167,13 +165,7 @@ fun DefaultCatalogView(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(product.photos[0].url)
-                                    .build(),
-                                contentDescription = null,
-                                modifier = Modifier.size(110.dp)
-                            )
+                            ProductImageOrPreview(product.photos, modifier = Modifier.size(110.dp))
                             Column (
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {

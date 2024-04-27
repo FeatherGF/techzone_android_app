@@ -7,13 +7,17 @@ data class Tablet(
     @SerializedName("accumulator_capacity")
     val accumulatorCapacity: Int,
     @SerializedName("accumulator_type")
-    val accumulatorType: Any,
+    val accumulatorType: String,
+    @SerializedName("average_rating")
+    override val rating: Float?,
     @SerializedName("camera_quality")
     val cameraQuality: String,
     @SerializedName("color_main")
     val colorMain: String,
     @SerializedName("color_other")
     val colorOther: String,
+    @SerializedName("communicate_module")
+    val communicateModule: Boolean,
     @SerializedName("date_created")
     val dateCreated: String,
     @SerializedName("date_release")
@@ -21,21 +25,26 @@ data class Tablet(
     @SerializedName("degree_protection")
     val degreeProtection: String,
     @SerializedName("description")
-    val description: Any,
+    val description: String,
+    @SerializedName("discount")
+    override val discountPercentage: Int,
+    @SerializedName("equipment")
+    val equipment: String,
     @SerializedName("fast_charge")
     val fastCharge: Boolean,
     @SerializedName("front_camera_quality")
     val frontCameraQuality: String,
     @SerializedName("headphone_output")
     val headphoneOutput: Boolean,
-    @SerializedName("id")
-    val id: Int,
+    @SerializedName("height")
+    val height: Int,
+    override val id: Int,
     @SerializedName("id_provider")
     val idProvider: Int,
     @SerializedName("is_active")
     val isActive: Boolean,
-    @SerializedName("length")
-    val length: Int,
+    @SerializedName("is_favourite")
+    override val isFavorite: Boolean,
     @SerializedName("material")
     val material: String,
     @SerializedName("matrix_brightness")
@@ -52,8 +61,7 @@ data class Tablet(
     val memoryRam: Int,
     @SerializedName("model")
     val model: String,
-    @SerializedName("name")
-    val name: String,
+    override val name: String,
     @SerializedName("number_cameras")
     val numberCameras: Int,
     @SerializedName("number_cores")
@@ -62,16 +70,19 @@ data class Tablet(
     val operatingSystem: String,
     @SerializedName("optical_stabilization")
     val opticalStabilization: Boolean,
+    override val photos: List<Photo>,
     @SerializedName("pixel_density")
     val pixelDensity: Int,
-    @SerializedName("price")
-    val price: Int,
+    override val price: Int,
     @SerializedName("processor_frequency")
     val processorFrequency: Int,
     @SerializedName("processor_model")
     val processorModel: String,
     @SerializedName("quantity")
     val quantity: Int,
+    override val reviews: List<Review>,
+    @SerializedName("reviews_count")
+    override val reviewsCount: Int,
     @SerializedName("screen_diagonal")
     val screenDiagonal: String,
     @SerializedName("screen_format")
@@ -80,16 +91,21 @@ data class Tablet(
     val screenResolution: String,
     @SerializedName("screen_type")
     val screenType: String,
+    @SerializedName("sensors")
+    val sensors: String,
     @SerializedName("sim_card_format")
     val simCardFormat: String,
     @SerializedName("sound_technology")
     val soundTechnology: String,
     @SerializedName("support_lte")
     val supportLte: Boolean,
+    @SerializedName("thickness")
+    val thickness: Double,
+    override val type: String,
     @SerializedName("video_format")
     val videoFormat: String,
     @SerializedName("weight")
-    val weight: Int,
+    val weight: Double,
     @SerializedName("width")
-    val width: Int
-)
+    val width: Double
+): IDetailedProduct

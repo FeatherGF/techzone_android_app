@@ -18,7 +18,7 @@ data class Category(
 )
 
 val categories = listOf(
-    Category(id = 1, imageVector = Icons.Outlined.Tv, name = "Телевизоры", endpoint = ApiConstants.Endpoints.products),
+    Category(id = 1, imageVector = Icons.Outlined.Tv, name = "Телевизоры", endpoint = ApiConstants.Endpoints.televisions),
     Category(id = 2, imageVector = Icons.Outlined.Laptop, name = "Ноутбуки", endpoint = ApiConstants.Endpoints.laptops),
     Category(id = 3, imageVector = Icons.Outlined.Tablet, name = "Планшеты", endpoint = ApiConstants.Endpoints.tablets),
     Category(id = 4, imageVector = Icons.Outlined.Smartphone, name = "Смартфоны", endpoint = ApiConstants.Endpoints.smartphones),

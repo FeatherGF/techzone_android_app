@@ -30,9 +30,9 @@ data class Laptop(
     @SerializedName("date_release")
     val dateRelease: String,
     @SerializedName("description")
-    val description: Any,
+    val description: String,
     @SerializedName("discrete_graphics")
-    val discreteGraphics: Any,
+    val discreteGraphics: String,
     @SerializedName("fingerprint_scanner")
     val fingerprintScanner: Boolean,
     @SerializedName("hdmi_ports")
@@ -60,6 +60,7 @@ data class Laptop(
     val matrixContrast: String,
     @SerializedName("matrix_frequency")
     val matrixFrequency: Int,
+    val equipment: String,
     @SerializedName("matrix_type")
     val matrixType: String,
     @SerializedName("memory")
@@ -89,7 +90,7 @@ data class Laptop(
     @SerializedName("type_graphics_accelerator")
     val typeGraphicsAccelerator: String,
     @SerializedName("usb_devices")
-    val usbDevices: Any,
+    val usbDevices: String,
     @SerializedName("video_card_model")
     val videoCardModel: String,
     @SerializedName("video_chip")
@@ -101,10 +102,12 @@ data class Laptop(
     @SerializedName("voice_assistant")
     val voiceAssistant: String,
     val weight: Double,
+    val height: Double,
     val width: Double,
     val thickness: Double,
+    val microphone: Boolean,
     @SerializedName("wifi_availability")
     val wifiAvailability: Boolean,
     @SerializedName("wifi_standard")
-    val wifiStandard: Any
+    val wifiStandard: String
 ): IDetailedProduct

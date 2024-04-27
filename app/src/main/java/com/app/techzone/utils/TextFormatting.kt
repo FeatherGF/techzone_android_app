@@ -1,4 +1,4 @@
-package com.app.techzone
+package com.app.techzone.utils
 
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -30,4 +30,11 @@ fun formatReview(reviewCount: Int): String {
         else -> {"отзывов"}
     }
     return "$reviewCount $review"
+}
+
+/**
+ * Конвертация булевого значения в человекочитабельный текст ("Есть" и "Нет")
+ */
+fun boolToString(value: Boolean): String {
+    return if (value) "Есть" else "Нет"
 }

@@ -19,6 +19,8 @@ object ApiConstants {
         const val laptopDetail = "laptops/{id_laptop}"
         const val smartwatches = "smartwatches"
         const val smartwatchDetail = "smartwatches/{id_smartwatch}"
+        const val televisions = "televisions"
+        const val televisionsDetail = "televisions/{id_television}"
 
         // user
         const val userDetail = "users/{id_user}"

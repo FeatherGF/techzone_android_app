@@ -1,5 +1,6 @@
 package com.app.techzone.ui.theme.main
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -51,8 +53,9 @@ import com.app.techzone.R
 import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.IBaseProduct
-import com.app.techzone.formatPrice
-import com.app.techzone.formatReview
+import com.app.techzone.data.remote.model.Photo
+import com.app.techzone.utils.formatPrice
+import com.app.techzone.utils.formatReview
 import com.app.techzone.model.Benefit
 import com.app.techzone.model.ProductCard
 import com.app.techzone.model.benefits
@@ -135,13 +138,17 @@ fun ProductCarousel(
                         )
                         .width(128.dp),
                 ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(product.photos[0].url)
-//                            .size(130)
-                            .build(),
-                        contentDescription = null
-                    )
+                    ProductImageOrPreview(product.photos, modifier = Modifier.size(130.dp))
+//                    if (product.photos.isNotEmpty()){
+//                        AsyncImage(
+//                            model = ImageRequest.Builder(LocalContext.current)
+//                                .data(product.photos[0].url)
+//                                .build(),
+//                            contentDescription = null
+//                        )
+//                    } else {
+//                        Image(painter = painterResource(id = R.drawable.ic_preview), contentDescription = null)
+//                    }
                     Column(
                         modifier = Modifier
                             .padding(top = 12.dp, bottom = 9.dp)
@@ -198,6 +205,32 @@ fun ProductCarousel(
     }
 }
 
+
+@Composable
+fun ProductImageOrPreview(
+    photos: List<Photo>,
+    photoIndex: Int = 0,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
+    filterQuality: FilterQuality = FilterQuality.Low,
+    description: String? = null
+) {
+    if (photos.isNotEmpty()){
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(photos[photoIndex].url)
+                .build(),
+            contentDescription = description,
+            filterQuality = filterQuality,
+            modifier = modifier
+        )
+    } else {
+        Image(
+            painter = painterResource(id = R.drawable.ic_preview),
+            contentDescription = description,
+            modifier = modifier
+        )
+    }
+}
 
 @Composable
 fun ProductBuyButton(product: BaseProduct? = null) {

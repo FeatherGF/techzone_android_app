@@ -52,14 +52,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.app.techzone.data.remote.model.IDetailedProduct
 import com.app.techzone.data.remote.model.Review
 import com.app.techzone.model.ProductCard
@@ -74,9 +71,10 @@ import com.app.techzone.ui.theme.main.ProductRating
 import com.app.techzone.ui.theme.main.ProductReviewCount
 import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.utils.calculateDiscount
-import com.app.techzone.formatPrice
+import com.app.techzone.utils.formatPrice
+import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.product_detail.characteristics.ICharacteristic
-import com.app.techzone.ui.theme.product_detail.characteristics.getProductCharacteristics
+import com.app.techzone.utils.getProductCharacteristics
 
 
 @Composable
@@ -86,8 +84,6 @@ fun ProductDetailScreen(
     onBackClicked: () -> Unit,
     addToFavorite: (product: ProductCard) -> Unit,
 ) {
-//    val window = (LocalContext.current as Activity).window
-//    window.statusBarColor = MaterialTheme.colorScheme.tertiary.toArgb()
     val detailProductViewModel = hiltViewModel<ProductDetailViewModel>()
     val recommendations = hiltViewModel<ProductViewModel>()
 
@@ -203,7 +199,8 @@ fun ProductDetailScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductImagesPager(product: IDetailedProduct) {
-    val pagerState = rememberPagerState(pageCount = { product.photos.size })
+    val pageCount = product.photos.size.takeIf { it > 0 } ?: 1
+    val pagerState = rememberPagerState(pageCount = { pageCount })
     Box(
         modifier = Modifier
             .padding(start = 16.dp, top = 16.dp, end = 16.dp)
@@ -216,15 +213,13 @@ fun ProductImagesPager(product: IDetailedProduct) {
             pageSize = PageSize.Fixed(316.dp),
             pageSpacing = 8.dp,
         ) { index ->
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(product.photos[index].url)
-                    .build(),
-                contentDescription = null,
-                filterQuality = FilterQuality.Medium,
+            ProductImageOrPreview(
+                product.photos,
+                photoIndex = index,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(color = Color.Companion.White, shape = RoundBorder28)
+                    .background(color = Color.White, shape = RoundBorder28),
+                filterQuality = FilterQuality.Medium
             )
         }
     }
@@ -599,7 +594,7 @@ fun Characteristic(characteristic: ICharacteristic) {
                         .align(Alignment.Bottom),
                 )
                 Text(
-                    value,
+                    value.takeIf { !it.isNullOrEmpty() } ?: "-",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                 )

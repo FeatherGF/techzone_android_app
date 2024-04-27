@@ -2,7 +2,7 @@ package com.app.techzone.di
 
 import android.content.Context
 import com.app.techzone.data.remote.api.UserApi
-import com.app.techzone.data.remote.repository.AuthRepository
+import com.app.techzone.data.remote.api.AuthRepository
 import com.app.techzone.data.remote.repository.UserRepo
 import dagger.Module
 import dagger.Provides
@@ -24,7 +24,7 @@ object UserApiModule {
 
     @Provides
     @Singleton
-    fun provideUserRepo(api: UserApi, @ApplicationContext context: Context): AuthRepository{
+    fun provideUserRepo(api: UserApi, @ApplicationContext context: Context): AuthRepository {
         return UserRepo(api, context)
     }
 

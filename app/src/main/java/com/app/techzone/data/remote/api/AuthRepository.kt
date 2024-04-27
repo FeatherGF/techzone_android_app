@@ -1,4 +1,4 @@
-package com.app.techzone.data.remote.repository
+package com.app.techzone.data.remote.api
 
 import com.app.techzone.data.remote.model.AuthResult
 

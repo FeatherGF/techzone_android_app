@@ -27,7 +27,10 @@ class ProductDetailViewModel @Inject constructor(
             _product.value = when (getProductType(productType)){
                 ProductTypeEnum.SMARTPHONE -> productRepo.getSmartphone(productId)
                 ProductTypeEnum.LAPTOP -> productRepo.getLaptop(productId)
-                else -> null
+                ProductTypeEnum.ACCESSORY -> productRepo.getAccessory(productId)
+                ProductTypeEnum.TABLET -> productRepo.getTablet(productId)
+                ProductTypeEnum.SMARTWATCH -> productRepo.getSmartwatch(productId)
+                ProductTypeEnum.TELEVISION -> productRepo.getTelevision(productId)
             }
         }
     }

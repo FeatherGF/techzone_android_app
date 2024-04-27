@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Base64
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
+import com.app.techzone.data.remote.api.AuthRepository
 import com.app.techzone.data.remote.api.UserApi
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.User
@@ -161,8 +162,12 @@ class UserRepo @Inject constructor(
                 return@handleExceptions AuthResult.Authorized()
             }
 
-            val refreshToken = sharedPreferences.getString(PreferencesKey.accessToken, null)
+            val refreshToken = sharedPreferences.getString(PreferencesKey.refreshToken, null)
                 ?: return@handleExceptions AuthResult.Unauthorized()
+
+            if (isTokenExpired(decodeToken(refreshToken))){
+                return@handleExceptions AuthResult.Unauthorized()
+            }
 
             // if only refresh token is passed. then backend will generate new access token
             // (which is expired at this point in code) and refresh token.

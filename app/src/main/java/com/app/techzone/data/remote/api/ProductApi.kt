@@ -8,6 +8,7 @@ import com.app.techzone.data.remote.model.ProductType
 import com.app.techzone.data.remote.model.Smartphone
 import com.app.techzone.data.remote.model.Smartwatch
 import com.app.techzone.data.remote.model.Tablet
+import com.app.techzone.data.remote.model.Television
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Path
@@ -97,5 +98,19 @@ interface ProductApi {
     suspend fun getLaptop(
         @Path("id_laptop") laptopId: Int,
     ): Laptop
+
+
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.televisions)
+    suspend fun getTelevisions(
+        @Query("size_page") pageSize: Int = 20,
+        @Query("number_page") pageNumber: Int = 1,
+    ): ProductList<BaseProduct>
+
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.televisionsDetail)
+    suspend fun getTelevision(
+        @Path("id_television") televisionId: Int,
+    ): Television
 
 }

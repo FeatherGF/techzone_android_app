@@ -66,7 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.app.techzone.data.remote.model.AuthResult
-import com.app.techzone.formatPhoneNumber
+import com.app.techzone.utils.formatPhoneNumber
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.auth.UserViewModel
@@ -148,9 +148,9 @@ fun EditUserProfile(
             return
         }
         userViewModel.updateUser(
-            firstName = firstName.takeIf { it.isNotBlank() },
-            lastName = lastName.takeIf { it.isNotBlank() },
-            phoneNumber = phoneNumber.takeIf { it.isNotBlank() }
+            firstName = firstName.takeIf { it.isNotBlank() } ?: "",
+            lastName = lastName.takeIf { it.isNotBlank() } ?: "",
+            phoneNumber = phoneNumber.takeIf { it.isNotBlank() } ?: ""
         )
         navController.navigate(ScreenRoutes.PROFILE) {
             popUpTo(ScreenRoutes.PROFILE)

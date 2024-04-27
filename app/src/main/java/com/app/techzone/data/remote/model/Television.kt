@@ -3,42 +3,43 @@ package com.app.techzone.data.remote.model
 
 import com.google.gson.annotations.SerializedName
 
-data class Smartwatch(
-    @SerializedName("accumulator_capacity")
-    val accumulatorCapacity: Int,
-    @SerializedName("accumulator_type")
-    val accumulatorType: String,
-    @SerializedName("average_rating")
-    override val rating: Float?,
+data class Television(
+    @SerializedName("angle_view")
+    val angleView: String,
+    @SerializedName("codecs")
+    val codecs: String,
     @SerializedName("color_main")
     val colorMain: String,
     @SerializedName("color_other")
     val colorOther: String,
+    @SerializedName("consumption")
+    val consumption: Int,
     @SerializedName("date_created")
     val dateCreated: String,
     @SerializedName("date_release")
     val dateRelease: String,
-    @SerializedName("degree_protection")
-    val degreeProtection: String,
+    @SerializedName("description")
     val description: String,
     @SerializedName("discount")
     override val discountPercentage: Int,
     val equipment: String,
-    @SerializedName("fast_charge")
-    val fastCharge: Boolean,
+    @SerializedName("hdmi_ports")
+    val hdmiPorts: Boolean,
+    @SerializedName("hdmi_version")
+    val hdmiVersion: Any,
+    @SerializedName("hdr_support")
+    val hdrSupport: Boolean,
     @SerializedName("headphone_output")
     val headphoneOutput: Boolean,
-    val height: Double,
+    val height: Int,
     override val id: Int,
     @SerializedName("id_provider")
     val idProvider: Int,
     @SerializedName("is_active")
     val isActive: Boolean,
-    @SerializedName("is_favourite")
-    override val isFavorite: Boolean,
+    @SerializedName("management_application")
+    val managementApplication: String,
     val material: String,
-    @SerializedName("material_belt")
-    val materialBelt: String,
     @SerializedName("matrix_brightness")
     val matrixBrightness: String,
     @SerializedName("matrix_contrast")
@@ -47,7 +48,6 @@ data class Smartwatch(
     val matrixFrequency: Int,
     @SerializedName("matrix_type")
     val matrixType: String,
-    val measurements: Any,
     val memory: Int,
     @SerializedName("memory_ram")
     val memoryRam: Int,
@@ -56,9 +56,8 @@ data class Smartwatch(
     @SerializedName("operating_system")
     val operatingSystem: String,
     override val photos: List<Photo>,
-    @SerializedName("pixel_density")
-    val pixelDensity: Int,
     override val price: Int,
+    @SerializedName("quantity")
     val quantity: Int,
     override val reviews: List<Review>,
     @SerializedName("reviews_count")
@@ -71,12 +70,31 @@ data class Smartwatch(
     val screenResolution: String,
     @SerializedName("screen_type")
     val screenType: String,
+    @SerializedName("smartphone_control")
+    val smartphoneControl: Boolean,
+    @SerializedName("sound_power")
+    val soundPower: String,
+    @SerializedName("sound_surround")
+    val surroundSound: Boolean,
     @SerializedName("sound_technology")
     val soundTechnology: String,
-    val thickness: Int,
+    val subwoofer: Boolean,
+    val thickness: Double,
     override val type: String,
-    @SerializedName("water_resistance")
-    val waterResistance: Int,
+    @SerializedName("usb_ports")
+    val usbPorts: String,
+    @SerializedName("voice_assistant")
+    val voiceAssistant: String,
     val weight: Double,
-    val width: Double
+    val width: Int,
+    @SerializedName("wifi_availability")
+    val wifiAvailability: Boolean,
+    @SerializedName("wifi_standard")
+    val wifiStandard: String,
+    @SerializedName("average_rating")
+    override val rating: Float?,
+    @SerializedName("is_favourite")
+    override val isFavorite: Boolean,
+    @SerializedName("bluetooth_control")
+    val bluetoothControl: Boolean,
 ): IDetailedProduct
