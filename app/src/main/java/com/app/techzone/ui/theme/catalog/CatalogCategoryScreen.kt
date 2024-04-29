@@ -28,7 +28,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.model.PricePreset
 import com.app.techzone.model.ProductCard
 import com.app.techzone.ui.theme.app_bars.SearchWidgetState
@@ -42,12 +41,14 @@ import com.app.techzone.ui.theme.main.ProductReviewCount
 import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.utils.formatPrice
 import com.app.techzone.ui.theme.main.ProductImageOrPreview
+import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.server_response.ErrorScreen
+import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.CurrencyVisualTransformation
 
 enum class CatalogScreenEnum {
     DEFAULT,
     FILTERS,
-    SORTING
 }
 
 
@@ -59,8 +60,6 @@ val UNSELECTED_PRICING = PricePreset("", 0, 0)
 val priceMask = CurrencyVisualTransformation("RUB")
 @Composable
 fun PriceRangeField(placeholderText: String, text: String, onValueChange: (String) -> Unit) {
-
-    val fieldShape = RoundedCornerShape(4.dp)
     OutlinedTextField(
         value = text,
         onValueChange = onValueChange,
@@ -68,7 +67,7 @@ fun PriceRangeField(placeholderText: String, text: String, onValueChange: (Strin
             keyboardType = KeyboardType.Decimal
         ),
         textStyle = MaterialTheme.typography.bodyLarge,
-        shape = fieldShape,
+        shape = RoundedCornerShape(4.dp),
         singleLine = true,
         visualTransformation = priceMask,
         placeholder = {
@@ -94,28 +93,20 @@ fun CatalogCategoryScreen(
     addToFavorite: (ProductCard) -> Unit,
     removeFromFavorite: (ProductCard) -> Unit,
 ) {
-    val catalogViewModel = hiltViewModel<CatalogViewModel>()
-    LaunchedEffect(catalogViewModel){
-        catalogViewModel.loadByCategory(category)
-    }
-    val products by catalogViewModel.products.collectAsStateWithLifecycle()
     when (activeScreenState) {
         CatalogScreenEnum.DEFAULT -> {
             onChangeView(SearchWidgetState.CATALOG_OPENED)
             DefaultCatalogView(
-                products = products.items,
+                category = category,
                 navigateToDetail = navigateToDetail,
-                onChangeStateView = onChangeStateView,
+                showFilters = { onChangeStateView(CatalogScreenEnum.FILTERS) },
                 addToFavorite = addToFavorite,
                 removeFromFavorite = removeFromFavorite,
             )
         }
         CatalogScreenEnum.FILTERS -> {
             onChangeView(SearchWidgetState.HIDDEN)
-            FiltersView(onChangeStateView = onChangeStateView)
-        }
-        CatalogScreenEnum.SORTING -> {
-            onChangeView(SearchWidgetState.HIDDEN)
+            FiltersView(onBackClicked = {onChangeStateView(CatalogScreenEnum.DEFAULT)})
         }
     }
 }
@@ -123,16 +114,24 @@ fun CatalogCategoryScreen(
 
 @Composable
 fun DefaultCatalogView(
-    products: List<BaseProduct>,
+    category: String,
     navigateToDetail: (productId: Int) -> Unit,
-    onChangeStateView: (CatalogScreenEnum) -> Unit,
+    showFilters: () -> Unit,
     addToFavorite: (ProductCard) -> Unit,
     removeFromFavorite: (ProductCard) -> Unit,
 ) {
+    val catalogViewModel = hiltViewModel<CatalogViewModel>()
+    LaunchedEffect(catalogViewModel){
+        catalogViewModel.loadByCategory(category)
+    }
+    val catalogProducts by catalogViewModel.products.collectAsStateWithLifecycle()
+    val products = catalogProducts.items
+    val state = catalogViewModel.state
+
     Column(
         modifier = Modifier.background(color = MaterialTheme.colorScheme.background)
     ) {
-        FiltersAndSorting(onChangeStateView = onChangeStateView)
+        FiltersAndSorting(showFilters = showFilters)
         LazyColumn(
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp)
@@ -215,6 +214,14 @@ fun DefaultCatalogView(
                 }
             }
         }
+    }
+    when(state.response) {
+        ServerResponse.LOADING -> { LoadingBox() }
+        ServerResponse.ERROR -> {
+            ErrorScreen(onRefreshApiCall = { catalogViewModel.loadByCategory(category) })
+        }
+        // if response is successful all the code above will be rendered
+        ServerResponse.SUCCESS -> {}
     }
 }
 

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.User
 import com.app.techzone.data.remote.repository.UserRepo
+import com.app.techzone.ui.theme.server_response.ServerResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,6 +59,7 @@ class UserViewModel @Inject constructor(
         lastName: String? = null,
         phoneNumber: String? = null
     ) {
+        state = state.copy(response = ServerResponse.LOADING)
         viewModelScope.launch {
             val result = userRepo.updateUser(
                 firstName, lastName, phoneNumber
@@ -65,14 +67,22 @@ class UserViewModel @Inject constructor(
             initialState = result
             resultChannel.send(result)
         }
+        state = state.copy(response = ServerResponse.SUCCESS)
     }
 
     fun loadUser() {
-        state = state.copy(isLoading = true)
+        state = state.copy(response = ServerResponse.LOADING)
         viewModelScope.launch{
-            _user.value = userRepo.getUser()
+            val response = userRepo.getUser()
+            if (response == null) {
+                state = state.copy(response = ServerResponse.ERROR)
+                resultChannel.send(AuthResult.UnknownError())
+                return@launch
+            }
+            _user.value = response
+            resultChannel.send(AuthResult.Authorized())
+            state = state.copy(response = ServerResponse.SUCCESS)
         }
-        state = state.copy(isLoading = false)
     }
 
     fun onEvent(event: AuthUiEvent) {
@@ -95,18 +105,18 @@ class UserViewModel @Inject constructor(
 
     private fun sendAuthCode(){
         viewModelScope.launch {
-            state = state.copy(isLoading = true)
+            state = state.copy(response = ServerResponse.LOADING)
             val result = userRepo.sendAuthenticationCode(
                 email = state.authEmail
             )
             resultChannel.send(result)
-            state = state.copy(isLoading = false)
+            state = state.copy(response = ServerResponse.SUCCESS)
         }
     }
 
     private fun verifyCode(){
         viewModelScope.launch {
-            state = state.copy(isLoading = true)
+            state = state.copy(response = ServerResponse.LOADING)
             var result = userRepo.authorize(
                 email = state.authEmail,
                 code = state.authCode.toInt()
@@ -118,17 +128,17 @@ class UserViewModel @Inject constructor(
             if (result is AuthResult.Authorized) {
                 initialState = result
             }
-            state = state.copy(isLoading = false)
+            state = state.copy(response = ServerResponse.SUCCESS)
         }
     }
 
     private fun authenticate(){
         viewModelScope.launch {
-            state = state.copy(isLoading = true)
+            state = state.copy(response = ServerResponse.LOADING)
             val result = userRepo.authenticate()
             resultChannel.send(result)
             initialState = result
-            state = state.copy(isLoading = false)
+            state = state.copy(response = ServerResponse.SUCCESS)
         }
     }
 }

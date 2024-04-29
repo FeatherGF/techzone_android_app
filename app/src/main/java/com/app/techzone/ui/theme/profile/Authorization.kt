@@ -29,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,6 +40,8 @@ import com.app.techzone.ui.theme.RoundBorder100
 import com.app.techzone.ui.theme.profile.auth.AuthState
 import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
 import com.app.techzone.ui.theme.profile.auth.UserViewModel
+import com.app.techzone.ui.theme.server_response.ErrorScreen
+import com.app.techzone.ui.theme.server_response.ServerResponse
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -114,15 +115,10 @@ fun EnterEmailAddress(
     ) {
         Text("Получить код", style = MaterialTheme.typography.labelLarge)
     }
-    if (state.isLoading){
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
+    when (state.response){
+        ServerResponse.LOADING -> { LoadingBox() }
+        ServerResponse.ERROR -> { ErrorScreen() }
+        ServerResponse.SUCCESS -> {}
     }
 }
 
@@ -216,17 +212,26 @@ fun EnterAuthCode(
             )
         }
     }
-    if (state.isLoading){
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
+    when (state.response) {
+        ServerResponse.LOADING -> { LoadingBox() }
+        ServerResponse.ERROR -> { ErrorScreen() }
+        ServerResponse.SUCCESS -> {}
     }
 }
+
+
+@Composable
+fun LoadingBox() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.tertiary),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
 
 @Composable
 fun Authorization(
@@ -236,7 +241,7 @@ fun Authorization(
 ) {
     Column(
         modifier = Modifier
-            .background(color = MaterialTheme.colorScheme.tertiary)
+            .background(MaterialTheme.colorScheme.tertiary)
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -245,7 +250,7 @@ fun Authorization(
         val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
         val state = userViewModel.state
         when (authResultState){
-            is AuthResult.UnknownError -> {Text("Unknown error happened")}
+            is AuthResult.UnknownError -> { ErrorScreen() }
             is AuthResult.Unauthorized ->{
                 EnterEmailAddress(
                     state = state,
