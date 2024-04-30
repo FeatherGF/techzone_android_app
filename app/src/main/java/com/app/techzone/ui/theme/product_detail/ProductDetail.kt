@@ -73,6 +73,9 @@ import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.utils.formatPrice
 import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.product_detail.characteristics.ICharacteristic
+import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.server_response.ErrorScreen
+import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.getProductCharacteristics
 
 
@@ -91,6 +94,7 @@ fun ProductDetailScreen(
 
     val product by detailProductViewModel.product.collectAsStateWithLifecycle()
     val recommendedProducts by recommendations.allProducts.collectAsStateWithLifecycle()
+    val state = detailProductViewModel.state
 
     val lazyListState = rememberLazyListState()
     val isMainBuyButtonHidden = remember {
@@ -179,9 +183,13 @@ fun ProductDetailScreen(
         }
     }
 
-    // TODO: implement `loading` state
-    if (product == null) {
-        Text("Произошла ошибка на сервере")
+    when(state.response) {
+        ServerResponse.LOADING -> { LoadingBox() }
+        ServerResponse.ERROR -> {
+            ErrorScreen(onRefreshApiCall = { detailProductViewModel.loadProduct(productId) })
+        }
+        // if response is successful all the code above will be rendered
+        ServerResponse.SUCCESS -> {}
     }
 }
 

@@ -68,6 +68,8 @@ class UserRepo @Inject constructor(
             )
         } catch (e: IndexOutOfBoundsException) {
             null
+        } catch (e: IOException) {
+            null
         }
     }
 
@@ -102,7 +104,7 @@ class UserRepo @Inject constructor(
                 userPathId = userIdToDelete,
             )
             userIdToDelete == deletedUser.id
-        } catch (e: HttpException) {
+        } catch (e: IOException) {
             false
         }
     }

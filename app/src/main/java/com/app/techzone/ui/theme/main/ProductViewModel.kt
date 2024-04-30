@@ -1,10 +1,15 @@
 package com.app.techzone.ui.theme.main
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.ProductList
 import com.app.techzone.data.remote.repository.ProductRepo
+import com.app.techzone.ui.theme.server_response.ServerResponse
+import com.app.techzone.ui.theme.server_response.ServerResponseState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,15 +20,25 @@ import javax.inject.Inject
 class ProductViewModel @Inject constructor(
     private val productRepo: ProductRepo
 ): ViewModel() {
+    var state by mutableStateOf(ServerResponseState())
     private val _allProducts = MutableStateFlow(ProductList(items = emptyList<BaseProduct>()))
     val allProducts: StateFlow<ProductList<BaseProduct>>
         get() = _allProducts
 
     init {
+        loadMainProducts()
+    }
+
+    fun loadMainProducts() {
         viewModelScope.launch {
-            val products =
-                productRepo.getByCategoryOrAllProducts() ?: ProductList(items = emptyList())
-            _allProducts.value = products
+            state = state.copy(response = ServerResponse.LOADING)
+            val response = productRepo.getByCategoryOrAllProducts()
+            if (response == null){
+                state = state.copy(response = ServerResponse.ERROR)
+                return@launch
+            }
+            _allProducts.value = response
+            state = state.copy(response = ServerResponse.SUCCESS)
         }
     }
 

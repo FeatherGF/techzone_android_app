@@ -30,6 +30,9 @@ import com.app.techzone.ui.theme.profile.auth.UserViewModel
 import com.app.techzone.ui.theme.profile.ProfileScreen
 import com.app.techzone.ui.theme.profile.Authorization
 import com.app.techzone.ui.theme.profile.EditUserProfile
+import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.server_response.ErrorScreen
+import com.app.techzone.ui.theme.server_response.ServerResponse
 
 @Composable
 fun Main() {
@@ -94,13 +97,21 @@ fun Main() {
         NavHost(navController = navController, startDestination = ScreenRoutes.MAIN) {
             composable(ScreenRoutes.MAIN) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                MainScreen(
-                    navigateToDetail = ::navigateToDetail,
-                    addToFavorite = favoriteViewModel::addToFavorite,
-                    removeFromFavorite = favoriteViewModel::removeFromFavorite,
-                    newProducts = allProducts.items,
-                    bestSellerProducts = allProducts.items
-                )
+                when (productViewModel.state.response){
+                    ServerResponse.LOADING -> { LoadingBox() }
+                    ServerResponse.ERROR -> {
+                        ErrorScreen(onRefreshApiCall = productViewModel::loadMainProducts)
+                    }
+                    ServerResponse.SUCCESS -> {
+                        MainScreen(
+                            navigateToDetail = ::navigateToDetail,
+                            addToFavorite = favoriteViewModel::addToFavorite,
+                            removeFromFavorite = favoriteViewModel::removeFromFavorite,
+                            newProducts = allProducts.items,
+                            bestSellerProducts = allProducts.items
+                        )
+                    }
+                }
             }
             composable(ScreenRoutes.CATALOG) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)

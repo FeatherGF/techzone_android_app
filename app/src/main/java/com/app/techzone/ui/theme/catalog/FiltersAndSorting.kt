@@ -40,7 +40,7 @@ import com.app.techzone.ui.theme.ForStroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FiltersAndSorting(onChangeStateView: (CatalogScreenEnum) -> Unit) {
+fun FiltersAndSorting(showFilters: () -> Unit) {
     var showSortingSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
@@ -135,7 +135,7 @@ fun FiltersAndSorting(onChangeStateView: (CatalogScreenEnum) -> Unit) {
             Text(selectedSorting.text, style = MaterialTheme.typography.labelLarge)
         }
         OutlinedButton(
-            onClick = { onChangeStateView(CatalogScreenEnum.FILTERS) },
+            onClick = showFilters,
             border = null,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.background,

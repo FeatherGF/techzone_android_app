@@ -40,11 +40,8 @@ import kotlin.math.roundToInt
 
 
 @Composable
-fun FiltersView(onChangeStateView: (CatalogScreenEnum) -> Unit) {
-    fun onBackClicked() {
-        onChangeStateView(CatalogScreenEnum.DEFAULT)
-    }
-    BackHandler(onBack = ::onBackClicked)
+fun FiltersView(onBackClicked: () -> Unit) {
+    BackHandler(onBack = onBackClicked)
     Column(
         modifier = Modifier.background(color = MaterialTheme.colorScheme.background)
     ) {
@@ -73,7 +70,7 @@ fun FiltersView(onChangeStateView: (CatalogScreenEnum) -> Unit) {
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                 )
-                IconButton(onClick = ::onBackClicked) {
+                IconButton(onClick = onBackClicked) {
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = null,

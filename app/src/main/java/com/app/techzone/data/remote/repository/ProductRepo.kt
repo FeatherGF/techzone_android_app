@@ -19,14 +19,18 @@ class ProductRepo @Inject constructor(
     private val productApi: ProductApi
 ) {
 
-    suspend fun getProductType(productId: Int): ProductType {
-        return productApi.getProductType(productId)
+    suspend fun getProductType(productId: Int): ProductType? {
+        return try{
+            productApi.getProductType(productId)
+        } catch (e: IOException){
+            null
+        }
     }
 
     suspend fun getSmartphone(phoneId: Int): Smartphone? {
         return try {
             productApi.getSmartphone(phoneId)
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             null
         }
     }

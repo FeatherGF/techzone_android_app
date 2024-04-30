@@ -70,6 +70,7 @@ import com.app.techzone.utils.formatPhoneNumber
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.auth.UserViewModel
+import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.utils.MaskVisualTransformation
 import kotlinx.coroutines.launch
 
@@ -92,10 +93,7 @@ fun ProfileScreen(
                 }
             }
         }
-
-        is AuthResult.UnknownError -> {
-            Text("Unknown error occurred")
-        }
+        is AuthResult.UnknownError -> { ErrorScreen(userViewModel::loadUser) }
         else -> {}
     }
 }
