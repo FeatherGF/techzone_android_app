@@ -1,5 +1,6 @@
 package com.app.techzone.utils
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,12 +29,14 @@ fun PullToRefresh(
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
     Box(
-        modifier = modifier.nestedScroll(pullToRefreshState.nestedScrollConnection)
+        modifier = modifier
+            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
     ) {
         LazyColumn(
             state = lazyListState,
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item { content() }

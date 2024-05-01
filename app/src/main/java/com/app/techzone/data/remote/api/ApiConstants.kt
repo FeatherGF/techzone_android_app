@@ -7,6 +7,7 @@ object ApiConstants {
 
         // products
         const val products = "products"
+        const val productsDetail = "products/{id_product}"
         const val product_type = "products/type/{id_product}"
 
         const val smartphones = "smartphones"
@@ -30,6 +31,9 @@ object ApiConstants {
         const val authorize = "users/authentication"
         const val authenticate = "users/valid-token"
 
+        // favorites
+        const val favorites = "favourites"
+        const val favoritesDetail = "favourites/{id_product}"
     }
 
 }

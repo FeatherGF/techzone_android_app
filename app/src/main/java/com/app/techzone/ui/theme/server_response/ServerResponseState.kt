@@ -4,7 +4,8 @@ package com.app.techzone.ui.theme.server_response
 enum class ServerResponse {
     LOADING,
     ERROR,
-    SUCCESS
+    SUCCESS,
+    UNAUTHORIZED,
 }
 
 data class ServerResponseState(

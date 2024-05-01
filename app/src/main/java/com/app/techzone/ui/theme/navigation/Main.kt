@@ -22,7 +22,6 @@ import com.app.techzone.ui.theme.catalog.CatalogCategoryScreen
 import com.app.techzone.ui.theme.catalog.CatalogScreen
 import com.app.techzone.ui.theme.catalog.CatalogViewModel
 import com.app.techzone.ui.theme.favorite.FavoriteScreen
-import com.app.techzone.ui.theme.favorite.FavoriteViewModel
 import com.app.techzone.ui.theme.main.MainScreen
 import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.ui.theme.product_detail.ProductDetailScreen
@@ -30,24 +29,20 @@ import com.app.techzone.ui.theme.profile.auth.UserViewModel
 import com.app.techzone.ui.theme.profile.ProfileScreen
 import com.app.techzone.ui.theme.profile.Authorization
 import com.app.techzone.ui.theme.profile.EditUserProfile
-import com.app.techzone.ui.theme.profile.LoadingBox
-import com.app.techzone.ui.theme.server_response.ErrorScreen
-import com.app.techzone.ui.theme.server_response.ServerResponse
 
 @Composable
 fun Main() {
     val searchViewModel = viewModel<SearchViewModel>()
     val catalogViewModel = viewModel<CatalogViewModel>()
-    val favoriteViewModel = viewModel<FavoriteViewModel>()
     val productViewModel = hiltViewModel<ProductViewModel>()
     val userViewModel = hiltViewModel<UserViewModel>()
+
     val snackbarHostState = remember { SnackbarHostState() }
+    val navController = rememberNavController()
 
     val searchSuggestions by searchViewModel.searchSuggestions.collectAsStateWithLifecycle()
-    val favorites by favoriteViewModel.favorites.collectAsStateWithLifecycle()
-    val allProducts by productViewModel.allProducts.collectAsStateWithLifecycle()
-    val navController = rememberNavController()
     val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
+    val favorites by userViewModel.favorites.collectAsState()
 
     fun navigateToDetail(productId: Int) {
         navController.navigate("catalog/$productId"){
@@ -55,9 +50,22 @@ fun Main() {
         }
     }
 
+    val navigateToFavorite = {
+        navController.navigate(ScreenRoutes.FAVORITE){
+            popUpTo(ScreenRoutes.FAVORITE)
+        }
+    }
+    fun addToFavorite(productId: Int) = userViewModel.addToFavorite(
+        productId, snackbarHostState, navigateToFavorite
+    )
+    fun removeFromFavorite(productId: Int) = userViewModel.removeFromFavorite(
+        productId, snackbarHostState, navigateToFavorite
+    )
+
     BaseScreen(
         navController,
         favorites = favorites,
+        cartItems = emptyList(), // preparation for future
         snackbarHostState = snackbarHostState,
         topAppBar = {
             MainAppBar(
@@ -97,21 +105,12 @@ fun Main() {
         NavHost(navController = navController, startDestination = ScreenRoutes.MAIN) {
             composable(ScreenRoutes.MAIN) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                when (productViewModel.state.response){
-                    ServerResponse.LOADING -> { LoadingBox() }
-                    ServerResponse.ERROR -> {
-                        ErrorScreen(onRefreshApiCall = productViewModel::loadMainProducts)
-                    }
-                    ServerResponse.SUCCESS -> {
-                        MainScreen(
-                            navigateToDetail = ::navigateToDetail,
-                            addToFavorite = favoriteViewModel::addToFavorite,
-                            removeFromFavorite = favoriteViewModel::removeFromFavorite,
-                            newProducts = allProducts.items,
-                            bestSellerProducts = allProducts.items
-                        )
-                    }
-                }
+                MainScreen(
+                    navigateToDetail = ::navigateToDetail,
+                    addToFavorite = ::addToFavorite,
+                    removeFromFavorite = ::removeFromFavorite,
+                    productViewModel = productViewModel,
+                )
             }
             composable(ScreenRoutes.CATALOG) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
@@ -127,6 +126,8 @@ fun Main() {
                     productId = productId,
                     navigateToDetail = ::navigateToDetail,
                     onBackClicked = { navController.popBackStack() },
+                    addToFavorite = ::addToFavorite,
+                    removeFromFavorite = ::removeFromFavorite,
                 )
             }
             composable(
@@ -141,8 +142,8 @@ fun Main() {
                     activeScreenState = catalogViewModel.activeScreenState,
                     onChangeView = searchViewModel::updateSearchWidgetState,
                     onChangeStateView = catalogViewModel::updateActiveState,
-                    addToFavorite = favoriteViewModel::addToFavorite,
-                    removeFromFavorite = favoriteViewModel::removeFromFavorite,
+                    addToFavorite = ::addToFavorite,
+                    removeFromFavorite = ::removeFromFavorite,
                 )
             }
             composable(ScreenRoutes.CART) {
@@ -151,7 +152,14 @@ fun Main() {
             }
             composable(ScreenRoutes.FAVORITE) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                FavoriteScreen(navController = navController, favorites)
+                FavoriteScreen(
+                    navController = navController,
+                    favorites = favorites,
+                    favoriteState = userViewModel.state.response,
+                    loadFavorites = userViewModel::loadFavorites,
+                    addToFavorite = ::addToFavorite,
+                    removeFromFavorite = ::removeFromFavorite
+                )
             }
             composable(ScreenRoutes.PROFILE) {
                 searchViewModel.updateSearchWidgetState(
@@ -177,6 +185,7 @@ fun Main() {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
                 Authorization(
                     userViewModel = userViewModel,
+                    authResultState = authResultState,
                     onBackClicked = { navController.popBackStack() },
                     navigateToProfile = {
                         navController.navigate(ScreenRoutes.PROFILE) {

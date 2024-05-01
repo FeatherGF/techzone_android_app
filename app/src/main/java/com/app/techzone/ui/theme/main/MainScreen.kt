@@ -37,10 +37,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,15 +58,16 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.app.techzone.R
 import com.app.techzone.utils.calculateDiscount
-import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.data.remote.model.Photo
 import com.app.techzone.utils.formatPrice
 import com.app.techzone.utils.formatReview
 import com.app.techzone.model.Benefit
-import com.app.techzone.model.ProductCard
 import com.app.techzone.model.benefits
 import com.app.techzone.ui.theme.RoundBorder24
+import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.server_response.ErrorScreen
+import com.app.techzone.ui.theme.server_response.ServerResponse
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -104,9 +106,9 @@ fun BannerCarousel() {
 @Composable
 fun ProductCarousel(
     navigateToDetail: (productId: Int) -> Unit,
-    products: List<BaseProduct>,
-    addToFavorite: (ProductCard) -> Unit,
-    removeFromFavorite: (ProductCard) -> Unit,
+    products: List<IBaseProduct>,
+    addToFavorite: (Int) -> Int,
+    removeFromFavorite: (Int) -> Int,
 ) {
     val pagerState = rememberPagerState(pageCount = { products.size })
     HorizontalPager(
@@ -165,8 +167,8 @@ fun ProductCarousel(
                         }
                         ProductFavoriteIcon(
                             product = product,
-//                                addToFavorite = addToFavorite,
-//                                removeFromFavorite = removeFromFavorite
+                            addToFavorite = addToFavorite,
+                            removeFromFavorite = removeFromFavorite
                         )
                     }
                     Text(
@@ -219,7 +221,7 @@ fun ProductImageOrPreview(
 }
 
 @Composable
-fun ProductBuyButton(product: BaseProduct? = null) {
+fun ProductBuyButton(product: IBaseProduct? = null) {
     var isInCartState by remember { mutableStateOf(false)}
     val text: String
     val colors: ButtonColors
@@ -309,12 +311,18 @@ fun ProductReviewCount(
 fun ProductFavoriteIcon(
     product: IBaseProduct,
     sizeDp: Dp = 24.dp,
-//    addToFavorite: (ProductCard) -> Unit,
-//    removeFromFavorite: (ProductCard) -> Unit,
+    addToFavorite: (Int) -> Int,
+    removeFromFavorite: (Int) -> Int,
 ) {
-    var isFavoriteState by rememberSaveable { mutableStateOf(product.isFavorite) }
+    var isFavoriteState by remember (addToFavorite, removeFromFavorite) {
+        mutableStateOf(product.isFavorite)
+    }
     IconButton(
-        onClick = { isFavoriteState = !isFavoriteState },
+        onClick = {
+            isFavoriteState = !isFavoriteState
+            val action = if (isFavoriteState) addToFavorite else removeFromFavorite
+            action(product.id)
+        },
         modifier = Modifier.size(sizeDp)
     ) {
         Icon(
@@ -371,11 +379,16 @@ fun BenefitItem(benefit: Benefit) {
 @Composable
 fun MainScreen(
     navigateToDetail: (productId: Int) -> Unit,
-    newProducts: List<BaseProduct>,
-    bestSellerProducts: List<BaseProduct>,
-    addToFavorite: (ProductCard) -> Unit,
-    removeFromFavorite: (ProductCard) -> Unit,
+    productViewModel: ProductViewModel,
+    addToFavorite: (Int) -> Int,
+    removeFromFavorite: (Int) -> Int,
 ) {
+    LaunchedEffect(addToFavorite, removeFromFavorite) {
+        productViewModel.loadMainProducts()
+    }
+    val products by productViewModel.allProducts.collectAsState()
+    val bestSellerProducts = products.items.sortedBy { it.discountPercentage }
+    val newProducts = products.items
     LazyColumn(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
         item { BannerCarousel() }
 
@@ -414,5 +427,13 @@ fun MainScreen(
         items(benefits) { benefit ->
             BenefitItem(benefit)
         }
+    }
+    when (productViewModel.state.response){
+        ServerResponse.LOADING -> { LoadingBox() }
+        ServerResponse.ERROR -> {
+            ErrorScreen(onRefreshApiCall = productViewModel::loadMainProducts)
+        }
+        ServerResponse.UNAUTHORIZED -> {}
+        ServerResponse.SUCCESS -> {}
     }
 }
