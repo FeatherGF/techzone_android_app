@@ -28,8 +28,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.model.PricePreset
-import com.app.techzone.model.ProductCard
 import com.app.techzone.ui.theme.app_bars.SearchWidgetState
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
@@ -90,8 +90,8 @@ fun CatalogCategoryScreen(
     activeScreenState: CatalogScreenEnum,
     onChangeView: (SearchWidgetState) -> Unit,
     onChangeStateView: (CatalogScreenEnum) -> Unit,
-    addToFavorite: (ProductCard) -> Unit,
-    removeFromFavorite: (ProductCard) -> Unit,
+    addToFavorite: (Int) -> Int,
+    removeFromFavorite: (Int) -> Int,
 ) {
     when (activeScreenState) {
         CatalogScreenEnum.DEFAULT -> {
@@ -117,11 +117,11 @@ fun DefaultCatalogView(
     category: String,
     navigateToDetail: (productId: Int) -> Unit,
     showFilters: () -> Unit,
-    addToFavorite: (ProductCard) -> Unit,
-    removeFromFavorite: (ProductCard) -> Unit,
+    addToFavorite: (Int) -> Int,
+    removeFromFavorite: (Int) -> Int,
 ) {
     val catalogViewModel = hiltViewModel<CatalogViewModel>()
-    LaunchedEffect(catalogViewModel){
+    LaunchedEffect(catalogViewModel, addToFavorite, removeFromFavorite){
         catalogViewModel.loadByCategory(category)
     }
     val catalogProducts by catalogViewModel.products.collectAsStateWithLifecycle()
@@ -132,88 +132,12 @@ fun DefaultCatalogView(
         modifier = Modifier.background(color = MaterialTheme.colorScheme.background)
     ) {
         FiltersAndSorting(showFilters = showFilters)
-        LazyColumn(
-            modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.background,
-                    shape = RoundBorder24
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(
-                count = products.size,
-                key = { index -> products[index].id }
-            ) {index ->
-                val product = products[index]
-                Card(
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth(),
-                    onClick = { navigateToDetail(product.id) },
-                    shape = RoundBorder24,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    ),
-                    border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            ProductImageOrPreview(product.photos, modifier = Modifier.size(110.dp))
-                            Column (
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    product.name,
-                                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                Row (horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    ProductRating(product = product, textStyle = MaterialTheme.typography.labelLarge)
-                                    ProductReviewCount(product = product, textStyle = MaterialTheme.typography.labelLarge)
-                                }
-                            }
-                        }
-                        Row (
-                            modifier = Modifier
-                                .height(40.dp)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column{
-                                ProductCrossedPrice(product = product, large = true)
-                                Text(
-                                    formatPrice(
-                                        calculateDiscount(
-                                            product.price,
-                                            product.discountPercentage
-                                        )
-                                    ),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                                )
-                            }
-                            Row (
-                                modifier = Modifier.width(190.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                ProductFavoriteIcon(product = product, sizeDp = 32.dp)
-                                ProductBuyButton()
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        LazyProductCards(
+            products = products,
+            navigateToDetail = navigateToDetail,
+            addToFavorite = addToFavorite,
+            removeFromFavorite = removeFromFavorite
+        )
     }
     when(state.response) {
         ServerResponse.LOADING -> { LoadingBox() }
@@ -222,14 +146,103 @@ fun DefaultCatalogView(
         }
         // if response is successful all the code above will be rendered
         ServerResponse.SUCCESS -> {}
+        ServerResponse.UNAUTHORIZED -> {}
     }
 }
 
 
-
-
-
-
-
-
-
+@Composable
+fun LazyProductCards(
+    products: List<IBaseProduct>,
+    navigateToDetail: (productId: Int) -> Unit,
+    addToFavorite: (Int) -> Int,
+    removeFromFavorite: (Int) -> Int,
+) {
+    LazyColumn(
+        modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp)
+            .background(
+                color = MaterialTheme.colorScheme.background,
+                shape = RoundBorder24
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(
+            count = products.size,
+            key = { index -> products[index].id }
+        ) {index ->
+            val product = products[index]
+            Card(
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth(),
+                onClick = { navigateToDetail(product.id) },
+                shape = RoundBorder24,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                ),
+                border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ProductImageOrPreview(product.photos, modifier = Modifier.size(110.dp))
+                        Column (
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                product.name,
+                                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Row (horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                ProductRating(product = product, textStyle = MaterialTheme.typography.labelLarge)
+                                ProductReviewCount(product = product, textStyle = MaterialTheme.typography.labelLarge)
+                            }
+                        }
+                    }
+                    Row (
+                        modifier = Modifier
+                            .height(40.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column{
+                            ProductCrossedPrice(product = product, large = true)
+                            Text(
+                                formatPrice(
+                                    calculateDiscount(
+                                        product.price,
+                                        product.discountPercentage
+                                    )
+                                ),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                            )
+                        }
+                        Row (
+                            modifier = Modifier.width(190.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            ProductFavoriteIcon(
+                                product = product,
+                                addToFavorite = addToFavorite,
+                                removeFromFavorite = removeFromFavorite,
+                                sizeDp = 32.dp
+                            )
+                            ProductBuyButton()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

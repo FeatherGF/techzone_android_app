@@ -21,7 +21,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -119,6 +118,7 @@ fun EnterEmailAddress(
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> { ErrorScreen() }
         ServerResponse.SUCCESS -> {}
+        ServerResponse.UNAUTHORIZED -> {}
     }
 }
 
@@ -216,6 +216,7 @@ fun EnterAuthCode(
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> { ErrorScreen() }
         ServerResponse.SUCCESS -> {}
+        ServerResponse.UNAUTHORIZED -> {}
     }
 }
 
@@ -236,6 +237,7 @@ fun LoadingBox() {
 @Composable
 fun Authorization(
     onBackClicked: () -> Unit,
+    authResultState: AuthResult<Unit>,
     userViewModel: UserViewModel,
     navigateToProfile: () -> Unit,
 ) {
@@ -246,14 +248,24 @@ fun Authorization(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AuthTopBar(onBackClicked)
-        val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
-        val state = userViewModel.state
         when (authResultState){
-            is AuthResult.UnknownError -> { ErrorScreen() }
+            is AuthResult.UnknownError -> {
+                val refreshApiCall = if (userViewModel.state.authCode.isEmpty()) {
+                    { userViewModel.onEvent(AuthUiEvent.SendAuthCode) }
+                } else if (
+                    userViewModel.state.authCode.isNotEmpty()
+                    && userViewModel.state.authEmail.isNotEmpty()
+                ) {
+                    { userViewModel.onEvent(AuthUiEvent.VerifyCode) }
+                } else {
+                    { userViewModel.loadUser() }
+                }
+                ErrorScreen(refreshApiCall)
+            }
             is AuthResult.Unauthorized ->{
+                AuthTopBar(onBackClicked)
                 EnterEmailAddress(
-                    state = state,
+                    state = userViewModel.state,
                     onEmailSendCode = {
                         userViewModel.onEvent(AuthUiEvent.SendAuthCode)
                     },
@@ -264,8 +276,9 @@ fun Authorization(
             }
             is AuthResult.Authorized -> { navigateToProfile() }
             else -> {
+                AuthTopBar(onBackClicked)
                 EnterAuthCode(
-                    state = state,
+                    state = userViewModel.state,
                     authResultState = authResultState,
                     onCodeVerify = {
                         userViewModel.onEvent(AuthUiEvent.VerifyCode)

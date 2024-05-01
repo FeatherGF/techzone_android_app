@@ -25,21 +25,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.app.techzone.model.ProductCard
+import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.ui.theme.ForStroke
 
 @Composable
 fun BaseScreen(
     navController: NavController,
     snackbarHostState: SnackbarHostState,
-    favorites: List<ProductCard>,
+    favorites: List<IBaseProduct>,
+    cartItems: List<IBaseProduct> = emptyList(),
     topAppBar: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
     val screens = listOf(
         BottomItem.MainScreen,
         BottomItem.SearchScreen,
-        BottomItem.CartScreen,
+        BottomItem.CartScreen.updateCartCount(cartItems.size),
         BottomItem.FavoriteScreen.updateFavoriteCount(favorites.size),
         BottomItem.ProfileScreen,
     )
@@ -95,7 +96,12 @@ fun BaseScreen(
                             icon = {
                                 BadgedBox(badge = {
                                     screen.badgeCount?.let {
-                                        Badge { Text(text = it.toString()) }
+                                        Badge {
+                                            Text(
+                                                text = it.toString(),
+                                                color = MaterialTheme.colorScheme.tertiary
+                                            )
+                                        }
                                     }
                                 }) {
                                     Icon(

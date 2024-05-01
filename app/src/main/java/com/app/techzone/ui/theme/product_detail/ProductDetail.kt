@@ -84,6 +84,8 @@ fun ProductDetailScreen(
     productId: Int,
     navigateToDetail: (productId: Int) -> Unit,
     onBackClicked: () -> Unit,
+    addToFavorite: (Int) -> Int,
+    removeFromFavorite: (Int) -> Int,
 ) {
     val detailProductViewModel = hiltViewModel<ProductDetailViewModel>()
     val recommendations = hiltViewModel<ProductViewModel>()
@@ -127,7 +129,11 @@ fun ProductDetailScreen(
                                     tint = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                                 )
                             }
-                                ProductFavoriteIcon(product = it)
+                            ProductFavoriteIcon(
+                                product = it,
+                                addToFavorite = addToFavorite,
+                                removeFromFavorite = removeFromFavorite
+                            )
                         }
                     }
                     item {
@@ -163,8 +169,8 @@ fun ProductDetailScreen(
                         ProductCarousel(
                             navigateToDetail = navigateToDetail,
                             products = recommendedProducts.items,
-                            addToFavorite = {},
-                            removeFromFavorite = {}
+                            addToFavorite = addToFavorite,
+                            removeFromFavorite = removeFromFavorite
                         )
                     }
                 }
@@ -190,6 +196,7 @@ fun ProductDetailScreen(
         }
         // if response is successful all the code above will be rendered
         ServerResponse.SUCCESS -> {}
+        ServerResponse.UNAUTHORIZED -> TODO()
     }
 }
 

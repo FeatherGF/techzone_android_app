@@ -85,7 +85,6 @@ fun ProfileScreen(
         is AuthResult.Authorized -> {
             UserProfile(userViewModel, navController = navController)
         }
-
         is AuthResult.Unauthorized -> {
             UnauthorizedScreen {
                 navController.navigate(ScreenRoutes.PROFILE_REGISTRATION) {
@@ -597,9 +596,7 @@ fun LoginText(paddingTop: Dp = 12.dp) {
 }
 
 @Composable
-fun UnauthorizedScreen(
-    navigateToAuth: () -> Unit
-) {
+fun UnauthorizedScreen(navigateToAuth: () -> Unit) {
     Column(
         modifier = Modifier
             .padding(start = 16.dp, top = 100.dp, end = 16.dp)
