@@ -3,7 +3,6 @@ package com.app.techzone.ui.theme.profile
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,7 +44,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.app.techzone.data.remote.model.AuthResult
+import com.app.techzone.data.remote.model.validateUserInfo
 import com.app.techzone.utils.formatPhoneNumber
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
@@ -98,7 +97,6 @@ fun ProfileScreen(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditUserProfile(
     navController: NavController,
@@ -111,36 +109,18 @@ fun EditUserProfile(
 
     val user by userViewModel.user.collectAsStateWithLifecycle()
 
-    var firstName by remember { mutableStateOf(user?.firstName ?: "") }
-    var lastName by remember { mutableStateOf(user?.lastName ?: "") }
-    var phoneNumber by remember { mutableStateOf(user?.phoneNumber ?: "") }
-    val coroutineScope = rememberCoroutineScope()
+    val (firstName, onFirstNameChange) = remember { mutableStateOf(user?.firstName ?: "") }
+    val (lastName, onLastNameChange) = remember { mutableStateOf(user?.lastName ?: "") }
+    val (phoneNumber, onPhoneNumberChange) = remember { mutableStateOf(user?.phoneNumber ?: "") }
 
-    val phoneNumberVisualTransformation = MaskVisualTransformation("+# (###) ###-##-##")
+    val coroutineScope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
 
     fun saveUserChanges() {
-        if (firstName.any { !it.isLetter() }) {
+        val (isValid, reason) = validateUserInfo(firstName, lastName, phoneNumber)
+        if (!isValid){
             coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                    "В поле имени оставьте только буквы без цифр и специальных символов"
-                )
-            }
-            return
-        }
-        if (lastName.any { !it.isLetter() }) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                    "В поле фамилии оставьте только буквы без цифр и специальных символов"
-                )
-            }
-            return
-        }
-        if (phoneNumber.any { it.isLetter() }) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                    "Введите корректный номер телефона"
-                )
+                snackbarHostState.showSnackbar(reason)
             }
             return
         }
@@ -205,71 +185,24 @@ fun EditUserProfile(
                     )
                 }
 
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 26.dp),
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next
-                    ),
-                    placeholder = {
-                        Text("Имя", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
-                    },
-                    textStyle = MaterialTheme.typography.bodyLarge
-                )
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next,
-                    ),
-                    placeholder = {
-                        Text("Фамилия", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
-                    },
-                    textStyle = MaterialTheme.typography.bodyLarge
-                )
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    value = phoneNumber,
-                    onValueChange = { textPhone ->
-                        if (textPhone.length < 12)
-                            phoneNumber = textPhone.filter { it.isDigit() }
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone,
-                        imeAction = ImeAction.Send
-                    ),
-                    keyboardActions = KeyboardActions(
+                UserInfoFields(
+                    firstName = firstName,
+                    onFirstNameChange = onFirstNameChange,
+                    lastName = lastName,
+                    onLastNameChange = onLastNameChange,
+                    phoneNumber = phoneNumber,
+                    onPhoneUmberChange = onPhoneNumberChange,
+                    email = user?.email!!,
+                    phoneFieldActions = KeyboardActions(
                         onSend = {
                             saveUserChanges()
                             // if text fields contained errors, hide keyboard to make snackbar visible
                             keyboardController?.hide()
                         }
-                    ),
-                    visualTransformation = phoneNumberVisualTransformation,
-                    placeholder = {
-                        Text("Телефон", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
-                    },
-                    textStyle = MaterialTheme.typography.bodyLarge
-                )
-                OutlinedTextField(
-                    value = user?.email!!,
-                    onValueChange = {},
-                    enabled = false,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
+                    )
                 )
 
                 var isBottomSheetDeleteUserShown by remember { mutableStateOf(false) }
-                val sheetState = rememberModalBottomSheetState()
                 OutlinedButton(
                     modifier = Modifier.padding(top = 16.dp),
                     onClick = { isBottomSheetDeleteUserShown = true },
@@ -293,52 +226,12 @@ fun EditUserProfile(
                     }
                 }
                 if (isBottomSheetDeleteUserShown) {
-                    ModalBottomSheet(
-                        onDismissRequest = { isBottomSheetDeleteUserShown = false },
-                        sheetState = sheetState
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 23.dp, end = 23.dp, bottom = 23.dp),
-                        ) {
-                            Text(
-                                "Вы действительно хотите удалить свой профиль? " +
-                                        "Отменить это действие будет невозможно.",
-                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Button(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 12.dp, bottom = 8.dp)
-                                    .height(40.dp),
-                                onClick = { userViewModel.deleteUser() }
-                            ) {
-                                Text(
-                                    "Удалить",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.tertiary
-                                )
-                            }
-                            Button(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp),
-                                onClick = { isBottomSheetDeleteUserShown = false },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                )
-                            ) {
-                                Text(
-                                    "Отменить",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
+                    ConfirmationModalSheet(
+                        confirmationText = "Вы действительно хотите удалить свой профиль? " +
+                                "Отменить это действие будет невозможно.",
+                        onConfirm = { userViewModel.deleteUser() },
+                        onDismiss = { isBottomSheetDeleteUserShown = false}
+                    )
                 }
             }
         }
@@ -351,12 +244,135 @@ fun EditUserProfile(
         ) {
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = ::saveUserChanges
+                onClick = { saveUserChanges() }
             ) {
                 Text(
                     "Сохранить изменения",
                     color = Color.Companion.White,
                     style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun UserInfoFields(
+    firstName: String,
+    onFirstNameChange: (String) -> Unit,
+    lastName: String,
+    onLastNameChange: (String) -> Unit,
+    phoneNumber: String,
+    onPhoneUmberChange: (String) -> Unit,
+    email: String,
+    phoneFieldActions: KeyboardActions = KeyboardActions.Default
+) {
+    val phoneNumberVisualTransformation = MaskVisualTransformation("+# (###) ###-##-##")
+
+    OutlinedTextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 26.dp),
+        value = firstName,
+        onValueChange = { onFirstNameChange(it) },
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Next
+        ),
+        placeholder = {
+            Text("Имя", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
+        },
+        textStyle = MaterialTheme.typography.bodyLarge
+    )
+    OutlinedTextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
+        value = lastName,
+        onValueChange = { onLastNameChange(it) },
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Next,
+        ),
+        placeholder = {
+            Text("Фамилия", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
+        },
+        textStyle = MaterialTheme.typography.bodyLarge
+    )
+    OutlinedTextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
+        value = phoneNumber,
+        onValueChange = { textPhone ->
+            if (textPhone.length < 12)
+                onPhoneUmberChange(textPhone.filter { it.isDigit() })
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Phone,
+            imeAction = if (phoneFieldActions != KeyboardActions.Default) ImeAction.Send else ImeAction.Next
+        ),
+        keyboardActions = phoneFieldActions,
+        visualTransformation = phoneNumberVisualTransformation,
+        placeholder = {
+            Text("Телефон", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
+        },
+        textStyle = MaterialTheme.typography.bodyLarge
+    )
+    OutlinedTextField(
+        value = email,
+        onValueChange = {},
+        enabled = false,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
+    )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ConfirmationModalSheet(
+    confirmationText: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 23.dp, end = 23.dp, bottom = 23.dp),
+        ) {
+            Text(
+                confirmationText,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp, bottom = 8.dp)
+                    .height(40.dp),
+                onClick = onConfirm
+            ) {
+                Text(
+                    "Удалить",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp),
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text(
+                    "Отменить",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -452,9 +468,7 @@ fun UserProfile(
             IconButton(
                 modifier = Modifier.padding(end = 12.dp),
                 onClick = {
-                    navController.navigate(ScreenRoutes.EDIT_PROFILE) {
-                        popUpTo(ScreenRoutes.EDIT_PROFILE)
-                    }
+                    navController.navigate(ScreenRoutes.EDIT_PROFILE)
                 }
             ) {
                 Icon(
@@ -465,9 +479,9 @@ fun UserProfile(
             }
         }
         val profileItems = listOf(
-            "Мои заказы",
-            "Избранное",
-            "Способ оплаты"
+            "Мои заказы" to ScreenRoutes.ORDERS,
+            "Избранное" to ScreenRoutes.FAVORITE,
+            "Способ оплаты" to ScreenRoutes.PAY_METHOD
         )
         Column(
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 28.dp),
@@ -480,26 +494,24 @@ fun UserProfile(
                     shape = RoundedCornerShape(4.dp)
                 )
             ) {
-                profileItems.forEachIndexed { index, profileItem ->
+                profileItems.forEachIndexed { index, profileItemsPair ->
+                    val (text, route) = profileItemsPair
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp)
-                            .clickable {
-
-                            }
                             .padding(start = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            profileItem,
+                            text,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                         )
                         IconButton(
                             modifier = Modifier.padding(end = 36.dp),
-                            onClick = { /*TODO*/ }
+                            onClick = { navController.navigate(route) }
                         ) {
                             Icon(
                                 modifier = Modifier.size(30.dp),

@@ -1,6 +1,7 @@
 package com.app.techzone.ui.theme.navigation
 
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,16 +25,18 @@ import com.app.techzone.ui.theme.catalog.CatalogViewModel
 import com.app.techzone.ui.theme.favorite.FavoriteScreen
 import com.app.techzone.ui.theme.main.MainScreen
 import com.app.techzone.ui.theme.main.ProductViewModel
+import com.app.techzone.ui.theme.orders.OrderScreenRoot
 import com.app.techzone.ui.theme.product_detail.ProductDetailScreen
 import com.app.techzone.ui.theme.profile.auth.UserViewModel
 import com.app.techzone.ui.theme.profile.ProfileScreen
 import com.app.techzone.ui.theme.profile.Authorization
 import com.app.techzone.ui.theme.profile.EditUserProfile
+import com.app.techzone.ui.theme.purchase.PurchaseScreenRoot
 
 @Composable
 fun Main() {
     val searchViewModel = viewModel<SearchViewModel>()
-    val catalogViewModel = viewModel<CatalogViewModel>()
+    val catalogViewModel = hiltViewModel<CatalogViewModel>()
     val productViewModel = hiltViewModel<ProductViewModel>()
     val userViewModel = hiltViewModel<UserViewModel>()
 
@@ -44,17 +47,14 @@ fun Main() {
     val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
     val favorites by userViewModel.favorites.collectAsState()
 
+//    val orders by userViewModel.orders.collectAsState()
+
     fun navigateToDetail(productId: Int) {
-        navController.navigate("catalog/$productId"){
-            popUpTo(ScreenRoutes.PRODUCT_DETAIL)
-        }
+        navController.navigate("catalog/$productId")
     }
 
-    val navigateToFavorite = {
-        navController.navigate(ScreenRoutes.FAVORITE){
-            popUpTo(ScreenRoutes.FAVORITE)
-        }
-    }
+    val navigateToFavorite = { navController.navigate(ScreenRoutes.FAVORITE) }
+
     fun addToFavorite(productId: Int) = userViewModel.addToFavorite(
         productId, snackbarHostState, navigateToFavorite
     )
@@ -139,16 +139,41 @@ fun Main() {
                 CatalogCategoryScreen(
                     navigateToDetail = ::navigateToDetail,
                     category = category,
-                    activeScreenState = catalogViewModel.activeScreenState,
                     onChangeView = searchViewModel::updateSearchWidgetState,
-                    onChangeStateView = catalogViewModel::updateActiveState,
+                    catalogViewModel = catalogViewModel,
                     addToFavorite = ::addToFavorite,
                     removeFromFavorite = ::removeFromFavorite,
                 )
             }
             composable(ScreenRoutes.CART) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                CartScreen()
+                CartScreen(
+                    navController = navController,
+                    userViewModel = userViewModel,
+                    addToFavorite = ::addToFavorite,
+                    removeFromFavorite = ::removeFromFavorite,
+                )
+            }
+            composable(ScreenRoutes.PURCHASE) {
+                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                PurchaseScreenRoot(
+                    userViewModel = userViewModel,
+                    navController = navController,
+                    snackbarHostState = snackbarHostState
+                )
+            }
+            composable(ScreenRoutes.ORDERS) {
+                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+
+                OrderScreenRoot(
+                    userViewModel = userViewModel,
+                    navController = navController,
+//                    orders = orders.items
+                )
+            }
+            composable(ScreenRoutes.PAY_METHOD){
+                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                Text("pay method")
             }
             composable(ScreenRoutes.FAVORITE) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)

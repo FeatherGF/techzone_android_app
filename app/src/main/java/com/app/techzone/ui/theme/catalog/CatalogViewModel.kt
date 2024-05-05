@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.techzone.data.remote.model.BaseProduct
-import com.app.techzone.data.remote.model.ProductList
 import com.app.techzone.data.remote.repository.ProductRepo
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.ui.theme.server_response.ServerResponseState
@@ -24,8 +23,8 @@ class CatalogViewModel @Inject constructor(
     var activeScreenState by mutableStateOf(CatalogScreenEnum.DEFAULT)
     var state by mutableStateOf(ServerResponseState())
 
-    private val _products = MutableStateFlow(ProductList(emptyList<BaseProduct>()))
-    val products: StateFlow<ProductList<BaseProduct>>
+    private val _products = MutableStateFlow(emptyList<BaseProduct>())
+    val products: StateFlow<List<BaseProduct>>
         get() = _products
 
     fun loadByCategory(category: String) {
@@ -36,7 +35,7 @@ class CatalogViewModel @Inject constructor(
                 state = state.copy(response = ServerResponse.ERROR)
                 return@launch
             }
-            _products.value = response
+            _products.value = response.items
             state = state.copy(response = ServerResponse.SUCCESS)
         }
     }

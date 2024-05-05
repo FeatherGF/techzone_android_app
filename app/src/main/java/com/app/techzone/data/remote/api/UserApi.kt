@@ -3,6 +3,8 @@ package com.app.techzone.data.remote.api
 import com.app.techzone.data.remote.model.AddFavoriteRequest
 import com.app.techzone.data.remote.model.FavoriteItem
 import com.app.techzone.data.remote.model.FavoritesList
+import com.app.techzone.data.remote.model.Order
+import com.app.techzone.data.remote.model.OrdersList
 import com.app.techzone.data.remote.model.UserUpdateRequest
 import com.app.techzone.data.remote.model.User
 import com.app.techzone.model.AuthenticationRequest
@@ -75,4 +77,19 @@ interface UserApi {
         @Header("Authorization") token: String,
         @Path("id_product") productId: Int,
     )
+
+
+    // Orders & Cart
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.orders)
+    suspend fun getOrders(@Header("Authorization") token: String): OrdersList
+
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.ordersDetail)
+    suspend fun getOrder(
+        @Header("Authorization") token: String,
+        orderId: Int
+    ): Order
+
+     // TODO: узнать создаёт ли фронт сам корзины и нужна ли ему пост ручка на заказы
 }
