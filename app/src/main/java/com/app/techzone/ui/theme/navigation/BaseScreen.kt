@@ -1,7 +1,6 @@
 package com.app.techzone.ui.theme.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
@@ -26,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.app.techzone.data.remote.model.IBaseProduct
-import com.app.techzone.ui.theme.ForStroke
 
 @Composable
 fun BaseScreen(
@@ -85,7 +83,6 @@ fun BaseScreen(
         bottomBar = {
             BottomAppBar(
                 containerColor = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f))
             ) {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.tertiary) {
                     screens.forEach { screen ->

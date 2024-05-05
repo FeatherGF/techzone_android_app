@@ -24,3 +24,22 @@ data class UserUpdateRequest(
     @SerializedName("phone_number")
     val phoneNumber: String? = null
 )
+
+typealias ReasonValidationFailed = String
+
+fun validateUserInfo(
+    firstName: String,
+    lastName: String,
+    phoneNumber: String,
+): Pair<Boolean, ReasonValidationFailed> {
+    if (firstName.any { !it.isLetter() })
+        return false to "В поле имени оставьте только буквы без цифр и специальных символов"
+
+    if (lastName.any { !it.isLetter() })
+        return false to "В поле фамилии оставьте только буквы без цифр и специальных символов"
+
+    if (phoneNumber.any { it.isLetter() })
+        return false to "Введите корректный номер телефона"
+
+   return true to ""
+}

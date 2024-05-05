@@ -21,13 +21,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.model.PricePreset
 import com.app.techzone.ui.theme.app_bars.SearchWidgetState
@@ -86,27 +85,28 @@ fun PriceRangeField(placeholderText: String, text: String, onValueChange: (Strin
 @Composable
 fun CatalogCategoryScreen(
     category: String,  // ApiConstant.Endpoints strings
-    navigateToDetail: (productId: Int) -> Unit,
-    activeScreenState: CatalogScreenEnum,
+    catalogViewModel: CatalogViewModel,
+    navigateToDetail: (Int) -> Unit,
     onChangeView: (SearchWidgetState) -> Unit,
-    onChangeStateView: (CatalogScreenEnum) -> Unit,
     addToFavorite: (Int) -> Int,
     removeFromFavorite: (Int) -> Int,
 ) {
-    when (activeScreenState) {
+    when (catalogViewModel.activeScreenState) {
         CatalogScreenEnum.DEFAULT -> {
             onChangeView(SearchWidgetState.CATALOG_OPENED)
             DefaultCatalogView(
                 category = category,
                 navigateToDetail = navigateToDetail,
-                showFilters = { onChangeStateView(CatalogScreenEnum.FILTERS) },
+                catalogViewModel = catalogViewModel,
                 addToFavorite = addToFavorite,
                 removeFromFavorite = removeFromFavorite,
             )
         }
         CatalogScreenEnum.FILTERS -> {
             onChangeView(SearchWidgetState.HIDDEN)
-            FiltersView(onBackClicked = {onChangeStateView(CatalogScreenEnum.DEFAULT)})
+            FiltersView {
+                catalogViewModel.updateActiveState(CatalogScreenEnum.DEFAULT)
+            }
         }
     }
 }
@@ -116,22 +116,20 @@ fun CatalogCategoryScreen(
 fun DefaultCatalogView(
     category: String,
     navigateToDetail: (productId: Int) -> Unit,
-    showFilters: () -> Unit,
+    catalogViewModel: CatalogViewModel,
     addToFavorite: (Int) -> Int,
     removeFromFavorite: (Int) -> Int,
 ) {
-    val catalogViewModel = hiltViewModel<CatalogViewModel>()
-    LaunchedEffect(catalogViewModel, addToFavorite, removeFromFavorite){
+    LaunchedEffect(Unit){
         catalogViewModel.loadByCategory(category)
     }
-    val catalogProducts by catalogViewModel.products.collectAsStateWithLifecycle()
-    val products = catalogProducts.items
+    val products by catalogViewModel.products.collectAsState()
     val state = catalogViewModel.state
 
-    Column(
-        modifier = Modifier.background(color = MaterialTheme.colorScheme.background)
-    ) {
-        FiltersAndSorting(showFilters = showFilters)
+    Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
+        FiltersAndSorting {
+            catalogViewModel.updateActiveState(CatalogScreenEnum.FILTERS)
+        }
         LazyProductCards(
             products = products,
             navigateToDetail = navigateToDetail,

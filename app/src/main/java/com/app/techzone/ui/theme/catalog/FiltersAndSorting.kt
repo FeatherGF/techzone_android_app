@@ -25,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,14 +41,10 @@ import com.app.techzone.ui.theme.ForStroke
 @Composable
 fun FiltersAndSorting(showFilters: () -> Unit) {
     var showSortingSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
 
     val (selectedSorting, onSortingSelected) = remember { mutableStateOf(sortingOptions[0]) }
     if (showSortingSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSortingSheet = false },
-            sheetState = sheetState,
-        ) {
+        ModalBottomSheet(onDismissRequest = { showSortingSheet = false },) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

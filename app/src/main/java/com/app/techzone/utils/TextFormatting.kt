@@ -6,7 +6,14 @@ import java.util.Locale
 
 fun formatPrice(price: Int): String {
     val dec = DecimalFormat("###,###,###,###,### ₽", DecimalFormatSymbols(Locale.ENGLISH))
-    return dec.format(price).replace(",", " ")
+    return dec.format(price).replace(',', ' ')
+}
+
+fun formatMaskedCard(cardNumber: String): String {
+    return cardNumber
+        .replace(Regex("[0-9](?=.*.{4})"), "*")
+        .chunked(4)
+        .joinToString(separator = " ")
 }
 
 /**
@@ -19,17 +26,31 @@ fun formatPhoneNumber(phoneNumber: String): String {
     }-${phoneNumber.substring(7, 9)}-${phoneNumber.substring(9, 11)}"
 }
 
-fun formatReview(reviewCount: Int): String {
-    when (reviewCount.mod(100)) {
-        11, 12, 13, 14 -> { return "$reviewCount отзывов"}
+/**
+ * @param quantity количество для которого нужно поставить слово в падеж
+ * @param word слово, которое нужно поставить в падеж
+ * @return строка с количеством и словом в нужном падеже
+ * @sample formatCommonCaseSample
+ */
+fun formatCommonCase(quantity: Int, word: String): String {
+    when (quantity.mod(100)) {
+        11, 12, 13, 14 -> {
+            return "$quantity ${word}ов"
+        }
     }
+    val endCase: String = when (quantity.mod(10)) {
+        1 -> { "" }
+        2, 3, 4 -> { "а" }
+        else -> { "ов" }
+    }
+    return "$quantity $word$endCase"
+}
 
-    val review: String = when (reviewCount.mod(10)) {
-        1 -> {"отзыв"}
-        2, 3, 4 -> {"отзыва"}
-        else -> {"отзывов"}
-    }
-    return "$reviewCount $review"
+private fun formatCommonCaseSample() {
+    println(formatCommonCase(120, "отзыв"))  // "120 отзывов"
+    println(formatCommonCase(243, "отзыв"))  // "243 отзыва"
+    println(formatCommonCase(111, "отзыв"))  // "111 отзывов"
+    println(formatCommonCase(401, "отзыв"))  // "401 отзыв"
 }
 
 /**

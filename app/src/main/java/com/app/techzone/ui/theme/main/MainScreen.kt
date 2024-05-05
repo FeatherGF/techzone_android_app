@@ -61,13 +61,13 @@ import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.data.remote.model.Photo
 import com.app.techzone.utils.formatPrice
-import com.app.techzone.utils.formatReview
 import com.app.techzone.model.Benefit
 import com.app.techzone.model.benefits
 import com.app.techzone.ui.theme.RoundBorder24
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
+import com.app.techzone.utils.formatCommonCase
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -240,7 +240,7 @@ fun ProductBuyButton(product: IBaseProduct? = null) {
     }
     Button(
         onClick = { isInCartState = !isInCartState },
-        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(vertical = 10.dp, horizontal = 29.dp),
         colors = colors,
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge)
@@ -261,6 +261,19 @@ fun ProductCrossedPrice(product: IBaseProduct, large: Boolean = false) {
             modifier = Modifier.padding(bottom = 2.dp)
         )
     }
+}
+
+@Composable
+fun ProductCrossedPrice(price: Int, large: Boolean = false) {
+    val style = if (large) MaterialTheme.typography.labelLarge else
+        MaterialTheme.typography.labelSmall
+    Text(
+        text = formatPrice(price),
+        style = style,
+        color = MaterialTheme.colorScheme.scrim,
+        textDecoration = TextDecoration.LineThrough,
+        modifier = Modifier.padding(bottom = 2.dp)
+    )
 }
 
 
@@ -299,7 +312,8 @@ fun ProductReviewCount(
 ) {
     if (product.reviewsCount > 0){
         Text(
-            text = formatReview(product.reviewsCount),
+            text = formatCommonCase(product.reviewsCount, "отзыв"),
+//            text = formatReview(product.reviewsCount),
             style = textStyle,
             color = Color.Companion.Black.copy(alpha = 0.5f),
         )
@@ -383,7 +397,7 @@ fun MainScreen(
     addToFavorite: (Int) -> Int,
     removeFromFavorite: (Int) -> Int,
 ) {
-    LaunchedEffect(addToFavorite, removeFromFavorite) {
+    LaunchedEffect(Unit) {
         productViewModel.loadMainProducts()
     }
     val products by productViewModel.allProducts.collectAsState()

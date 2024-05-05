@@ -25,10 +25,6 @@ class ProductViewModel @Inject constructor(
     val allProducts: StateFlow<ProductList<BaseProduct>>
         get() = _allProducts
 
-    init {
-        loadMainProducts()
-    }
-
     fun loadMainProducts() {
         viewModelScope.launch {
             state = state.copy(response = ServerResponse.LOADING)

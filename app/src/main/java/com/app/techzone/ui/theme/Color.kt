@@ -7,7 +7,7 @@ val BoxBackground = Color(0xFFF8F8F8)
 /**
  * only used with 10% opacity
  */
-val ForStroke = Color(39, 39, 39, 50)
+val ForStroke = Color(39, 39, 39, 10)
 val ErrorRed = Color(0xFFB3261E)
 
 val AccentBlue = Color(0xFF006FEE)

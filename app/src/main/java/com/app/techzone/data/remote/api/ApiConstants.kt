@@ -34,6 +34,10 @@ object ApiConstants {
         // favorites
         const val favorites = "favourites"
         const val favoritesDetail = "favourites/{id_product}"
+
+        // orders
+        const val orders = "orders"
+        const val ordersDetail = "orders/{id_order}"
     }
 
 }

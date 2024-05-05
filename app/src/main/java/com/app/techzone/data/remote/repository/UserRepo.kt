@@ -5,6 +5,8 @@ import com.app.techzone.data.remote.api.AuthRepository
 import com.app.techzone.data.remote.api.UserApi
 import com.app.techzone.data.remote.model.AddFavoriteRequest
 import com.app.techzone.data.remote.model.AuthResult
+import com.app.techzone.data.remote.model.Order
+import com.app.techzone.data.remote.model.OrdersList
 import com.app.techzone.data.remote.model.User
 import com.app.techzone.data.remote.model.UserUpdateRequest
 import com.app.techzone.model.AuthenticationRequest
@@ -209,5 +211,40 @@ class UserRepo @Inject constructor(
         } catch (e: HttpException) {
             false
         }
+    }
+
+    // Orders
+    suspend fun getOrders(): OrdersList? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.getOrders(accessToken)
+        } catch (e: IOException){
+            null
+        } catch (e: HttpException) {
+            null
+        }
+    }
+
+    suspend fun getOrder(orderId: Int): Order? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.getOrder(accessToken, orderId)
+        } catch (e: IOException){
+            null
+        } catch (e: HttpException) {
+            null
+        }
+    }
+
+    suspend fun getCart(): Order? {
+        getOrders()?.let {
+            return it.items.first { order ->
+                // TODO: add all possible statuses to enum
+                order.status == "cart"
+            }
+        }
+        return null
     }
 }

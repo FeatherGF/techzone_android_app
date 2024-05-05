@@ -6,9 +6,14 @@ object ScreenRoutes {
     const val CATALOG_CATEGORY = "catalog/{category}"
     const val CART = "cart"
     const val FAVORITE = "favorite"
+
     const val PROFILE = "profile"
     const val PROFILE_REGISTRATION = "profile/registration"
     const val EDIT_PROFILE = "profile/edit"
+    const val PURCHASE = "purchase"
+    const val PAY_METHOD = "pay_method"
+
+    const val ORDERS = "orders"
 
     const val PRODUCT_DETAIL = "catalog/{productId}"
 }
