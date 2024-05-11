@@ -1,6 +1,6 @@
 package com.app.techzone.model
 
 data class AuthorizationRequest(
-    val identifier: String,
+    val email: String,
     val code: Int
 )

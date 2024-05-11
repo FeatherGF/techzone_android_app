@@ -45,6 +45,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.app.techzone.LocalNavController
+import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.validateUserInfo
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder100
@@ -52,7 +54,7 @@ import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.UnauthorizedScreen
 import com.app.techzone.ui.theme.profile.UserInfoFields
-import com.app.techzone.ui.theme.profile.auth.UserViewModel
+import com.app.techzone.ui.theme.profile.UserViewModel
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.formatMaskedCard
@@ -61,19 +63,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun PurchaseScreenRoot(
     userViewModel: UserViewModel,
-    navController: NavController,
-    snackbarHostState: SnackbarHostState
 ) {
-    PurchaseScreen(userViewModel, snackbarHostState) {
-        navController.popBackStack()
-    }
+    PurchaseScreen(userViewModel)
     when (userViewModel.state.response) {
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> { ErrorScreen(userViewModel::loadUser) }
         ServerResponse.UNAUTHORIZED -> {
-            UnauthorizedScreen {
-                navController.navigate(ScreenRoutes.PROFILE_REGISTRATION)
-            }
+            UnauthorizedScreen()
         }
         ServerResponse.SUCCESS -> { }
     }
@@ -92,17 +88,14 @@ val defaultPaymentTypes = mutableListOf(
 )
 
 @Composable
-fun PurchaseScreen(
-    userViewModel: UserViewModel,
-    snackbarHostState: SnackbarHostState,
-    onBackClicked: () -> Unit
-) {
+fun PurchaseScreen(userViewModel: UserViewModel) {
     LaunchedEffect(userViewModel) { userViewModel.loadUser() }
-    BackHandler(onBack = onBackClicked)
     val scope = rememberCoroutineScope()
-
+    val navController = LocalNavController.current
+    val snackbarHostState = LocalSnackbarHostState.current
     val user by userViewModel.user.collectAsStateWithLifecycle()
 
+    BackHandler(onBack = navController::popBackStack)
     user?.let{ currentUser ->
         // i have no idea why but this three variables just don't want to get the value
         // if it isn't in let block
@@ -130,11 +123,12 @@ fun PurchaseScreen(
                     Modifier
                         .fillMaxWidth()
                         .background(color = MaterialTheme.colorScheme.tertiary)
-                        .padding(start = 20.dp, top = 40.dp, bottom = 16.dp, end = 28.dp),
+                        .padding(start = 20.dp, top = 40.dp, bottom = 16.dp, end = 28.dp)
+                        .border(width = 1.dp, color = ForStroke),
                     horizontalArrangement = Arrangement.spacedBy(48.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBackClicked) {
+                    IconButton(onClick = navController::popBackStack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,

@@ -33,12 +33,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
+import com.app.techzone.LocalNavController
 import com.app.techzone.R
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.ui.theme.RoundBorder100
+import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.auth.AuthState
 import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
-import com.app.techzone.ui.theme.profile.auth.UserViewModel
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import kotlinx.coroutines.delay
@@ -46,12 +47,13 @@ import kotlin.time.Duration.Companion.seconds
 
 
 @Composable
-fun AuthTopBar(onBackClicked: () -> Unit) {
+fun AuthTopBar() {
+    val navController = LocalNavController.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End
     ){
-        IconButton(onClick = onBackClicked) {
+        IconButton(onClick = navController::popBackStack) {
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = null,
@@ -236,11 +238,10 @@ fun LoadingBox() {
 
 @Composable
 fun Authorization(
-    onBackClicked: () -> Unit,
     authResultState: AuthResult<Unit>,
     userViewModel: UserViewModel,
-    navigateToProfile: () -> Unit,
 ) {
+    val navController = LocalNavController.current
     Column(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.tertiary)
@@ -251,43 +252,43 @@ fun Authorization(
         when (authResultState){
             is AuthResult.UnknownError -> {
                 val refreshApiCall = if (userViewModel.state.authCode.isEmpty()) {
-                    { userViewModel.onEvent(AuthUiEvent.SendAuthCode) }
+                    { userViewModel.onAuthEvent(AuthUiEvent.SendAuthCode) }
                 } else if (
                     userViewModel.state.authCode.isNotEmpty()
                     && userViewModel.state.authEmail.isNotEmpty()
                 ) {
-                    { userViewModel.onEvent(AuthUiEvent.VerifyCode) }
+                    { userViewModel.onAuthEvent(AuthUiEvent.VerifyCode) }
                 } else {
                     { userViewModel.loadUser() }
                 }
                 ErrorScreen(refreshApiCall)
             }
             is AuthResult.Unauthorized ->{
-                AuthTopBar(onBackClicked)
+                AuthTopBar()
                 EnterEmailAddress(
                     state = userViewModel.state,
                     onEmailSendCode = {
-                        userViewModel.onEvent(AuthUiEvent.SendAuthCode)
+                        userViewModel.onAuthEvent(AuthUiEvent.SendAuthCode)
                     },
                     onEmailTextChange = {
-                        userViewModel.onEvent(AuthUiEvent.AuthEmailChanged(it))
+                        userViewModel.onAuthEvent(AuthUiEvent.AuthEmailChanged(it))
                     }
                 )
             }
-            is AuthResult.Authorized -> { navigateToProfile() }
+            is AuthResult.Authorized -> { navController.navigate(ScreenRoutes.PROFILE) }
             else -> {
-                AuthTopBar(onBackClicked)
+                AuthTopBar()
                 EnterAuthCode(
                     state = userViewModel.state,
                     authResultState = authResultState,
                     onCodeVerify = {
-                        userViewModel.onEvent(AuthUiEvent.VerifyCode)
+                        userViewModel.onAuthEvent(AuthUiEvent.VerifyCode)
                     },
                     onAuthCodeChanged = {
-                        userViewModel.onEvent(AuthUiEvent.AuthCodeChanged(it))
+                        userViewModel.onAuthEvent(AuthUiEvent.AuthCodeChanged(it))
                     },
                     onEmailResend = {
-                        userViewModel.onEvent(AuthUiEvent.SendAuthCode)
+                        userViewModel.onAuthEvent(AuthUiEvent.SendAuthCode)
                     }
                 )
             }

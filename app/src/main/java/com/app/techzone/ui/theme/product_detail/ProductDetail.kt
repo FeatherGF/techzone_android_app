@@ -44,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -51,12 +52,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import android.graphics.Color as GraphicsColor
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.app.techzone.LocalNavController
+import com.app.techzone.data.remote.model.BaseProduct
+import com.app.techzone.data.remote.model.ColorVariation
+import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.data.remote.model.IDetailedProduct
 import com.app.techzone.data.remote.model.Review
 import com.app.techzone.ui.theme.ForStroke
@@ -74,6 +80,7 @@ import com.app.techzone.utils.formatPrice
 import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.product_detail.characteristics.ICharacteristic
 import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.getProductCharacteristics
@@ -82,16 +89,15 @@ import com.app.techzone.utils.getProductCharacteristics
 @Composable
 fun ProductDetailScreen(
     productId: Int,
-    navigateToDetail: (productId: Int) -> Unit,
-    onBackClicked: () -> Unit,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     val detailProductViewModel = hiltViewModel<ProductDetailViewModel>()
     val recommendations = hiltViewModel<ProductViewModel>()
+    val navController = LocalNavController.current
 
     LaunchedEffect(detailProductViewModel) {
         detailProductViewModel.loadProduct(productId)
+        recommendations.loadMainProducts()
     }
 
     val product by detailProductViewModel.product.collectAsStateWithLifecycle()
@@ -104,10 +110,12 @@ fun ProductDetailScreen(
             lazyListState.firstVisibleItemIndex == 2
         }
     }
-    BackHandler(onBack = onBackClicked)
+    BackHandler(onBack = navController::popBackStack)
     Column {
-        Column(Modifier.weight(1f)) {
-            product?.let {
+        product?.let {
+            val (isInCart, onIsInCartChange) = remember { mutableStateOf(it.isInCart)}
+
+            Column(Modifier.weight(1f)) {
                 LazyColumn(
                     modifier = Modifier.background(color = MaterialTheme.colorScheme.background),
                     state = lazyListState
@@ -122,7 +130,7 @@ fun ProductDetailScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            IconButton(onClick = onBackClicked) {
+                            IconButton(onClick = navController::popBackStack) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = null,
@@ -131,8 +139,7 @@ fun ProductDetailScreen(
                             }
                             ProductFavoriteIcon(
                                 product = it,
-                                addToFavorite = addToFavorite,
-                                removeFromFavorite = removeFromFavorite
+                                onProductAction = onProductAction
                             )
                         }
                     }
@@ -141,7 +148,12 @@ fun ProductDetailScreen(
                             modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            ProductDetail(it)
+                            ProductDetail(
+                                product = it,
+                                isInCart = isInCart,
+                                onInCartChange = onIsInCartChange,
+                                onProductAction = onProductAction
+                            )
                         }
                     }
                     item {
@@ -167,24 +179,29 @@ fun ProductDetailScreen(
                     }
                     item {
                         ProductCarousel(
-                            navigateToDetail = navigateToDetail,
-                            products = recommendedProducts.items,
-                            addToFavorite = addToFavorite,
-                            removeFromFavorite = removeFromFavorite
+                            products = recommendedProducts,
+                            onProductAction = onProductAction
                         )
                     }
                 }
             }
-        }
-        if (isMainBuyButtonHidden.value) {
-            Surface(
-                Modifier
-                    .fillMaxWidth()
-                    .border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f))
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                contentColor = MaterialTheme.colorScheme.tertiary,
-            ) {
-                ProductBuyButton()
+            if (isMainBuyButtonHidden.value) {
+                Surface(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.tertiary)
+                        .border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f))
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    contentColor = MaterialTheme.colorScheme.tertiary,
+                ) {
+                    ProductBuyButton(
+                        modifier = Modifier.background(MaterialTheme.colorScheme.tertiary),
+                        productId = it.id,
+                        isInCart = isInCart,
+                        onInCartChange = onIsInCartChange,
+                        onProductAction = onProductAction,
+                    )
+                }
             }
         }
     }
@@ -192,11 +209,13 @@ fun ProductDetailScreen(
     when(state.response) {
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> {
-            ErrorScreen(onRefreshApiCall = { detailProductViewModel.loadProduct(productId) })
+            ErrorScreen {
+                detailProductViewModel.loadProduct(productId)
+            }
         }
         // if response is successful all the code above will be rendered
         ServerResponse.SUCCESS -> {}
-        ServerResponse.UNAUTHORIZED -> TODO()
+        ServerResponse.UNAUTHORIZED -> {}
     }
 }
 
@@ -233,7 +252,12 @@ fun ProductImagesPager(product: IDetailedProduct) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProductVariantsAndPrice(product: IDetailedProduct) {
+fun ProductVariantsAndPrice(
+    product: IDetailedProduct,
+    onProductAction: suspend (ProductAction) -> Boolean,
+    isInCart: Boolean,
+    onInCartChange: (Boolean) -> Unit,
+) {
     val mainTextColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
     val dimTextColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f)
     Column(
@@ -249,79 +273,76 @@ fun ProductVariantsAndPrice(product: IDetailedProduct) {
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Column {
-                Text("Цвет:", style = MaterialTheme.typography.labelLarge, color = dimTextColor)
-                val chips = mapOf(
-                    "Blue Titanium" to mainTextColor,
-                    "Gray" to Color.Companion.Gray,
-                    "Black Titanium" to Color.Companion.Black,
-                    "White" to Color.Companion.White,
-                )
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    chips.forEach { (text, color) ->
-                        var selected by rememberSaveable { mutableStateOf(false) }
-                        FilterChip(
-                            selected = selected,
-                            onClick = { selected = !selected },
-                            border = if (selected) BorderStroke(
-                                width = 2.dp,
-                                color = MaterialTheme.colorScheme.primary
-                            ) else BorderStroke(width = 1.dp, color = dimTextColor),
-                            label = {
-                                Text(
-                                    text,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = if (selected) MaterialTheme.colorScheme.primary else Color.Companion.Black
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Filled.Circle,
-                                    contentDescription = null,
-                                    tint = color,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                        )
+            if (product.colorVariations.isNotEmpty()){
+                Column {
+                    Text("Цвет:", style = MaterialTheme.typography.labelLarge, color = dimTextColor)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        product.colorVariations.forEach { colorVariation: ColorVariation ->
+                            var selected by rememberSaveable {
+                                mutableStateOf(product.colorMain == colorVariation.colorName)
+                            }
+                            FilterChip(
+                                selected = selected,
+                                onClick = { selected = !selected },
+                                border = if (selected) BorderStroke(
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                ) else BorderStroke(width = 1.dp, color = dimTextColor),
+                                label = {
+                                    Text(
+                                        colorVariation.colorName,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = if (selected) MaterialTheme.colorScheme.primary else Color.Companion.Black
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Filled.Circle,
+                                        contentDescription = null,
+                                        tint = Color(GraphicsColor.parseColor(colorVariation.colorHex)),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    "Встроенная память:",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = dimTextColor
-                )
-                val memorySizes = listOf(
-                    "128 ГБ",
-                    "256 ГБ",
-                    "512 ГБ",
-                )
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    memorySizes.forEach { size ->
-                        var selected by remember { mutableStateOf(false) }
-                        FilterChip(
-                            modifier = Modifier
-                                .height(32.dp)
-                                .width(77.dp),
-                            selected = selected,
-                            onClick = { selected = !selected },
-                            border = if (selected) BorderStroke(
-                                width = 2.dp,
-                                color = MaterialTheme.colorScheme.primary
-                            ) else BorderStroke(width = 1.dp, color = dimTextColor),
-                            label = {
-                                Text(
-                                    size,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = if (selected) MaterialTheme.colorScheme.primary else Color.Companion.Black
-                                )
+            product.memoryVariations?.let { variations ->
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Встроенная память:",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = dimTextColor
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        variations.forEach { size ->
+                            var selected by remember {
+                                mutableStateOf(size == product.memory)
                             }
-                        )
+                            FilterChip(
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .width(77.dp),
+                                selected = selected,
+                                onClick = { selected = !selected },
+                                border = if (selected) BorderStroke(
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                ) else BorderStroke(width = 1.dp, color = dimTextColor),
+                                label = {
+                                    Text(
+                                        "$size ГБ",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = if (selected) MaterialTheme.colorScheme.primary else Color.Companion.Black
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -374,7 +395,13 @@ fun ProductVariantsAndPrice(product: IDetailedProduct) {
                 }
             }
         }
-        ProductBuyButton()
+        ProductBuyButton(
+            modifier = Modifier.fillMaxWidth(),
+            productId = product.id,
+            isInCart = isInCart,
+            onInCartChange = onInCartChange,
+            onProductAction = onProductAction
+        )
     }
 }
 
@@ -610,7 +637,12 @@ fun Characteristic(characteristic: ICharacteristic) {
 
 
 @Composable
-fun ProductDetail(product: IDetailedProduct) {
+fun ProductDetail(
+    product: IDetailedProduct,
+    isInCart: Boolean,
+    onInCartChange: (Boolean) -> Unit,
+    onProductAction: suspend (ProductAction) -> Boolean,
+) {
     val mainTextColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
     val dimTextColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f)
     ProductImagesPager(product)
@@ -650,5 +682,10 @@ fun ProductDetail(product: IDetailedProduct) {
             ProductReviewCount(product, textStyle = MaterialTheme.typography.labelLarge)
         }
     }
-    ProductVariantsAndPrice(product)
+    ProductVariantsAndPrice(
+        product = product,
+        onProductAction = onProductAction,
+        onInCartChange = onInCartChange,
+        isInCart = isInCart
+    )
 }

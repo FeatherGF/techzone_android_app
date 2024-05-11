@@ -3,10 +3,7 @@ package com.app.techzone.data.remote.model
 import com.google.gson.annotations.SerializedName
 
 data class FavoriteItem(
-    @SerializedName("id_product")
-    val productId: Int,
-    @SerializedName("id_user")
-    val userId: Int,
+    val product: BaseProduct
 )
 
 data class FavoritesList(

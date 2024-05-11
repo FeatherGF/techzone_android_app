@@ -40,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -47,7 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
@@ -57,8 +58,9 @@ import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.ConfirmationModalSheet
 import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.profile.UnauthorizedScreen
-import com.app.techzone.ui.theme.profile.auth.UserViewModel
+import com.app.techzone.ui.theme.profile.UserViewModel
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.calculateDiscount
@@ -67,46 +69,29 @@ import com.app.techzone.utils.formatPrice
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 
 
 @Composable
 fun CartScreen(
-    navController: NavController,
     userViewModel: UserViewModel,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
-    LaunchedEffect(addToFavorite, removeFromFavorite) {
+    val cartItems by userViewModel.cartItems.collectAsState()
+    LaunchedEffect(cartItems.size) {
         userViewModel.loadCart()
     }
-    val cartItems by userViewModel.cartItems.collectAsState()
     when (userViewModel.state.response) {
-        ServerResponse.LOADING -> {
-            LoadingBox()
-        }
-
-        ServerResponse.ERROR -> {
-            ErrorScreen(userViewModel::loadCart)
-        }
-
-        ServerResponse.UNAUTHORIZED -> {
-            UnauthorizedScreen {
-                navController.navigate(ScreenRoutes.PROFILE_REGISTRATION)
-            }
-        }
-
+        ServerResponse.LOADING -> { LoadingBox() }
+        ServerResponse.ERROR -> { ErrorScreen(userViewModel::loadCart) }
+        ServerResponse.UNAUTHORIZED -> { UnauthorizedScreen() }
         ServerResponse.SUCCESS -> {
             if (cartItems.isEmpty()) {
-                EmptyCartScreen {
-                    navController.navigate(ScreenRoutes.CATALOG)
-                }
+                EmptyCartScreen()
             } else {
                 CartItemsList(
-                    cartItems,
-                    addToFavorite = addToFavorite,
-                    removeFromFavorite = removeFromFavorite,
-                    navController = navController,
-//                    navigateToDetail = { navController.navigate("catalog/$it") }
+                    cartItems = cartItems,
+                    onProductAction = onProductAction,
                 )
             }
         }
@@ -115,7 +100,8 @@ fun CartScreen(
 
 
 @Composable
-fun EmptyCartScreen(navigateToCatalog: () -> Unit) {
+fun EmptyCartScreen() {
+    val navController = LocalNavController.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -137,7 +123,7 @@ fun EmptyCartScreen(navigateToCatalog: () -> Unit) {
                 modifier = Modifier.padding(top = 12.dp, bottom = 16.dp),
                 textAlign = TextAlign.Center
             )
-            Button(onClick = navigateToCatalog) {
+            Button(onClick = { navController.navigate(ScreenRoutes.CATALOG) }) {
                 Text(
                     "Перейти в каталог",
                     style = MaterialTheme.typography.labelLarge
@@ -151,9 +137,7 @@ fun EmptyCartScreen(navigateToCatalog: () -> Unit) {
 @Composable
 fun CartItemsList(
     cartItems: List<OrderItem>,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
-    navController: NavController,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     val stateProductMapping: Map<MutableState<Boolean>, OrderItem> =
         cartItems.associate { orderItem ->
@@ -173,7 +157,7 @@ fun CartItemsList(
 
     val bottomPadding = if (selectedItems.isNotEmpty()) (12 + 72).dp else 12.dp
     var deleteProductId: Int? by remember { mutableStateOf(null) }
-
+    val scope = rememberCoroutineScope()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -225,10 +209,8 @@ fun CartItemsList(
                     )
                     CartItemCard(
                         orderItem = product,
-                        addToFavorite = addToFavorite,
-                        removeFromFavorite = removeFromFavorite,
-                        navigateToDetail = { navController.navigate("catalog/$it") },
-                        onRemoveFromCart = { deleteProductId = it }
+                        onProductAction = onProductAction,
+                        onShowModal = {deleteProductId = it}
                     )
                 }
             }
@@ -294,7 +276,14 @@ fun CartItemsList(
                         }
                     }
                     Button(
-                        onClick = { navController.navigate(ScreenRoutes.PURCHASE) },
+                        onClick = {
+//                            navController.navigate("${ScreenRoutes.PURCHASE}/${URLEncoder.encode(
+//                                selectedItems.map {
+//                                    it.id
+//                                }
+//                            )}")
+
+                        },
                         modifier = Modifier.wrapContentWidth(),
                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
                     ) {
@@ -310,7 +299,12 @@ fun CartItemsList(
         deleteProductId?.let { productId ->
             ConfirmationModalSheet(
                 confirmationText = "Вы действительно хотите удалить товар из корзины?",
-                onConfirm = { /*TODO userViewModel.removeFromCart(productId)*/ },
+                onConfirm = {
+                    scope.launch {
+                        onProductAction(ProductAction.RemoveFromCart(productId))
+                        deleteProductId = null
+                    }
+                },
                 onDismiss = { deleteProductId = null }
             )
         }
@@ -322,11 +316,10 @@ fun CartItemsList(
 @Composable
 fun CartItemCard(
     orderItem: OrderItem,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
-    navigateToDetail: (Int) -> Unit,
-    onRemoveFromCart: (Int) -> Unit,
+    onProductAction: suspend (ProductAction) -> Boolean,
+    onShowModal: (Int) -> Unit,
 ) {
+    val navController = LocalNavController.current
     var quantity by orderItem.mutableQuantity
     var isFirstComposition by remember { mutableStateOf(true) }
     LaunchedEffect(quantity) {
@@ -335,8 +328,8 @@ fun CartItemCard(
         if (isFirstComposition){
             isFirstComposition = false
         } else {
-            snapshotFlow { quantity }.debounce(2000L).distinctUntilChanged().collect {
-                println("SEND PATCH TO ORDER WITH QUANTITY: $it")
+            snapshotFlow { quantity }.debounce(500L).distinctUntilChanged().collect {
+                onProductAction(ProductAction.ChangeQuantityInCart(orderItem.product.id, quantity))
             }
         }
     }
@@ -344,7 +337,7 @@ fun CartItemCard(
         modifier = Modifier
             .wrapContentHeight()
             .fillMaxWidth(),
-        onClick = { navigateToDetail(orderItem.product.id) },
+        onClick = { navController.navigate("${ScreenRoutes.CATALOG}/${orderItem.product.id}") },
         shape = RoundBorder24,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiary
@@ -360,9 +353,7 @@ fun CartItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ProductImageOrPreview(orderItem.product.photos, modifier = Modifier.size(110.dp))
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         orderItem.product.name,
                         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
@@ -394,12 +385,11 @@ fun CartItemCard(
                 ) {
                     ProductFavoriteIcon(
                         product = orderItem.product,
-                        addToFavorite = addToFavorite,
-                        removeFromFavorite = removeFromFavorite,
+                        onProductAction = onProductAction,
                         sizeDp = 28.dp
                     )
                     IconButton(
-                        onClick = { onRemoveFromCart(orderItem.product.id) },
+                        onClick = { onShowModal(orderItem.product.id) },
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
@@ -414,10 +404,7 @@ fun CartItemCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = {
-                            quantity--
-                            println("CHANGED REMOVE")
-                        },
+                        onClick = { quantity-- },
                         enabled = quantity > 1,
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -435,10 +422,7 @@ fun CartItemCard(
                         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                     )
                     IconButton(
-                        onClick = {
-                            quantity++
-                            println("CHANGED ADD")
-                        },
+                        onClick = { quantity++ },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.primary

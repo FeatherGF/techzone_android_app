@@ -11,7 +11,9 @@ data class Smartwatch(
     @SerializedName("average_rating")
     override val rating: Float?,
     @SerializedName("color_main")
-    val colorMain: String,
+    override val colorMain: String,
+    @SerializedName("color_variations")
+    override val colorVariations: List<ColorVariation>,
     @SerializedName("color_other")
     val colorOther: String,
     @SerializedName("date_created")
@@ -48,7 +50,9 @@ data class Smartwatch(
     @SerializedName("matrix_type")
     val matrixType: String,
     val measurements: Any,
-    val memory: Int,
+    override val memory: Int,
+    @SerializedName("memory_variations")
+    override val memoryVariations: List<Int>,
     @SerializedName("memory_ram")
     val memoryRam: Int,
     val model: String,
@@ -78,5 +82,7 @@ data class Smartwatch(
     @SerializedName("water_resistance")
     val waterResistance: Int,
     val weight: Double,
-    val width: Double
+    val width: Double,
+    @SerializedName("is_in_cart")
+    override val isInCart: Boolean
 ): IDetailedProduct

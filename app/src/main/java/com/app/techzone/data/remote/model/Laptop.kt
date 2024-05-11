@@ -20,7 +20,9 @@ data class Laptop(
     @SerializedName("clock_speed")
     val clockSpeed: Int,
     @SerializedName("color_main")
-    val colorMain: String,
+    override val colorMain: String,
+    @SerializedName("color_variations")
+    override val colorVariations: List<ColorVariation>,
     @SerializedName("color_other")
     val colorOther: String,
     @SerializedName("consumption")
@@ -63,8 +65,9 @@ data class Laptop(
     val equipment: String,
     @SerializedName("matrix_type")
     val matrixType: String,
-    @SerializedName("memory")
-    val memory: Int,
+    override val memory: Int,
+    @SerializedName("memory_variations")
+    override val memoryVariations: List<Int>,
     @SerializedName("memory_ram")
     val memoryRam: Int,
     @SerializedName("model")
@@ -109,5 +112,7 @@ data class Laptop(
     @SerializedName("wifi_availability")
     val wifiAvailability: Boolean,
     @SerializedName("wifi_standard")
-    val wifiStandard: String
+    val wifiStandard: String,
+    @SerializedName("is_in_cart")
+    override val isInCart: Boolean
 ): IDetailedProduct

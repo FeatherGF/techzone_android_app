@@ -38,11 +38,15 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,7 +60,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.app.techzone.LocalNavController
+import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.R
+import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.data.remote.model.Photo
@@ -64,10 +71,13 @@ import com.app.techzone.utils.formatPrice
 import com.app.techzone.model.Benefit
 import com.app.techzone.model.benefits
 import com.app.techzone.ui.theme.RoundBorder24
+import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.formatCommonCase
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -105,15 +115,14 @@ fun BannerCarousel() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductCarousel(
-    navigateToDetail: (productId: Int) -> Unit,
     products: List<IBaseProduct>,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     val pagerState = rememberPagerState(pageCount = { products.size })
+    val navController = LocalNavController.current
     HorizontalPager(
         state = pagerState,
-        key = { products[it].id },
+        key = { it.hashCode() },
         pageSize = PageSize.Fixed(154.dp),
         contentPadding = PaddingValues(end = 16.dp, start = 16.dp, top = 16.dp, bottom = 16.dp),
         pageSpacing = 8.dp,
@@ -123,7 +132,7 @@ fun ProductCarousel(
     ) { index ->
         val product = products[index]
         OutlinedCard(
-            onClick = { navigateToDetail(product.id) },
+            onClick = { navController.navigate("${ScreenRoutes.CATALOG}/${product.id}") },
             shape = RoundBorder24,
             border = BorderStroke(
                 width = 1.dp,
@@ -167,8 +176,7 @@ fun ProductCarousel(
                         }
                         ProductFavoriteIcon(
                             product = product,
-                            addToFavorite = addToFavorite,
-                            removeFromFavorite = removeFromFavorite
+                            onProductAction = onProductAction
                         )
                     }
                     Text(
@@ -187,7 +195,10 @@ fun ProductCarousel(
                         ProductReviewCount(product = product)
                     }
                 }
-                ProductBuyButton(product = product)
+                ProductBuyButton(
+                    product = product,
+                    onProductAction = onProductAction
+                )
             }
         }
     }
@@ -221,27 +232,88 @@ fun ProductImageOrPreview(
 }
 
 @Composable
-fun ProductBuyButton(product: IBaseProduct? = null) {
-    var isInCartState by remember { mutableStateOf(false)}
+fun ProductBuyButton(
+    modifier: Modifier = Modifier,
+    product: IBaseProduct,
+    onProductAction: suspend (ProductAction) -> Boolean
+) {
+    val scope = rememberCoroutineScope()
+    var isInCartState by remember {
+        mutableStateOf(product.isInCart)
+    }
     val text: String
     val colors: ButtonColors
+    val action: ProductAction
     if (isInCartState) {
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0, 111, 238, 12),
             contentColor = MaterialTheme.colorScheme.primary
         )
         text = "В корзине"
+        action = ProductAction.RemoveFromCart(product.id)
     } else {
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.tertiary
         )
         text = "В корзину"
+        action = ProductAction.AddToCart(product.id)
     }
     Button(
-        onClick = { isInCartState = !isInCartState },
+        onClick = {
+            scope.launch {
+                isInCartState = onProductAction(action)
+            }
+        },
         contentPadding = PaddingValues(vertical = 10.dp, horizontal = 29.dp),
         colors = colors,
+        modifier = modifier
+    ) {
+        Text(text = text, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+
+/**
+ Composable with passed isInCart state for example
+ product detail view and those two separate add to cart buttons
+ */
+@Composable
+fun ProductBuyButton(
+    modifier: Modifier = Modifier,
+    productId: Int,
+    isInCart: Boolean,
+    onInCartChange: (Boolean) -> Unit,
+    onProductAction: suspend (ProductAction) -> Boolean
+) {
+    val scope = rememberCoroutineScope()
+    val text: String
+    val colors: ButtonColors
+    val action: ProductAction
+    if (isInCart) {
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0, 111, 238, 12),
+            contentColor = MaterialTheme.colorScheme.primary
+        )
+        text = "В корзине"
+        action = ProductAction.RemoveFromCart(productId)
+    } else {
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.tertiary
+        )
+        text = "В корзину"
+        action = ProductAction.AddToCart(productId)
+    }
+    Button(
+        onClick = {
+            scope.launch {
+                onInCartChange(onProductAction(action))
+            }
+        },
+        contentPadding = PaddingValues(vertical = 10.dp, horizontal = 29.dp),
+        colors = colors,
+        modifier = modifier
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
@@ -313,7 +385,6 @@ fun ProductReviewCount(
     if (product.reviewsCount > 0){
         Text(
             text = formatCommonCase(product.reviewsCount, "отзыв"),
-//            text = formatReview(product.reviewsCount),
             style = textStyle,
             color = Color.Companion.Black.copy(alpha = 0.5f),
         )
@@ -325,22 +396,36 @@ fun ProductReviewCount(
 fun ProductFavoriteIcon(
     product: IBaseProduct,
     sizeDp: Dp = 24.dp,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
-    var isFavoriteState by remember (addToFavorite, removeFromFavorite) {
+    val scope = rememberCoroutineScope()
+    var isFavorite by remember {
         mutableStateOf(product.isFavorite)
     }
+    val navController = LocalNavController.current
+    val snackbarHostState = LocalSnackbarHostState.current
     IconButton(
         onClick = {
-            isFavoriteState = !isFavoriteState
-            val action = if (isFavoriteState) addToFavorite else removeFromFavorite
-            action(product.id)
+            scope.launch {
+                isFavorite = if (isFavorite) {
+                    !onProductAction(
+                        ProductAction.RemoveFromFavorites(product.id, snackbarHostState) {
+                            navController.navigate(ScreenRoutes.FAVORITE)
+                        }
+                    )
+                } else {
+                    onProductAction(
+                        ProductAction.AddToFavorites(product.id, snackbarHostState) {
+                            navController.navigate(ScreenRoutes.FAVORITE)
+                        }
+                    )
+                }
+            }
         },
         modifier = Modifier.size(sizeDp)
     ) {
         Icon(
-            imageVector = if (isFavoriteState) Icons.Filled.Favorite else {
+            imageVector = if (isFavorite) Icons.Filled.Favorite else {
                 Icons.Outlined.FavoriteBorder
             },
             contentDescription = null,
@@ -392,17 +477,14 @@ fun BenefitItem(benefit: Benefit) {
 
 @Composable
 fun MainScreen(
-    navigateToDetail: (productId: Int) -> Unit,
     productViewModel: ProductViewModel,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     LaunchedEffect(Unit) {
         productViewModel.loadMainProducts()
     }
     val products by productViewModel.allProducts.collectAsState()
-    val bestSellerProducts = products.items.sortedBy { it.discountPercentage }
-    val newProducts = products.items
+    val bestSellerProducts = products.sortedBy { it.discountPercentage }
     LazyColumn(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
         item { BannerCarousel() }
 
@@ -415,10 +497,8 @@ fun MainScreen(
         }
         item {
             ProductCarousel(
-                navigateToDetail = navigateToDetail,
-                products = newProducts,
-                addToFavorite = addToFavorite,
-                removeFromFavorite = removeFromFavorite
+                products = products,
+                onProductAction = onProductAction
             )
         }
 
@@ -431,10 +511,8 @@ fun MainScreen(
         }
         item {
             ProductCarousel(
-                navigateToDetail = navigateToDetail,
                 products = bestSellerProducts,
-                addToFavorite = addToFavorite,
-                removeFromFavorite = removeFromFavorite
+                onProductAction = onProductAction
             )
         }
 

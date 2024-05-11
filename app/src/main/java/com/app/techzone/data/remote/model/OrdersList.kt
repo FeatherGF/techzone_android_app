@@ -7,6 +7,8 @@ data class Order(
     val id: Int,
     val description: String? = null,
     val status: String,
+    @SerializedName("date_created")
+    val dateCreated: String,
     @SerializedName("order_item")
     val orderItem: List<OrderItem>
 )

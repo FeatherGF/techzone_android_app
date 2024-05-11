@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.techzone.data.remote.model.BaseProduct
+import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.data.remote.repository.ProductRepo
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.ui.theme.server_response.ServerResponseState

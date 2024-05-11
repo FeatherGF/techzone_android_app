@@ -24,14 +24,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.IBaseProduct
+import com.app.techzone.data.remote.model.OrderItem
 
 @Composable
 fun BaseScreen(
     navController: NavController,
-    snackbarHostState: SnackbarHostState,
     favorites: List<IBaseProduct>,
-    cartItems: List<IBaseProduct> = emptyList(),
+    cartItems: List<OrderItem>,
     topAppBar: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -42,7 +43,7 @@ fun BaseScreen(
         BottomItem.FavoriteScreen.updateFavoriteCount(favorites.size),
         BottomItem.ProfileScreen,
     )
-
+    val snackbarHostState = LocalSnackbarHostState.current
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: ""
 
