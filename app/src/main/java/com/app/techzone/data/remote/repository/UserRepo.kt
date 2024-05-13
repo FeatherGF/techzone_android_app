@@ -4,9 +4,14 @@ import android.util.Base64
 import com.app.techzone.data.remote.api.AuthRepository
 import com.app.techzone.data.remote.api.UserApi
 import com.app.techzone.data.remote.model.AddFavoriteRequest
+import com.app.techzone.data.remote.model.AddToCartRequest
 import com.app.techzone.data.remote.model.AuthResult
+import com.app.techzone.data.remote.model.ChangeQuantityRequest
+import com.app.techzone.data.remote.model.CreateOrderRequest
 import com.app.techzone.data.remote.model.Order
+import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
+import com.app.techzone.data.remote.model.ProductInCartResponse
 import com.app.techzone.data.remote.model.User
 import com.app.techzone.data.remote.model.UserUpdateRequest
 import com.app.techzone.model.AuthenticationRequest
@@ -23,7 +28,7 @@ import javax.inject.Inject
 class UserRepo @Inject constructor(
     private val userApi: UserApi,
     private val prefs: EncryptedSharedPreferencesImpl,
-): AuthRepository {
+) : AuthRepository {
 
     private suspend fun <T> handleExceptions(call: suspend () -> AuthResult<T>): AuthResult<T> {
         return try {
@@ -45,11 +50,7 @@ class UserRepo @Inject constructor(
         authenticate()
         val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
         return try {
-            userApi.getUser(
-                accessToken,
-                // backend will add fixes to remove this abomination
-                userPathId = decodeToken(accessToken).get("sub").toString().toInt()
-            )
+            userApi.getUser(accessToken)
         } catch (e: IndexOutOfBoundsException) {
             null
         } catch (e: IOException) {
@@ -68,10 +69,7 @@ class UserRepo @Inject constructor(
                 ?: return@handleExceptions AuthResult.Unauthorized()
             userApi.updateUser(
                 token = accessToken,
-                userPathId = decodeToken(accessToken).get("sub").toString().toInt(),
-                userUpdateRequest = UserUpdateRequest(
-                    firstName, lastName, phoneNumber
-                )
+                userUpdateRequest = UserUpdateRequest(firstName, lastName, phoneNumber)
             )
             AuthResult.Authorized()
         }
@@ -82,12 +80,11 @@ class UserRepo @Inject constructor(
         val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return false
         val userIdToDelete = decodeToken(accessToken).get("sub").toString().toInt()
         return try {
-            val deletedUser = userApi.deleteUser(
-                token = accessToken,
-                userPathId = userIdToDelete,
-            )
+            val deletedUser = userApi.deleteUser(accessToken)
             userIdToDelete == deletedUser.id
         } catch (e: IOException) {
+            false
+        } catch (e: HttpException) {
             false
         }
     }
@@ -95,7 +92,7 @@ class UserRepo @Inject constructor(
     override suspend fun sendAuthenticationCode(email: String): AuthResult<Unit> {
         return handleExceptions {
             userApi.sendAuthenticationCode(
-                request = SendCodeRequest(email)
+                SendCodeRequest(email)
             )
             AuthResult.CodeSent()
         }
@@ -105,7 +102,7 @@ class UserRepo @Inject constructor(
         return handleExceptions {
             val tokenResponse = userApi.authorize(
                 request = AuthorizationRequest(
-                    identifier = email,
+                    email = email,
                     code = code
                 )
             )
@@ -128,7 +125,10 @@ class UserRepo @Inject constructor(
             throw IllegalArgumentException("partIndex parameter can not have value other than 0 or 1")
         }
         val decodedToken =
-            String(Base64.decode(token.split(".")[1], Base64.DEFAULT), StandardCharsets.UTF_8)
+            String(
+                Base64.decode(token.split(".")[partIndex], Base64.DEFAULT),
+                StandardCharsets.UTF_8
+            )
         return JSONObject(decodedToken)
     }
 
@@ -148,7 +148,7 @@ class UserRepo @Inject constructor(
             val refreshToken = prefs.getKey(PreferencesKey.refreshToken)
                 ?: return@handleExceptions AuthResult.Unauthorized()
 
-            if (isTokenExpired(decodeToken(refreshToken))){
+            if (isTokenExpired(decodeToken(refreshToken))) {
                 return@handleExceptions AuthResult.Unauthorized()
             }
 
@@ -169,17 +169,17 @@ class UserRepo @Inject constructor(
 
     // Favorites
     @Suppress("UNCHECKED_CAST")
-    suspend fun <T>getFavorites(): AuthResult<T>{
+    suspend fun <T> getFavorites(): AuthResult<T> {
         authenticate()
         val accessToken =
             prefs.getKey(PreferencesKey.accessToken) ?: return AuthResult.Unauthorized()
         return try {
             val favorites = userApi.getFavorites(accessToken)
             AuthResult.Authorized(favorites as T)
-        } catch (e: IOException){
+        } catch (e: IOException) {
             AuthResult.UnknownError()
-        } catch (e: HttpException){
-            if (e.code() == 401){
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
                 AuthResult.Unauthorized()
             } else {
                 AuthResult.UnknownError()
@@ -193,7 +193,7 @@ class UserRepo @Inject constructor(
         return try {
             userApi.addFavorite(accessToken, AddFavoriteRequest(productId))
             true
-        } catch (e: IOException){
+        } catch (e: IOException) {
             null
         } catch (e: HttpException) {
             false
@@ -206,7 +206,7 @@ class UserRepo @Inject constructor(
         return try {
             userApi.removeFavorite(accessToken, productId)
             true
-        } catch (e: IOException){
+        } catch (e: IOException) {
             null
         } catch (e: HttpException) {
             false
@@ -219,7 +219,24 @@ class UserRepo @Inject constructor(
         val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
         return try {
             userApi.getOrders(accessToken)
-        } catch (e: IOException){
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
+            null
+        }
+    }
+
+    suspend fun createOrder(orderItemIds: List<Int>, paymentMethod: String): OrderCreated? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.createOrder(
+                token = accessToken,
+                request = CreateOrderRequest(
+                    orderItemIds, paymentMethod
+                )
+            )
+        } catch (e: IOException) {
             null
         } catch (e: HttpException) {
             null
@@ -231,20 +248,77 @@ class UserRepo @Inject constructor(
         val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
         return try {
             userApi.getOrder(accessToken, orderId)
-        } catch (e: IOException){
+        } catch (e: IOException) {
             null
         } catch (e: HttpException) {
             null
         }
     }
 
-    suspend fun getCart(): Order? {
-        getOrders()?.let {
-            return it.items.first { order ->
-                // TODO: add all possible statuses to enum
-                order.status == "cart"
+    // Cart
+    @Suppress("UNCHECKED_CAST")
+    suspend fun <T> getCart(): AuthResult<T> {
+        authenticate()
+        val accessToken =
+            prefs.getKey(PreferencesKey.accessToken) ?: return AuthResult.Unauthorized()
+        return try {
+            val cart = userApi.getCart(accessToken)
+            AuthResult.Authorized(cart as T)
+        } catch (e: IOException) {
+            AuthResult.UnknownError()
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
+                AuthResult.Unauthorized()
+            } else {
+                AuthResult.UnknownError()
             }
         }
-        return null
+    }
+
+    suspend fun addToCart(productId: Int): ProductInCartResponse? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.addToCart(
+                token = accessToken,
+                request = AddToCartRequest(productId)
+            )
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
+            null
+        }
+    }
+
+    suspend fun removeFromCart(productId: Int): Boolean? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return false
+        return try {
+            userApi.removeFromCart(
+                token = accessToken,
+                productId = productId
+            )
+            true
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
+            false
+        }
+    }
+
+    suspend fun changeQuantityInCart(productId: Int, quantity: Int): ProductInCartResponse? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.changeQuantityInCart(
+                token = accessToken,
+                productId = productId,
+                request = ChangeQuantityRequest(quantity)
+            )
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
+            null
+        }
     }
 }

@@ -7,7 +7,9 @@ data class Accessory(
     @SerializedName("average_rating")
     override val rating: Float?,
     @SerializedName("color_main")
-    val colorMain: String,
+    override val colorMain: String,
+    @SerializedName("color_variations")
+    override val colorVariations: List<ColorVariation>,
     @SerializedName("date_created")
     val dateCreated: String,
     val description: String,
@@ -35,5 +37,11 @@ data class Accessory(
     val thickness: Int,
     override val type: String,
     val weight: Double,
-    val width: Int
+    val width: Int,
+    @SerializedName("is_in_cart")
+    override val isInCart: Boolean,
+    // accessories won't have any memory, can't think of a better approach
+    override val memory: Int? = null,
+    @SerializedName("memory_variations")
+    override val memoryVariations: List<Int>? = null,
 ): IDetailedProduct

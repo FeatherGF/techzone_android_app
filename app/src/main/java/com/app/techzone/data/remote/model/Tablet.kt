@@ -13,7 +13,9 @@ data class Tablet(
     @SerializedName("camera_quality")
     val cameraQuality: String,
     @SerializedName("color_main")
-    val colorMain: String,
+    override val colorMain: String,
+    @SerializedName("color_variations")
+    override val colorVariations: List<ColorVariation>,
     @SerializedName("color_other")
     val colorOther: String,
     @SerializedName("communicate_module")
@@ -55,8 +57,9 @@ data class Tablet(
     val matrixFrequency: Int,
     @SerializedName("matrix_type")
     val matrixType: String,
-    @SerializedName("memory")
-    val memory: Int,
+    override val memory: Int,
+    @SerializedName("memory_variations")
+    override val memoryVariations: List<Int>,
     @SerializedName("memory_ram")
     val memoryRam: Int,
     @SerializedName("model")
@@ -107,5 +110,7 @@ data class Tablet(
     @SerializedName("weight")
     val weight: Double,
     @SerializedName("width")
-    val width: Double
+    val width: Double,
+    @SerializedName("is_in_cart")
+override val isInCart: Boolean
 ): IDetailedProduct

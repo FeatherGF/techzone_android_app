@@ -24,7 +24,7 @@ object ApiConstants {
         const val televisionsDetail = "televisions/{id_television}"
 
         // user
-        const val userDetail = "users/{id_user}"
+        const val userDetail = "users"
 
         // authentication
         const val sendAuthCode = "users/send-authentication-code"
@@ -38,6 +38,10 @@ object ApiConstants {
         // orders
         const val orders = "orders"
         const val ordersDetail = "orders/{id_order}"
+
+        // cart
+        const val cart = "cart"
+        const val cartDetail = "cart/{id_product}"
     }
 
 }

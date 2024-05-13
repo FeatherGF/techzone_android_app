@@ -12,6 +12,7 @@ import com.app.techzone.data.remote.model.Smartphone
 import com.app.techzone.data.remote.model.Smartwatch
 import com.app.techzone.data.remote.model.Tablet
 import com.app.techzone.data.remote.model.Television
+import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
 
@@ -26,6 +27,8 @@ class ProductRepo @Inject constructor(
             apiCall(accessToken)
         } catch (e: IOException) {
             null
+        } catch (e: HttpException) {
+            null
         }
     }
 
@@ -33,6 +36,8 @@ class ProductRepo @Inject constructor(
         return try {
             productApi.getProductType(productId)
         } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
             null
         }
     }

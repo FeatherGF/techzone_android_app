@@ -17,7 +17,7 @@ data class Smartphone(
     @SerializedName("camera_quality")
     val cameraQuality: String,
     @SerializedName("color_main")
-    val colorMain: String,
+    override val colorMain: String,
     @SerializedName("color_other")
     val colorOther: String,
     @SerializedName("communication_standard")
@@ -51,7 +51,7 @@ data class Smartphone(
     val matrixFrequency: Int,
     @SerializedName("matrix_type")
     val matrixType: String,
-    val memory: Int,
+    override val memory: Int,
     @SerializedName("memory_ram")
     val memoryRam: Int,
     val model: String,
@@ -98,5 +98,11 @@ data class Smartphone(
     @SerializedName("video_format")
     val videoFormat: String,
     val weight: Double,
-    val width: Double
+    val width: Double,
+    @SerializedName("is_in_cart")
+    override val isInCart: Boolean,
+    @SerializedName("memory_variations")
+    override val memoryVariations: List<Int>,
+    @SerializedName("color_variations")
+    override val colorVariations: List<ColorVariation>,
 ): IDetailedProduct

@@ -1,4 +1,4 @@
-package com.app.techzone.ui.theme.profile.auth
+package com.app.techzone.ui.theme.profile
 
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -9,16 +9,17 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.techzone.data.remote.model.AuthResult
+import com.app.techzone.data.remote.model.BaseProduct
+import com.app.techzone.data.remote.model.Cart
 import com.app.techzone.data.remote.model.FavoritesList
-import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.data.remote.model.Order
 import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.data.remote.model.User
-import com.app.techzone.data.remote.repository.ProductRepo
 import com.app.techzone.data.remote.repository.UserRepo
+import com.app.techzone.ui.theme.profile.auth.AuthState
+import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +32,6 @@ import javax.inject.Inject
 @HiltViewModel
 class UserViewModel @Inject constructor(
     private val userRepo: UserRepo,
-    private val productRepo: ProductRepo
 ): ViewModel() {
 
     private val resultChannel = Channel<AuthResult<Unit>>()
@@ -42,7 +42,7 @@ class UserViewModel @Inject constructor(
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
 
-    private val _favorites = MutableStateFlow(emptyList<IBaseProduct>())
+    private val _favorites = MutableStateFlow(emptyList<BaseProduct>())
     val favorites = _favorites.asStateFlow()
 
     private val _cartItems = MutableStateFlow(emptyList<OrderItem>())
@@ -51,14 +51,11 @@ class UserViewModel @Inject constructor(
     private val _orders = MutableStateFlow(emptyList<Order>())
     val orders = _orders.asStateFlow()
 
-    init {
-        authenticate()
-        loadFavorites()
-    }
-
     fun logoutUser(){
         viewModelScope.launch {
             userRepo.logoutUser()
+            _cartItems.update { emptyList() }
+            _favorites.update { emptyList() }
             resultChannel.send(AuthResult.Unauthorized())
             initialState = AuthResult.Unauthorized()
         }
@@ -67,8 +64,11 @@ class UserViewModel @Inject constructor(
     fun deleteUser(){
         viewModelScope.launch {
             val result: AuthResult<Unit> =
-                if (userRepo.deleteUser())
+                if (userRepo.deleteUser()){
+                    _cartItems.update { emptyList() }
+                    _favorites.update { emptyList() }
                     AuthResult.Unauthorized()
+                }
                 else AuthResult.UnknownError()
             initialState = result
             resultChannel.send(result)
@@ -122,106 +122,139 @@ class UserViewModel @Inject constructor(
                 else -> {}
             }
             if (response is AuthResult.Authorized){
-                // TODO: will be optimised after upcoming backend release
-                val products = response.data?.items?.map {
-                    viewModelScope.async { productRepo.getProduct(it.productId) }
-                } ?: emptyList()
-//                _favorites.value = products.mapNotNull { it.await() }
-                _favorites.update {
-                    products.mapNotNull { it.await() }
+                response.data?.let { data ->
+                    _favorites.update {
+                        data.items.map { it.product }
+                    }
                 }
 
                 resultChannel.send(AuthResult.Authorized())
                 state = state.copy(response = ServerResponse.SUCCESS)
+                println("favorites loaded")
             }
         }
     }
 
-    fun addToFavorite(
+    private suspend fun addToFavorite(
         productId: Int,
         snackbarHostState: SnackbarHostState,
         navigateToFavorite: () -> Unit
-    ): Int {
+    ): Boolean {
+        val isSuccessful = userRepo.addToFavorite(productId)
+        if (isSuccessful == null){
+            snackbarHostState.showSnackbar(
+                "Что-то пошло не так\nПроверьте подключение к интернету"
+            )
+            return false
+        }
+        if (!isSuccessful){
+            snackbarHostState.showSnackbar(
+                "Авторизуйтесь в приложение, чтобы добавлять товары в избранное"
+            )
+            return false
+        }
         viewModelScope.launch {
-            val isSuccessful = userRepo.addToFavorite(productId)
-            if (isSuccessful == null){
-                snackbarHostState.showSnackbar(
-                    "Что-то пошло не так\nПроверьте подключение к интернету"
-                )
-                return@launch
-            }
-            if (!isSuccessful){
-                snackbarHostState.showSnackbar(
-                    "Авторизуйтесь в приложение, чтобы добавлять товары в избранное"
-                )
-                return@launch
-            }
             val result = snackbarHostState.showSnackbar(
                 message = "Товар добавлен в избранное",
                 actionLabel = "Перейти",
                 duration = SnackbarDuration.Short
             )
-            when (result) {
-                SnackbarResult.Dismissed -> {}
-                SnackbarResult.ActionPerformed -> {
-                    navigateToFavorite()
-                }
+            if (result == SnackbarResult.ActionPerformed){
+                navigateToFavorite()
             }
         }
         loadFavorites()
-        return _favorites.value.size
+        return true
     }
 
-    fun removeFromFavorite(
+    private suspend fun removeFromFavorite(
         productId: Int,
         snackbarHostState: SnackbarHostState,
         navigateToFavorite: () -> Unit
-    ): Int {
-        viewModelScope.launch {
-            val isSuccessful = userRepo.removeFromFavorite(productId)
-            if (isSuccessful == null){
-                snackbarHostState.showSnackbar(
-                    "Что-то пошло не так\nПроверьте подключение к интернету"
-                )
-                return@launch
-            }
-            if (!isSuccessful){
-                snackbarHostState.showSnackbar(
-                    "Авторизуйтесь в приложение, чтобы добавлять товары в избранное"
-                )
-                return@launch
-            }
-            val result = snackbarHostState.showSnackbar(
-                message = "Товар удален из избранного",
-                actionLabel = "Отмена",
-                duration = SnackbarDuration.Short
+    ): Boolean {
+        var isRemoved: Boolean
+        val isSuccessful = userRepo.removeFromFavorite(productId)
+        if (isSuccessful == null){
+            snackbarHostState.showSnackbar(
+                "Что-то пошло не так\nПроверьте подключение к интернету"
             )
-            when (result){
-                SnackbarResult.Dismissed -> {}
-                SnackbarResult.ActionPerformed -> {
-//                    userRepo.addToFavorite(productId)
-                    addToFavorite(productId, snackbarHostState, navigateToFavorite)
-                }
-            }
+            return false
+        }
+        if (!isSuccessful){
+            snackbarHostState.showSnackbar(
+                "Авторизуйтесь в приложение, чтобы добавлять товары в избранное"
+            )
+            return false
+        }
+        isRemoved = true
+        val result = snackbarHostState.showSnackbar(
+            message = "Товар удален из избранного",
+            actionLabel = "Отмена",
+            duration = SnackbarDuration.Short
+        )
+        if (result == SnackbarResult.ActionPerformed){
+            isRemoved = !addToFavorite(productId, snackbarHostState, navigateToFavorite)
         }
         loadFavorites()
-        return _favorites.value.size
+        return isRemoved
     }
 
     fun loadCart() {
         state = state.copy(response = ServerResponse.LOADING)
         viewModelScope.launch {
-            val response = userRepo.getCart()
-            if (response == null) {
-                state = state.copy(response = ServerResponse.ERROR)
-                return@launch
+            val response: AuthResult<Cart> = userRepo.getCart()
+            when (response) {
+                is AuthResult.Unauthorized -> {
+                    resultChannel.send(AuthResult.Unauthorized())
+                    state = state.copy(response = ServerResponse.UNAUTHORIZED)
+                }
+                is AuthResult.UnknownError -> {
+                    resultChannel.send(AuthResult.UnknownError())
+                    state = state.copy(response = ServerResponse.ERROR)
+                }
+                else -> {}
             }
 
-            // TODO: change to regular orderItem when backend adds quantity in responses
-            _cartItems.value = response.orderItem.onEach {
-                it.quantity = 1
+            if (response is AuthResult.Authorized) {
+                response.data?.let { cart ->
+                    _cartItems.update{ cart.items }
+                }
+                resultChannel.send(AuthResult.Authorized())
+                state = state.copy(response = ServerResponse.SUCCESS)
+                println("cart loaded")
             }
-            state = state.copy(response = ServerResponse.SUCCESS)
+        }
+    }
+
+    private suspend fun addToCart(productId: Int): Boolean {
+        var isSuccessful = false
+        userRepo.addToCart(productId)?.let{
+            val response: AuthResult<Cart> = userRepo.getCart()
+            if (response is AuthResult.Authorized){
+                response.data?.let{ cart ->
+                    _cartItems.update { cart.items }
+                }
+                isSuccessful = true
+            }
+        }
+        return isSuccessful
+    }
+
+    private suspend fun removeFromCart(productId: Int): Boolean {
+        var isRemoved = false
+        userRepo.removeFromCart(productId)?.let{ isSuccessful ->
+            if(!isSuccessful) return false
+            _cartItems.update { listOrderItems ->
+                listOrderItems.filter { it.product.id != productId }
+            }
+            isRemoved = true
+        }
+        return !isRemoved
+    }
+
+    private fun changeQuantityInCart(productId: Int, quantity: Int) {
+        viewModelScope.launch {
+            userRepo.changeQuantityInCart(productId, quantity)
         }
     }
 
@@ -233,13 +266,48 @@ class UserViewModel @Inject constructor(
                 state = state.copy(response = ServerResponse.ERROR)
                 return@launch
             }
-            _orders.value = response.items
-            // TODO: change to regular orderItem when backend adds quantity in responses
+            _orders.update { response.items }
             state = state.copy(response = ServerResponse.SUCCESS)
         }
     }
 
-    fun onEvent(event: AuthUiEvent) {
+    suspend fun createOrder(orderItemIds: List<Int>, paymentMethod: String): Boolean {
+        val order = userRepo.createOrder(orderItemIds, paymentMethod)
+        return order != null
+    }
+
+    suspend fun onProductAction(action: ProductAction): Boolean {
+        when (action){
+            is ProductAction.AddToCart -> {
+                return addToCart(action.productId)
+            }
+            is ProductAction.RemoveFromCart -> {
+                return removeFromCart(action.productId)
+            }
+
+            is ProductAction.ChangeQuantityInCart -> {
+                changeQuantityInCart(action.productId, action.quantity)
+                return true
+            }
+
+            is ProductAction.AddToFavorites -> {
+                return addToFavorite(
+                    action.productId,
+                    action.snackbarHostState,
+                    action.navigateToFavorites
+                )
+            }
+            is ProductAction.RemoveFromFavorites -> {
+                return removeFromFavorite(
+                    action.productId,
+                    action.snackbarHostState,
+                    action.navigateToFavorites
+                )
+            }
+        }
+    }
+
+    fun onAuthEvent(event: AuthUiEvent) {
         when (event){
             is AuthUiEvent.AuthEmailChanged -> {
                 state = state.copy(authEmail = event.value)
@@ -286,13 +354,10 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    private fun authenticate(){
-        viewModelScope.launch {
-            state = state.copy(response = ServerResponse.LOADING)
-            val result = userRepo.authenticate()
-            resultChannel.send(result)
-            initialState = result
-            state = state.copy(response = ServerResponse.SUCCESS)
-        }
+    suspend fun authenticate(): AuthResult<Unit>{
+        val result = userRepo.authenticate()
+        resultChannel.send(result)
+        initialState = result
+        return result
     }
 }

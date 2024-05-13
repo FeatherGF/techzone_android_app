@@ -1,10 +1,16 @@
 package com.app.techzone.data.remote.api
 
 import com.app.techzone.data.remote.model.AddFavoriteRequest
+import com.app.techzone.data.remote.model.AddToCartRequest
+import com.app.techzone.data.remote.model.Cart
+import com.app.techzone.data.remote.model.ChangeQuantityRequest
+import com.app.techzone.data.remote.model.CreateOrderRequest
 import com.app.techzone.data.remote.model.FavoriteItem
 import com.app.techzone.data.remote.model.FavoritesList
 import com.app.techzone.data.remote.model.Order
+import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
+import com.app.techzone.data.remote.model.ProductInCartResponse
 import com.app.techzone.data.remote.model.UserUpdateRequest
 import com.app.techzone.data.remote.model.User
 import com.app.techzone.model.AuthenticationRequest
@@ -24,25 +30,18 @@ import retrofit2.http.Path
 interface UserApi {
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.userDetail)
-    suspend fun getUser(
-        @Header("Authorization") token: String,
-        @Path("id_user") userPathId: Int,
-    ): User
+    suspend fun getUser(@Header("Authorization") token: String): User
 
     @Headers("Accept: application/json")
     @PATCH(ApiConstants.Endpoints.userDetail)
     suspend fun updateUser(
         @Header("Authorization") token: String,
-        @Path("id_user") userPathId: Int,
         @Body userUpdateRequest: UserUpdateRequest
     ): User
 
     @Headers("Accept: application/json")
     @POST(ApiConstants.Endpoints.userDetail)
-    suspend fun deleteUser(
-        @Header("Authorization") token: String,
-        @Path("id_user") userPathId: Int,
-    ): User
+    suspend fun deleteUser(@Header("Authorization") token: String): User
 
 
     // Authentication
@@ -79,10 +78,17 @@ interface UserApi {
     )
 
 
-    // Orders & Cart
+    // Orders
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.orders)
     suspend fun getOrders(@Header("Authorization") token: String): OrdersList
+
+    @Headers("Accept: application/json")
+    @POST(ApiConstants.Endpoints.orders)
+    suspend fun createOrder(
+        @Header("Authorization") token: String,
+        @Body request: CreateOrderRequest
+    ): OrderCreated
 
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.ordersDetail)
@@ -91,5 +97,31 @@ interface UserApi {
         orderId: Int
     ): Order
 
-     // TODO: узнать создаёт ли фронт сам корзины и нужна ли ему пост ручка на заказы
+    // Cart
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.cart)
+    suspend fun getCart(@Header("Authorization") token: String): Cart
+
+    @Headers("Accept: application/json")
+    @POST(ApiConstants.Endpoints.cart)
+    suspend fun addToCart(
+        @Header("Authorization") token: String,
+        @Body request: AddToCartRequest
+    ): ProductInCartResponse
+
+    @Headers("Accept: application/json")
+    @DELETE(ApiConstants.Endpoints.cartDetail)
+    suspend fun removeFromCart(
+        @Header("Authorization") token: String,
+        @Path("id_product") productId: Int
+    )
+
+    @Headers("Accept: application/json")
+    @PATCH(ApiConstants.Endpoints.cartDetail)
+    suspend fun changeQuantityInCart(
+        @Header("Authorization") token: String,
+        @Path("id_product") productId: Int,
+        @Body request: ChangeQuantityRequest
+    ): ProductInCartResponse
+
 }

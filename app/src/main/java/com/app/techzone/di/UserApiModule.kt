@@ -2,7 +2,6 @@ package com.app.techzone.di
 
 import android.content.Context
 import com.app.techzone.data.remote.api.UserApi
-import com.app.techzone.data.remote.api.AuthRepository
 import com.app.techzone.data.remote.repository.EncryptedSharedPreferencesImpl
 import com.app.techzone.data.remote.repository.UserRepo
 import dagger.Module
@@ -25,8 +24,14 @@ object UserApiModule {
 
     @Provides
     @Singleton
-    fun provideUserRepo(api: UserApi, @ApplicationContext context: Context): AuthRepository {
-        return UserRepo(api, EncryptedSharedPreferencesImpl(context))
+    fun provideUserRepo(api: UserApi, prefs: EncryptedSharedPreferencesImpl): UserRepo {
+        return UserRepo(api, prefs)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEncryptedSharedPreferencesImpl(@ApplicationContext context: Context): EncryptedSharedPreferencesImpl {
+        return EncryptedSharedPreferencesImpl(context)
     }
 
 }

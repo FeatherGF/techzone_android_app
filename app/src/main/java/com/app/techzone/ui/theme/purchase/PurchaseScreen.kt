@@ -24,13 +24,17 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,38 +46,47 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import com.app.techzone.data.remote.model.validateUserInfo
+import com.app.techzone.LocalNavController
+import com.app.techzone.ui.theme.DarkText
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder100
+import com.app.techzone.ui.theme.cart.totalDiscountPrice
+import com.app.techzone.ui.theme.cart.totalPrice
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
+import com.app.techzone.ui.theme.orders.OrderComposition
+import com.app.techzone.ui.theme.payment_selection.Card
+import com.app.techzone.ui.theme.payment_selection.PaymentViewModel
+import com.app.techzone.ui.theme.payment_selection.emptyPayment
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.UnauthorizedScreen
 import com.app.techzone.ui.theme.profile.UserInfoFields
-import com.app.techzone.ui.theme.profile.auth.UserViewModel
+import com.app.techzone.ui.theme.profile.UserViewModel
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
+import com.app.techzone.utils.formatCommonCase
 import com.app.techzone.utils.formatMaskedCard
+import com.app.techzone.utils.formatPrice
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun PurchaseScreenRoot(
     userViewModel: UserViewModel,
-    navController: NavController,
-    snackbarHostState: SnackbarHostState
+    paymentViewModel: PaymentViewModel,
+    orderItemIds: List<Int>
 ) {
-    PurchaseScreen(userViewModel, snackbarHostState) {
-        navController.popBackStack()
-    }
+    PurchaseScreen(userViewModel, orderItemIds, storedCards = paymentViewModel.getCards())
     when (userViewModel.state.response) {
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> { ErrorScreen(userViewModel::loadUser) }
         ServerResponse.UNAUTHORIZED -> {
-            UnauthorizedScreen {
-                navController.navigate(ScreenRoutes.PROFILE_REGISTRATION)
-            }
+            UnauthorizedScreen()
         }
         ServerResponse.SUCCESS -> { }
     }
@@ -91,18 +104,23 @@ val defaultPaymentTypes = mutableListOf(
     "Наличный расчет" to PaymentType.CASH
 )
 
+@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
 fun PurchaseScreen(
     userViewModel: UserViewModel,
-    snackbarHostState: SnackbarHostState,
-    onBackClicked: () -> Unit
+    orderItemIds: List<Int>,
+    storedCards: List<Card>
 ) {
     LaunchedEffect(userViewModel) { userViewModel.loadUser() }
-    BackHandler(onBack = onBackClicked)
+    val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
-
     val user by userViewModel.user.collectAsStateWithLifecycle()
+    val cartItems by userViewModel.cartItems.collectAsStateWithLifecycle()
+    val orderItems = cartItems.filter { it.id in orderItemIds }
 
+    var showOrderComposition by remember { mutableStateOf(false) }
+
+    BackHandler(onBack = navController::popBackStack)
     user?.let{ currentUser ->
         // i have no idea why but this three variables just don't want to get the value
         // if it isn't in let block
@@ -110,16 +128,21 @@ fun PurchaseScreen(
         val (lastName, onLastNameChange) = remember { mutableStateOf(currentUser.lastName ?: "") }
         val (phoneNumber, onPhoneNumberChange) = remember { mutableStateOf(currentUser.phoneNumber ?: "") }
 
-        var paymentType by remember { mutableStateOf(PaymentType.NOT_SET) }
-        val paymentTypes = defaultPaymentTypes
-
-        /*
-            val paymentTypes = if (user?.connectedCards.isNotEmpty()){
-                connectedCards.map { currentUser to PaymentType.MASKED_CARD } + listOf("Новая карта" to PaymentType.CARD, defaultPaymentTypes.last())
-            } else {
-                defaultPaymentTypes
-            }
-         */
+        val paymentTypes = if (storedCards.isNotEmpty()){
+            storedCards.map { it.cardNumber to PaymentType.MASKED_CARD } + listOf(
+                "Новая карта" to PaymentType.CARD,
+                defaultPaymentTypes.last()
+            )
+        } else {
+            defaultPaymentTypes
+        }
+        var paymentType: Pair<String, PaymentType> by remember {
+            mutableStateOf(
+                if (storedCards.isNotEmpty())
+                    storedCards.first().cardNumber to PaymentType.MASKED_CARD
+                else emptyPayment
+            )
+        }
         Box(
             Modifier
                 .fillMaxSize()
@@ -129,12 +152,13 @@ fun PurchaseScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
+                        .border(width = 1.dp, color = ForStroke)
                         .background(color = MaterialTheme.colorScheme.tertiary)
                         .padding(start = 20.dp, top = 40.dp, bottom = 16.dp, end = 28.dp),
                     horizontalArrangement = Arrangement.spacedBy(48.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBackClicked) {
+                    IconButton(onClick = navController::popBackStack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
@@ -160,17 +184,30 @@ fun PurchaseScreen(
                     Column(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ){
-                        // TODO: get from backend after its release
-                        Text("3 товара")
-                        Text("Скидка: ...")
-                        Text("Итого ...")
-
+                        Text(
+                            formatCommonCase(orderItems.size, "товар"),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.scrim
+                        )
+                        val totalDiscountPrice = orderItems.totalDiscountPrice()
+                        val totalPrice = orderItems.totalPrice()
+                        val profit = totalPrice - totalDiscountPrice
+                        if (profit > 0){
+                            Text(
+                                "Скидка: ${formatPrice(profit)}",
+                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                color = MaterialTheme.colorScheme.scrim
+                            )
+                        }
+                        Text(
+                            "Итого: ${formatPrice(totalDiscountPrice)}",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                        )
                     }
                     IconButton(
                         modifier = Modifier.padding(end = 12.dp),
-                        onClick = {
-                            // TODO: скорее всего показать наполнение заказа. Уточнить у Ксюши
-                        }
+                        onClick = { showOrderComposition = true }
                     ) {
                         Icon(
                             modifier = Modifier.size(30.dp),
@@ -218,15 +255,15 @@ fun PurchaseScreen(
                                         .fillMaxWidth()
                                         .height(56.dp)
                                         .selectable(
-                                            selected = paymentType == type,
-                                            onClick = { paymentType = type },
+                                            selected = paymentType == paymentTypePair,
+                                            onClick = { paymentType = paymentTypePair },
                                             role = Role.RadioButton
                                         ),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Checkbox(
                                         modifier = Modifier.padding(start = 34.dp, end = 34.dp),
-                                        checked = paymentType == type,
+                                        checked = paymentType == paymentTypePair,
                                         onCheckedChange = null
                                     )
                                     val text = if (type == PaymentType.MASKED_CARD) {
@@ -266,30 +303,69 @@ fun PurchaseScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val tooltipState = rememberTooltipState()
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberRichTooltipPositionProvider(),
+                        tooltip = {
+                            RichTooltip(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 42.dp),
+                                colors = TooltipDefaults.richTooltipColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary,
+                                    titleContentColor = DarkText,
+                                    contentColor = DarkText
+                                ),
+                                title = {
+                                    Text(
+                                        "Заказ создан",
+                                        style = MaterialTheme.typography.titleSmall
+                                    )
+                                },
+                            ) {
+                                Text(
+                                    "Ваша заказ успешно создан \nи собирается на складе.",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        },
+                        state = tooltipState,
+                        content = {}
+                    )
                     Button(
                         onClick = {
-                            if (firstName != currentUser.firstName || lastName != currentUser.lastName || phoneNumber != currentUser.phoneNumber) {
-                                val (isValid, reason) = validateUserInfo(firstName, lastName, phoneNumber)
-                                if (!isValid){
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(reason)
-                                    }
+                            val paymentMethod = when (paymentType.second){
+                                PaymentType.CASH -> {
+                                    PaymentType.CASH.name.lowercase()
+                                }
+                                PaymentType.CARD -> {
+                                    navController.navigate(ScreenRoutes.PAY_METHOD)
                                     return@Button
                                 }
-                                userViewModel.updateUser(firstName, lastName, phoneNumber)
+                                PaymentType.MASKED_CARD -> {
+                                    PaymentType.CARD.name.lowercase()
+                                }
+                                PaymentType.NOT_SET -> {return@Button}
+                            }
+                            scope.launch {
+                                if (userViewModel.createOrder(orderItemIds, paymentMethod)) {
+                                    tooltipState.show()
+                                }
                             }
 
-                            if (paymentType == PaymentType.CARD) {
-                                // TODO: navigate to enter new card composable
+                            // FIXME: do it more elegant way than this hack
+                            // redirect to another page after tooltip disappears
+                            GlobalScope.launch(Dispatchers.Main) {
+                                delay(2000L)
+                                navController.navigate(ScreenRoutes.ORDERS)
+                                userViewModel.loadCart()
                             }
-
-                            /*TODO userViewModel.createOrder(<list of order item ids>)*/
                         },
                         enabled = (
                             firstName.isNotBlank() &&
                             lastName.isNotBlank() &&
                             phoneNumber.isNotBlank() &&
-                            paymentType != PaymentType.NOT_SET
+                            paymentType.first.isNotBlank()
                         ),
                         colors = ButtonDefaults.buttonColors(
                             contentColor = MaterialTheme.colorScheme.tertiary,
@@ -303,6 +379,13 @@ fun PurchaseScreen(
                         )
                     }
                 }
+            }
+            if (showOrderComposition){
+                OrderComposition(
+                    orderItems = orderItems,
+                    onDismiss = { showOrderComposition = false },
+                    onProductAction = userViewModel::onProductAction
+                )
             }
         }
     }

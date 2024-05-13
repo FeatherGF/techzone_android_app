@@ -18,7 +18,7 @@ private val MainColorScheme = lightColorScheme(
     background = BoxBackground,
     secondaryContainer = LightBlue,
     scrim = DarkBlueText,
-    onError = ErrorRed
+    onError = ErrorRed,
 )
 
 @Composable

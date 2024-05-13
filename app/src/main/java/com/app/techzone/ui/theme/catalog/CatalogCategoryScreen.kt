@@ -27,7 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.app.techzone.data.remote.model.IBaseProduct
+import com.app.techzone.LocalNavController
+import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.model.PricePreset
 import com.app.techzone.ui.theme.app_bars.SearchWidgetState
 import com.app.techzone.ui.theme.ForStroke
@@ -40,7 +41,9 @@ import com.app.techzone.ui.theme.main.ProductReviewCount
 import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.utils.formatPrice
 import com.app.techzone.ui.theme.main.ProductImageOrPreview
+import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.CurrencyVisualTransformation
@@ -86,20 +89,16 @@ fun PriceRangeField(placeholderText: String, text: String, onValueChange: (Strin
 fun CatalogCategoryScreen(
     category: String,  // ApiConstant.Endpoints strings
     catalogViewModel: CatalogViewModel,
-    navigateToDetail: (Int) -> Unit,
     onChangeView: (SearchWidgetState) -> Unit,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     when (catalogViewModel.activeScreenState) {
         CatalogScreenEnum.DEFAULT -> {
             onChangeView(SearchWidgetState.CATALOG_OPENED)
             DefaultCatalogView(
                 category = category,
-                navigateToDetail = navigateToDetail,
                 catalogViewModel = catalogViewModel,
-                addToFavorite = addToFavorite,
-                removeFromFavorite = removeFromFavorite,
+                onProductAction = onProductAction
             )
         }
         CatalogScreenEnum.FILTERS -> {
@@ -115,10 +114,8 @@ fun CatalogCategoryScreen(
 @Composable
 fun DefaultCatalogView(
     category: String,
-    navigateToDetail: (productId: Int) -> Unit,
     catalogViewModel: CatalogViewModel,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     LaunchedEffect(Unit){
         catalogViewModel.loadByCategory(category)
@@ -132,15 +129,15 @@ fun DefaultCatalogView(
         }
         LazyProductCards(
             products = products,
-            navigateToDetail = navigateToDetail,
-            addToFavorite = addToFavorite,
-            removeFromFavorite = removeFromFavorite
+            onProductAction = onProductAction
         )
     }
     when(state.response) {
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> {
-            ErrorScreen(onRefreshApiCall = { catalogViewModel.loadByCategory(category) })
+            ErrorScreen {
+                catalogViewModel.loadByCategory(category)
+            }
         }
         // if response is successful all the code above will be rendered
         ServerResponse.SUCCESS -> {}
@@ -151,11 +148,10 @@ fun DefaultCatalogView(
 
 @Composable
 fun LazyProductCards(
-    products: List<IBaseProduct>,
-    navigateToDetail: (productId: Int) -> Unit,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
+    products: List<BaseProduct>,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
+    val navController = LocalNavController.current
     LazyColumn(
         modifier = Modifier
             .padding(start = 16.dp, end = 16.dp)
@@ -175,7 +171,7 @@ fun LazyProductCards(
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth(),
-                onClick = { navigateToDetail(product.id) },
+                onClick = { navController.navigate("${ScreenRoutes.CATALOG}/${product.id}") },
                 shape = RoundBorder24,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.tertiary
@@ -232,11 +228,10 @@ fun LazyProductCards(
                         ) {
                             ProductFavoriteIcon(
                                 product = product,
-                                addToFavorite = addToFavorite,
-                                removeFromFavorite = removeFromFavorite,
+                                onProductAction = onProductAction,
                                 sizeDp = 32.dp
                             )
-                            ProductBuyButton()
+                            ProductBuyButton(product = product, onProductAction = onProductAction)
                         }
                     }
                 }

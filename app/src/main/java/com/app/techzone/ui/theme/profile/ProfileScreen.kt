@@ -41,7 +41,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,13 +61,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
+import com.app.techzone.LocalNavController
+import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.validateUserInfo
 import com.app.techzone.utils.formatPhoneNumber
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
-import com.app.techzone.ui.theme.profile.auth.UserViewModel
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.utils.MaskVisualTransformation
 import kotlinx.coroutines.launch
@@ -77,19 +76,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileScreen(
     authResultState: AuthResult<Unit>,
-    navController: NavController,
     userViewModel: UserViewModel
 ) {
     when (authResultState) {
         is AuthResult.Authorized -> {
-            UserProfile(userViewModel, navController = navController)
+            UserProfile(userViewModel)
         }
         is AuthResult.Unauthorized -> {
-            UnauthorizedScreen {
-                navController.navigate(ScreenRoutes.PROFILE_REGISTRATION) {
-                    popUpTo(ScreenRoutes.PROFILE_REGISTRATION)
-                }
-            }
+            UnauthorizedScreen()
         }
         is AuthResult.UnknownError -> { ErrorScreen(userViewModel::loadUser) }
         else -> {}
@@ -98,23 +92,21 @@ fun ProfileScreen(
 
 
 @Composable
-fun EditUserProfile(
-    navController: NavController,
-    snackbarHostState: SnackbarHostState,
-    userViewModel: UserViewModel,
-    onBackClicked: () -> Unit,
-) {
+fun EditUserProfile(userViewModel: UserViewModel) {
     LaunchedEffect(userViewModel) { userViewModel.loadUser() }
-    BackHandler(onBack = onBackClicked)
+
+    val navController = LocalNavController.current
+    val snackbarHostState = LocalSnackbarHostState.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
 
     val user by userViewModel.user.collectAsStateWithLifecycle()
+
+    BackHandler(onBack = navController::popBackStack)
 
     val (firstName, onFirstNameChange) = remember { mutableStateOf(user?.firstName ?: "") }
     val (lastName, onLastNameChange) = remember { mutableStateOf(user?.lastName ?: "") }
     val (phoneNumber, onPhoneNumberChange) = remember { mutableStateOf(user?.phoneNumber ?: "") }
-
-    val coroutineScope = rememberCoroutineScope()
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     fun saveUserChanges() {
         val (isValid, reason) = validateUserInfo(firstName, lastName, phoneNumber)
@@ -129,9 +121,7 @@ fun EditUserProfile(
             lastName = lastName.takeIf { it.isNotBlank() } ?: "",
             phoneNumber = phoneNumber.takeIf { it.isNotBlank() } ?: ""
         )
-        navController.navigate(ScreenRoutes.PROFILE) {
-            popUpTo(ScreenRoutes.PROFILE)
-        }
+        navController.navigate(ScreenRoutes.PROFILE)
     }
 
     // separate column needed in order to apply .weight(1f) and place `save` button at the bottom
@@ -149,7 +139,7 @@ fun EditUserProfile(
                 horizontalArrangement = Arrangement.spacedBy(48.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBackClicked) {
+                IconButton(onClick = navController::popBackStack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = null,
@@ -258,6 +248,7 @@ fun EditUserProfile(
 
 @Composable
 fun UserInfoFields(
+    // TODO: rewrite to AuthUIEvent
     firstName: String,
     onFirstNameChange: (String) -> Unit,
     lastName: String,
@@ -382,11 +373,9 @@ fun ConfirmationModalSheet(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UserProfile(
-    userViewModel: UserViewModel,
-    navController: NavController,
-) {
+fun UserProfile(userViewModel: UserViewModel) {
     LaunchedEffect(userViewModel) { userViewModel.loadUser() }
+    val navController = LocalNavController.current
     val user by userViewModel.user.collectAsStateWithLifecycle()
     Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
         Row(
@@ -608,9 +597,11 @@ fun LoginText(paddingTop: Dp = 12.dp) {
 }
 
 @Composable
-fun UnauthorizedScreen(navigateToAuth: () -> Unit) {
+fun UnauthorizedScreen() {
+    val navController = LocalNavController.current
     Column(
         modifier = Modifier
+            .background(MaterialTheme.colorScheme.background)
             .padding(start = 16.dp, top = 100.dp, end = 16.dp)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -633,7 +624,7 @@ fun UnauthorizedScreen(navigateToAuth: () -> Unit) {
             modifier = Modifier
                 .padding(top = 16.dp)
                 .fillMaxWidth(),
-            onClick = navigateToAuth
+            onClick = { navController.navigate(ScreenRoutes.PROFILE_REGISTRATION) }
         ) {
             Text(
                 text = "Войти или зарегистрироваться",

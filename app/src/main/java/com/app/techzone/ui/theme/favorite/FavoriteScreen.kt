@@ -20,11 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.app.techzone.data.remote.model.IBaseProduct
+import com.app.techzone.LocalNavController
+import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.ui.theme.catalog.LazyProductCards
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.profile.UnauthorizedScreen
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
@@ -32,39 +33,21 @@ import com.app.techzone.ui.theme.server_response.ServerResponse
 
 @Composable
 fun FavoriteScreen(
-    navController: NavController,
-    favorites: List<IBaseProduct>,
+    favorites: List<BaseProduct>,
     favoriteState: ServerResponse,
     loadFavorites: () -> Unit,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
-    LaunchedEffect(addToFavorite, removeFromFavorite){
-        loadFavorites()
-    }
+    LaunchedEffect(favorites.size){ loadFavorites() }
     when (favoriteState){
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> { ErrorScreen(loadFavorites) }
-        ServerResponse.UNAUTHORIZED -> {
-            UnauthorizedScreen {
-                navController.navigate(ScreenRoutes.PROFILE_REGISTRATION){
-                    popUpTo(ScreenRoutes.PROFILE_REGISTRATION)
-                }
-            }
-        }
+        ServerResponse.UNAUTHORIZED -> { UnauthorizedScreen() }
         ServerResponse.SUCCESS -> {
             if (favorites.isEmpty()) {
-                EmptyFavoriteScreen {
-                    navController.navigate(ScreenRoutes.CATALOG)
-                }
+                EmptyFavoriteScreen()
             } else {
-                FavoriteList(
-                    favorites,
-                    addToFavorite = addToFavorite,
-                    removeFromFavorite = removeFromFavorite,
-                ) {
-                    navController.navigate("catalog/$it")
-                }
+                FavoriteList(favorites, onProductAction)
             }
         }
     }
@@ -72,7 +55,8 @@ fun FavoriteScreen(
 
 
 @Composable
-fun EmptyFavoriteScreen(navigateToCatalog: () -> Unit) {
+fun EmptyFavoriteScreen() {
+    val navController = LocalNavController.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -93,7 +77,7 @@ fun EmptyFavoriteScreen(navigateToCatalog: () -> Unit) {
                 modifier = Modifier.padding(top = 12.dp, bottom = 16.dp, end = 43.dp, start = 43.dp),
                 textAlign = TextAlign.Center
             )
-            Button(onClick = navigateToCatalog, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { navController.navigate(ScreenRoutes.CATALOG) }, modifier = Modifier.fillMaxWidth()) {
                 Text(
                     "Перейти в каталог",
                     style = MaterialTheme.typography.labelLarge
@@ -106,10 +90,8 @@ fun EmptyFavoriteScreen(navigateToCatalog: () -> Unit) {
 
 @Composable
 fun FavoriteList(
-    favorites: List<IBaseProduct>,
-    addToFavorite: (Int) -> Int,
-    removeFromFavorite: (Int) -> Int,
-    navigateToDetail: (Int) -> Unit,
+    favorites: List<BaseProduct>,
+    onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     Column(Modifier.background(MaterialTheme.colorScheme.background)) {
         Row(
@@ -128,9 +110,7 @@ fun FavoriteList(
         }
         LazyProductCards(
             products = favorites,
-            navigateToDetail = navigateToDetail,
-            addToFavorite = addToFavorite,
-            removeFromFavorite = removeFromFavorite
+            onProductAction = onProductAction,
         )
     }
 }

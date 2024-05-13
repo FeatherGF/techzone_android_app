@@ -9,7 +9,9 @@ data class Television(
     @SerializedName("codecs")
     val codecs: String,
     @SerializedName("color_main")
-    val colorMain: String,
+    override val colorMain: String,
+    @SerializedName("color_variations")
+    override val colorVariations: List<ColorVariation>,
     @SerializedName("color_other")
     val colorOther: String,
     @SerializedName("consumption")
@@ -48,7 +50,9 @@ data class Television(
     val matrixFrequency: Int,
     @SerializedName("matrix_type")
     val matrixType: String,
-    val memory: Int,
+    override val memory: Int,
+    @SerializedName("memory_variations")
+    override val memoryVariations: List<Int>,
     @SerializedName("memory_ram")
     val memoryRam: Int,
     val model: String,
@@ -97,4 +101,6 @@ data class Television(
     override val isFavorite: Boolean,
     @SerializedName("bluetooth_control")
     val bluetoothControl: Boolean,
+    @SerializedName("is_in_cart")
+    override val isInCart: Boolean
 ): IDetailedProduct

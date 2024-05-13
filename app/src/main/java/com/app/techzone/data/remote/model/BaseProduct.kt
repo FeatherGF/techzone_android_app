@@ -4,7 +4,6 @@ package com.app.techzone.data.remote.model
 import com.google.gson.annotations.SerializedName
 
 
-// ProductTypeEnum.ACCESSORY.name.lowercase()
 enum class ProductTypeEnum {
     ACCESSORY,
     TABLET,
@@ -31,12 +30,24 @@ interface IBaseProduct{
     val reviewsCount: Int
     val rating: Float?
     val isFavorite: Boolean
+    val isInCart: Boolean
 }
 
 interface IDetailedProduct: IBaseProduct{
     val type: String
     val reviews: List<Review>
+    val colorMain: String
+    val colorVariations: List<ColorVariation>
+    val memoryVariations: List<Int>?
+    val memory: Int?
 }
+
+data class ColorVariation(
+    @SerializedName("color")
+    val colorName: String,
+    @SerializedName("hex")
+    val colorHex: String
+)
 
 data class BaseProduct(
     override val id: Int,
@@ -50,7 +61,9 @@ data class BaseProduct(
     @SerializedName("average_rating")
     override val rating: Float?,
     @SerializedName("is_favourite")
-    override val isFavorite: Boolean
+    override val isFavorite: Boolean,
+    @SerializedName("is_in_cart")
+    override val isInCart: Boolean
 ): IBaseProduct
 
 
