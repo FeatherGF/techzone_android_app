@@ -7,7 +7,9 @@ import com.app.techzone.data.remote.model.AddFavoriteRequest
 import com.app.techzone.data.remote.model.AddToCartRequest
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.ChangeQuantityRequest
+import com.app.techzone.data.remote.model.CreateOrderRequest
 import com.app.techzone.data.remote.model.Order
+import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
 import com.app.techzone.data.remote.model.ProductInCartResponse
 import com.app.techzone.data.remote.model.User
@@ -81,6 +83,8 @@ class UserRepo @Inject constructor(
             val deletedUser = userApi.deleteUser(accessToken)
             userIdToDelete == deletedUser.id
         } catch (e: IOException) {
+            false
+        } catch (e: HttpException) {
             false
         }
     }
@@ -215,6 +219,23 @@ class UserRepo @Inject constructor(
         val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
         return try {
             userApi.getOrders(accessToken)
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
+            null
+        }
+    }
+
+    suspend fun createOrder(orderItemIds: List<Int>, paymentMethod: String): OrderCreated? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.createOrder(
+                token = accessToken,
+                request = CreateOrderRequest(
+                    orderItemIds, paymentMethod
+                )
+            )
         } catch (e: IOException) {
             null
         } catch (e: HttpException) {

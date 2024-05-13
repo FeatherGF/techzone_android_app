@@ -53,6 +53,14 @@ private fun formatCommonCaseSample() {
     println(formatCommonCase(401, "отзыв"))  // "401 отзыв"
 }
 
+fun formatDateShort(s: String): String {
+    val locale = Locale("ru")
+    val dateParser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", locale)
+    val date = dateParser.parse(s)
+    val dateFormatter = java.text.SimpleDateFormat("dd.MM.yyyy", locale)
+    return dateFormatter.format(date!!)
+}
+
 /**
  * Конвертация булевого значения в человекочитабельный текст ("Есть" и "Нет")
  */

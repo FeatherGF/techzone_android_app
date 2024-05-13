@@ -44,7 +44,7 @@ fun FiltersAndSorting(showFilters: () -> Unit) {
 
     val (selectedSorting, onSortingSelected) = remember { mutableStateOf(sortingOptions[0]) }
     if (showSortingSheet) {
-        ModalBottomSheet(onDismissRequest = { showSortingSheet = false },) {
+        ModalBottomSheet(onDismissRequest = { showSortingSheet = false }) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

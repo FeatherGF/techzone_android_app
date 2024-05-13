@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -60,7 +59,7 @@ import com.app.techzone.ui.theme.profile.ConfirmationModalSheet
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.profile.UnauthorizedScreen
-import com.app.techzone.ui.theme.profile.UserViewModel
+import com.app.techzone.ui.theme.profile.auth.AuthState
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.calculateDiscount
@@ -74,17 +73,25 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CartScreen(
-    userViewModel: UserViewModel,
+    cartItems: List<OrderItem>,
+    state: AuthState,
+    loadCart: () -> Unit,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
-    val cartItems by userViewModel.cartItems.collectAsState()
-    LaunchedEffect(cartItems.size) {
-        userViewModel.loadCart()
-    }
-    when (userViewModel.state.response) {
-        ServerResponse.LOADING -> { LoadingBox() }
-        ServerResponse.ERROR -> { ErrorScreen(userViewModel::loadCart) }
-        ServerResponse.UNAUTHORIZED -> { UnauthorizedScreen() }
+    LaunchedEffect(cartItems.size) { loadCart() }
+    when (state.response) {
+        ServerResponse.LOADING -> {
+            LoadingBox()
+        }
+
+        ServerResponse.ERROR -> {
+            ErrorScreen(loadCart)
+        }
+
+        ServerResponse.UNAUTHORIZED -> {
+            UnauthorizedScreen()
+        }
+
         ServerResponse.SUCCESS -> {
             if (cartItems.isEmpty()) {
                 EmptyCartScreen()
@@ -134,11 +141,30 @@ fun EmptyCartScreen() {
 }
 
 
+fun List<OrderItem>.totalPrice(): Int {
+    return this.map { it.product.price * it.mutableQuantity.intValue }.reduce { acc, i -> acc + i }
+}
+
+fun List<OrderItem>.totalDiscountPrice(): Int {
+    return this
+        .associate {
+            (it.product.price to it.product.discountPercentage) to it.mutableQuantity.intValue
+        }
+        .map { (pair, quantity) ->
+            calculateDiscount(
+                initialPrice = pair.first,
+                discountPercentage = pair.second
+            ) * quantity
+        }
+        .reduce { acc, i -> acc + i }
+}
+
 @Composable
 fun CartItemsList(
     cartItems: List<OrderItem>,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
+    val navController = LocalNavController.current
     val stateProductMapping: Map<MutableState<Boolean>, OrderItem> =
         cartItems.associate { orderItem ->
             remember { mutableStateOf(true) } to orderItem.also {
@@ -154,7 +180,6 @@ fun CartItemsList(
         .filter { (state, _) -> state.value }
         .map { it.value }
         .toList()
-
     val bottomPadding = if (selectedItems.isNotEmpty()) (12 + 72).dp else 12.dp
     var deleteProductId: Int? by remember { mutableStateOf(null) }
     val scope = rememberCoroutineScope()
@@ -210,7 +235,7 @@ fun CartItemsList(
                     CartItemCard(
                         orderItem = product,
                         onProductAction = onProductAction,
-                        onShowModal = {deleteProductId = it}
+                        onShowModal = { deleteProductId = it }
                     )
                 }
             }
@@ -252,37 +277,22 @@ fun CartItemsList(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val discountPrice = selectedItems
-                                .associate { (it.product.price to it.product.discountPercentage) to it.mutableQuantity.intValue }
-                                .map { (pair, quantity) ->
-                                    calculateDiscount(
-                                        initialPrice = pair.first,
-                                        discountPercentage = pair.second
-                                    ) * quantity
-                                }
-                                .reduce { acc, i -> acc + i }
-
-                            val maxPrice = selectedItems
-                                .map { it.product.price * it.mutableQuantity.intValue }
-                                .reduce { acc, i -> acc + i }
-
+                            val totalDiscountPrice = selectedItems.totalDiscountPrice()
+                            val totalPrice = selectedItems.totalPrice()
                             Text(
-                                text = formatPrice(discountPrice),
+                                text = formatPrice(totalDiscountPrice),
                                 style = MaterialTheme.typography.titleLarge,
                             )
-
-                            if (discountPrice != maxPrice)
-                                ProductCrossedPrice(price = maxPrice, large = true)
+                            if (totalDiscountPrice != totalPrice)
+                                ProductCrossedPrice(price = totalPrice, large = true)
                         }
                     }
                     Button(
                         onClick = {
-//                            navController.navigate("${ScreenRoutes.PURCHASE}/${URLEncoder.encode(
-//                                selectedItems.map {
-//                                    it.id
-//                                }
-//                            )}")
-
+                            val orderItemIdsQuery = selectedItems
+                                .map { it.id }
+                                .joinToString("&") { "orderItem=$it" }
+                            navController.navigate("${ScreenRoutes.PURCHASE}?$orderItemIdsQuery")
                         },
                         modifier = Modifier.wrapContentWidth(),
                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
@@ -325,7 +335,7 @@ fun CartItemCard(
     LaunchedEffect(quantity) {
         // we don't need to send patch request with initial data.
         // only send it when quantity actually changes
-        if (isFirstComposition){
+        if (isFirstComposition) {
             isFirstComposition = false
         } else {
             snapshotFlow { quantity }.debounce(500L).distinctUntilChanged().collect {

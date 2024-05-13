@@ -29,7 +29,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.BaseProduct
-import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.model.PricePreset
 import com.app.techzone.ui.theme.app_bars.SearchWidgetState
 import com.app.techzone.ui.theme.ForStroke

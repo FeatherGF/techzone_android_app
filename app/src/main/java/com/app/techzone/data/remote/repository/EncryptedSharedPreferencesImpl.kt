@@ -9,6 +9,7 @@ import javax.inject.Inject
 object PreferencesKey {
     const val accessToken = "accessToken"
     const val refreshToken = "refreshToken"
+    const val savedCards = "savedCards"
 }
 
 class EncryptedSharedPreferencesImpl @Inject constructor(

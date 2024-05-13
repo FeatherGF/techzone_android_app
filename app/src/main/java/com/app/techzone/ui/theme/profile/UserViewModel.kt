@@ -3,18 +3,15 @@ package com.app.techzone.ui.theme.profile
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.runtime.CompositionLocal
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.Cart
 import com.app.techzone.data.remote.model.FavoritesList
-import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.data.remote.model.Order
 import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.data.remote.model.User
@@ -23,17 +20,12 @@ import com.app.techzone.ui.theme.profile.auth.AuthState
 import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -274,9 +266,14 @@ class UserViewModel @Inject constructor(
                 state = state.copy(response = ServerResponse.ERROR)
                 return@launch
             }
-            _orders.value = response.items
+            _orders.update { response.items }
             state = state.copy(response = ServerResponse.SUCCESS)
         }
+    }
+
+    suspend fun createOrder(orderItemIds: List<Int>, paymentMethod: String): Boolean {
+        val order = userRepo.createOrder(orderItemIds, paymentMethod)
+        return order != null
     }
 
     suspend fun onProductAction(action: ProductAction): Boolean {
@@ -357,13 +354,10 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    private fun authenticate(){
-        viewModelScope.launch {
-            state = state.copy(response = ServerResponse.LOADING)
-            val result = userRepo.authenticate()
-            resultChannel.send(result)
-            initialState = result
-            state = state.copy(response = ServerResponse.SUCCESS)
-        }
+    suspend fun authenticate(): AuthResult<Unit>{
+        val result = userRepo.authenticate()
+        resultChannel.send(result)
+        initialState = result
+        return result
     }
 }

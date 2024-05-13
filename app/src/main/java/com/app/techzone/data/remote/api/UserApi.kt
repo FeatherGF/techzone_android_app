@@ -4,9 +4,11 @@ import com.app.techzone.data.remote.model.AddFavoriteRequest
 import com.app.techzone.data.remote.model.AddToCartRequest
 import com.app.techzone.data.remote.model.Cart
 import com.app.techzone.data.remote.model.ChangeQuantityRequest
+import com.app.techzone.data.remote.model.CreateOrderRequest
 import com.app.techzone.data.remote.model.FavoriteItem
 import com.app.techzone.data.remote.model.FavoritesList
 import com.app.techzone.data.remote.model.Order
+import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
 import com.app.techzone.data.remote.model.ProductInCartResponse
 import com.app.techzone.data.remote.model.UserUpdateRequest
@@ -80,6 +82,13 @@ interface UserApi {
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.orders)
     suspend fun getOrders(@Header("Authorization") token: String): OrdersList
+
+    @Headers("Accept: application/json")
+    @POST(ApiConstants.Endpoints.orders)
+    suspend fun createOrder(
+        @Header("Authorization") token: String,
+        @Body request: CreateOrderRequest
+    ): OrderCreated
 
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.ordersDetail)

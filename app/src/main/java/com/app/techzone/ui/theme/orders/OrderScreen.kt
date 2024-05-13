@@ -1,6 +1,6 @@
 package com.app.techzone.ui.theme.orders
 
-import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -38,35 +38,40 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.Order
+import com.app.techzone.data.remote.model.OrderItem
+import com.app.techzone.data.remote.model.OrderStatus
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.Success
+import com.app.techzone.ui.theme.SuccessHalfOpacity
+import com.app.techzone.ui.theme.main.ProductBuyButton
 import com.app.techzone.ui.theme.main.ProductCrossedPrice
+import com.app.techzone.ui.theme.main.ProductFavoriteIcon
 import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.LoadingBox
+import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.profile.UnauthorizedScreen
 import com.app.techzone.ui.theme.profile.UserViewModel
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.calculateDiscount
+import com.app.techzone.utils.formatDateShort
 import com.app.techzone.utils.formatPrice
 
 @Composable
 fun OrderScreenRoot(
     userViewModel: UserViewModel,
 ) {
-    LaunchedEffect(userViewModel.orders) {
+    LaunchedEffect(Unit) {
         userViewModel.loadOrders()
     }
 
-//    val orders = emptyList<Order>()
     val orders by userViewModel.orders.collectAsStateWithLifecycle()
     when (userViewModel.state.response) {
         ServerResponse.LOADING -> {
@@ -85,7 +90,7 @@ fun OrderScreenRoot(
             if (orders.isEmpty()) {
                 EmptyOrderHistory()
             } else {
-                OrderHistory(orders)
+                OrderHistory(orders, userViewModel::onProductAction)
             }
         }
     }
@@ -131,6 +136,8 @@ fun EmptyOrderHistory() {
 
 @Composable
 fun OrdersTopBar() {
+    val navController = LocalNavController.current
+    BackHandler { navController.navigate(ScreenRoutes.PROFILE) }
     Row(
         Modifier
             .fillMaxWidth()
@@ -140,9 +147,7 @@ fun OrdersTopBar() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val navController = LocalNavController.current
-
-        IconButton(onClick = navController::popBackStack) {
+        IconButton(onClick = { navController.navigate(ScreenRoutes.PROFILE) }) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = null,
@@ -166,7 +171,10 @@ fun OrdersTopBar() {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun OrderHistory(orders: List<Order>) {
+fun OrderHistory(
+    orders: List<Order>,
+    onProductAction: suspend (ProductAction) -> Boolean,
+) {
     var selectedOrderId: Int? by remember { mutableStateOf(null) }
     Column(
         Modifier
@@ -193,21 +201,46 @@ fun OrderHistory(orders: List<Order>) {
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            "Заказ от ...",  // TODO: добавить в ответ от бека дату заказа
+                            "Заказ от ${formatDateShort(order.dateCreated)}",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.scrim
                         )
                     }
 
-                    // order status
+                    val orderStatus = OrderStatus.valueOf(order.status.uppercase())
+                    val containerColor: Color
+                    val textColor: Color
+                    val text: String
+                    when (orderStatus) {
+                        OrderStatus.ASSEMBLY -> {
+                            text = "В сборке"
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            textColor = MaterialTheme.colorScheme.primary
+                        }
+
+                        OrderStatus.READY -> {
+                            text = "Готов к выдаче"
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            textColor = MaterialTheme.colorScheme.primary
+                        }
+
+                        OrderStatus.GOT -> {
+                            text = "Получен"
+                            containerColor = SuccessHalfOpacity
+                            textColor = Success
+                        }
+
+                        else -> { // not possible here
+                            text = ""
+                            containerColor = Color.Companion.White
+                            textColor = Color.Companion.White
+                        }
+                    }
                     Surface(
-                        // если статус "Получен" то менять на зеленый
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.primary,
+                        color = containerColor,
+                        contentColor = textColor,
                         shape = RoundedCornerShape(4.dp),
                     ) {
-                        // only for testing
-                        val text = if (order.status == "cart") "В сборке" else "Получен"
                         Text(
                             text,
                             style = MaterialTheme.typography.labelLarge,
@@ -215,8 +248,8 @@ fun OrderHistory(orders: List<Order>) {
                         )
                     }
 
-                    FlowRow {
-                        order.orderItem.forEach { orderItem ->
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        order.orderItems.forEach { orderItem ->
                             ProductImageOrPreview(
                                 photos = orderItem.product.photos,
                                 modifier = Modifier.size(60.dp),
@@ -240,85 +273,117 @@ fun OrderHistory(orders: List<Order>) {
                 OrderComposition(
                     selectedOrder,
                     onDismiss = { selectedOrderId = null },
-                    showActions = true
+                    onProductAction = onProductAction
                 )
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderComposition(
     order: Order,
     onDismiss: () -> Unit,
-    showActions: Boolean = false,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.tertiary,
-        contentColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+    onProductAction: suspend (ProductAction) -> Boolean,
+) = OrderCompositionHolder().OrderCompositionInternal(
+    orderItems = order.orderItems,
+    onDismiss = onDismiss,
+    orderStatus = OrderStatus.valueOf(order.status.uppercase()),
+    onProductAction = onProductAction,
+)
+
+@Composable
+fun OrderComposition(
+    orderItems: List<OrderItem>,
+    onDismiss: () -> Unit,
+    onProductAction: suspend (ProductAction) -> Boolean,
+) = OrderCompositionHolder().OrderCompositionInternal(
+    orderItems = orderItems,
+    onDismiss = onDismiss,
+    orderStatus = null,
+    onProductAction = onProductAction,
+)
+
+private class OrderCompositionHolder {
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun OrderCompositionInternal(
+        orderItems: List<OrderItem>,
+        onDismiss: () -> Unit,
+        orderStatus: OrderStatus? = null,
+        onProductAction: suspend (ProductAction) -> Boolean,
     ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
         ) {
-            Text("Состав заказа", style = MaterialTheme.typography.titleLarge)
-            order.orderItem.forEach { orderItem ->
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    ProductImageOrPreview(
-                        photos = orderItem.product.photos,
-                        modifier = Modifier.size(60.dp),
-                        filterQuality = FilterQuality.None
-                    )
-                    Column(
-                        Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            "${orderItem.product.name} (${orderItem.quantity} шт.)",
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Text("Состав заказа", style = MaterialTheme.typography.titleLarge)
+                orderItems.forEach { orderItem ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        ProductImageOrPreview(
+                            photos = orderItem.product.photos,
+                            modifier = Modifier.size(60.dp),
+                            filterQuality = FilterQuality.None
                         )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            ProductCrossedPrice(
-                                product = orderItem.product,
-                                large = true
-                            )
                             Text(
-                                formatPrice(
-                                    calculateDiscount(
-                                        orderItem.product.price,
-                                        orderItem.product.discountPercentage
-                                    )
-                                ),
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = FontWeight.Medium
-                                ),
+                                "${orderItem.product.name} (${orderItem.quantity} шт.)",
+                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                             )
-                        }
-                        if (showActions){
-                            Row {
-                                Button(onClick = { }) {
-                                    Text("Оставить отзыв")
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                ProductCrossedPrice(
+                                    product = orderItem.product,
+                                    large = true
+                                )
+                                Text(
+                                    formatPrice(
+                                        calculateDiscount(
+                                            orderItem.product.price,
+                                            orderItem.product.discountPercentage
+                                        )
+                                    ),
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                )
+                            }
+                            orderStatus?.let {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    when (it) {
+                                        OrderStatus.GOT -> {
+                                            Button(onClick = { }) {
+                                                Text("Оставить отзыв")
+                                            }
+                                        }
+                                        else -> {
+                                            ProductBuyButton(
+                                                product = orderItem.product,
+                                                onProductAction = onProductAction
+                                            )
+                                            ProductFavoriteIcon(
+                                                product = orderItem.product,
+                                                sizeDp = 32.dp,
+                                                onProductAction = onProductAction
+                                            )
+                                        }
+                                    }
                                 }
-                                // TODO: order status enum
-//                                if (selectedOrder.status == "get") {  // получен
-//                                    Button(onClick = {  }) {
-//                                        Text("Оставить отзыв")
-//                                    }
-//                                } else {
-//                                    ProductBuyButton()
-//                                    ProductFavoriteIcon(
-//                                        product = orderItem.product,
-//                                        addToFavorite = ,
-//                                        removeFromFavorite =
-//                                    )
-//                                }
                             }
                         }
                     }

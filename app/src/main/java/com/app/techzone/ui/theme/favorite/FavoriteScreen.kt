@@ -20,10 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.BaseProduct
-import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.ui.theme.catalog.LazyProductCards
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.LoadingBox
@@ -40,13 +38,11 @@ fun FavoriteScreen(
     loadFavorites: () -> Unit,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
-    LaunchedEffect(favorites){ loadFavorites() }
+    LaunchedEffect(favorites.size){ loadFavorites() }
     when (favoriteState){
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> { ErrorScreen(loadFavorites) }
-        ServerResponse.UNAUTHORIZED -> {
-            UnauthorizedScreen()
-        }
+        ServerResponse.UNAUTHORIZED -> { UnauthorizedScreen() }
         ServerResponse.SUCCESS -> {
             if (favorites.isEmpty()) {
                 EmptyFavoriteScreen()
