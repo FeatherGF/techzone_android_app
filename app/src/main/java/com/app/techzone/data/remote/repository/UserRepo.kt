@@ -1,5 +1,7 @@
 package com.app.techzone.data.remote.repository
 
+import android.content.ContentResolver
+import android.net.Uri
 import android.util.Base64
 import com.app.techzone.data.remote.api.AuthRepository
 import com.app.techzone.data.remote.api.UserApi
@@ -13,16 +15,43 @@ import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
 import com.app.techzone.data.remote.model.ProductInCartResponse
 import com.app.techzone.data.remote.model.User
-import com.app.techzone.data.remote.model.UserUpdateRequest
 import com.app.techzone.model.AuthenticationRequest
 import com.app.techzone.model.AuthorizationRequest
 import com.app.techzone.model.SendCodeRequest
 import com.app.techzone.model.TokenResponse
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import okio.BufferedSink
+import okio.source
 import org.json.JSONObject
 import retrofit2.HttpException
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
+
+
+class ContentUriRequestBody(
+    private val contentResolver: ContentResolver,
+    private val contentUri: Uri
+) : RequestBody() {
+
+    override fun contentType(): MediaType? {
+        val contentType = contentResolver.getType(contentUri)
+        return contentType?.toMediaTypeOrNull()
+    }
+
+    override fun writeTo(sink: BufferedSink) {
+        val inputStream = contentResolver.openInputStream(contentUri)
+            ?: throw IOException("Couldn't open content URI for reading")
+
+        inputStream.source().use { source ->
+            sink.writeAll(source)
+        }
+    }
+}
 
 
 class UserRepo @Inject constructor(
@@ -59,6 +88,7 @@ class UserRepo @Inject constructor(
     }
 
     suspend fun updateUser(
+        imageFile: RequestBody? = null,
         firstName: String? = null,
         lastName: String? = null,
         phoneNumber: String? = null
@@ -67,10 +97,27 @@ class UserRepo @Inject constructor(
             authenticate()
             val accessToken = prefs.getKey(PreferencesKey.accessToken)
                 ?: return@handleExceptions AuthResult.Unauthorized()
-            userApi.updateUser(
-                token = accessToken,
-                userUpdateRequest = UserUpdateRequest(firstName, lastName, phoneNumber)
-            )
+            if (imageFile != null){
+                val imagePart = MultipartBody.Part.createFormData(
+                    "photo",
+                    "profile_photo.jpg",
+                    imageFile
+                )
+                userApi.updateUser(
+                    token = accessToken,
+                    photo = imagePart,
+                    firstName = firstName.orEmpty().toRequestBody(firstName?.toMediaTypeOrNull()),
+                    lastName = lastName.orEmpty().toRequestBody(lastName?.toMediaTypeOrNull()),
+                    phoneNumber = phoneNumber.orEmpty().toRequestBody(phoneNumber?.toMediaTypeOrNull())
+                )
+            } else {
+                userApi.updateUserWithoutPhoto(
+                    token = accessToken,
+                    firstName = firstName.orEmpty().toRequestBody(firstName?.toMediaTypeOrNull()),
+                    lastName = lastName.orEmpty().toRequestBody(lastName?.toMediaTypeOrNull()),
+                    phoneNumber = phoneNumber.orEmpty().toRequestBody(phoneNumber?.toMediaTypeOrNull())
+                )
+            }
             AuthResult.Authorized()
         }
     }

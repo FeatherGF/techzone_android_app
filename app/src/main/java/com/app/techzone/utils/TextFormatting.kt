@@ -2,6 +2,7 @@ package com.app.techzone.utils
 
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.util.Date
 import java.util.Locale
 
 fun formatPrice(price: Int): String {
@@ -54,11 +55,20 @@ private fun formatCommonCaseSample() {
 }
 
 fun formatDateShort(s: String): String {
-    val locale = Locale("ru")
-    val dateParser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", locale)
-    val date = dateParser.parse(s)
-    val dateFormatter = java.text.SimpleDateFormat("dd.MM.yyyy", locale)
-    return dateFormatter.format(date!!)
+    val date = getDateObject(s) ?: return ""
+    val dateFormatter = java.text.SimpleDateFormat("dd.MM.yyyy", Locale("ru"))
+    return dateFormatter.format(date)
+}
+
+private fun getDateObject(s: String): Date? {
+    val dateParser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale("ru"))
+    return dateParser.parse(s)
+}
+
+fun formatDateLong(s: String): String {
+    val date = getDateObject(s) ?: return ""
+    val dateFormatter = java.text.SimpleDateFormat("dd MMMM yyyy", Locale("ru"))
+    return dateFormatter.format(date)
 }
 
 /**
