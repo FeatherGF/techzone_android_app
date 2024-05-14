@@ -1,15 +1,23 @@
 package com.app.techzone.model
 
+
+enum class SortingOptions {
+    POPULAR,
+    PRICE_ASC,
+    PRICE_DESC,
+    DISCOUNT_DESC,
+    RATING_DESC;
+}
+
 data class Sorting (
     val text: String,
-    val queryName: String, // price_desc, price_asc, popular etc
+    val queryName: SortingOptions,
 )
 
-// queryName нужно согласовать с беком
 val sortingOptions = listOf(
-    Sorting("По популярности", queryName = "popular"),
-    Sorting("Сначала недорогие", queryName = "price_asc"),
-    Sorting("Сначала дорогие", queryName = "price_desc"),
-    Sorting("По размеру скидки", queryName = "sale_amount"),
-    Sorting("Высокий рейтинг", queryName = "high_rating"),
+    Sorting("По популярности", queryName = SortingOptions.POPULAR),
+    Sorting("Сначала недорогие", queryName = SortingOptions.PRICE_ASC),
+    Sorting("Сначала дорогие", queryName = SortingOptions.PRICE_DESC),
+    Sorting("По размеру скидки", queryName = SortingOptions.DISCOUNT_DESC),
+    Sorting("Высокий рейтинг", queryName = SortingOptions.RATING_DESC),
 )

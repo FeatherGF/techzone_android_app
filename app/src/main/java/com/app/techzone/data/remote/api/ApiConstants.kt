@@ -24,7 +24,7 @@ object ApiConstants {
         const val televisionsDetail = "televisions/{id_television}"
 
         // user
-        const val userDetail = "users"
+        const val users = "users/"
 
         // authentication
         const val sendAuthCode = "users/send-authentication-code"

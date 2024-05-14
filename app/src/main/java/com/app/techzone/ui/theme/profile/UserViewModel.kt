@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.RequestBody
 import javax.inject.Inject
 
 @HiltViewModel
@@ -75,19 +76,18 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    fun updateUser(
+    suspend fun updateUser(
+        imageFile: RequestBody? = null,
         firstName: String? = null,
         lastName: String? = null,
         phoneNumber: String? = null
     ) {
         state = state.copy(response = ServerResponse.LOADING)
-        viewModelScope.launch {
-            val result = userRepo.updateUser(
-                firstName, lastName, phoneNumber
-            )
-            initialState = result
-            resultChannel.send(result)
-        }
+        val result = userRepo.updateUser(
+            imageFile, firstName, lastName, phoneNumber
+        )
+        initialState = result
+        resultChannel.send(result)
         state = state.copy(response = ServerResponse.SUCCESS)
     }
 
@@ -100,7 +100,7 @@ class UserViewModel @Inject constructor(
                 resultChannel.send(AuthResult.UnknownError())
                 return@launch
             }
-            _user.value = response
+            _user.update{ response }
             resultChannel.send(AuthResult.Authorized())
             state = state.copy(response = ServerResponse.SUCCESS)
         }

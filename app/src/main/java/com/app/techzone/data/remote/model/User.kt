@@ -13,16 +13,9 @@ data class User(
     @SerializedName("last_name")
     val lastName: String? = null,
     @SerializedName("phone_number")
-    val phoneNumber: String? = null
-)
-
-data class UserUpdateRequest(
-    @SerializedName("first_name")
-    val firstName: String? = null,
-    @SerializedName("last_name")
-    val lastName: String? = null,
-    @SerializedName("phone_number")
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    @SerializedName("photo_url")
+    val photoUrl: String
 )
 
 typealias ReasonValidationFailed = String

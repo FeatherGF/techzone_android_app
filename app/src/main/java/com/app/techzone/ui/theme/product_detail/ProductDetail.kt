@@ -31,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -78,8 +79,10 @@ import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.product_detail.characteristics.ICharacteristic
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.ProductAction
+import com.app.techzone.ui.theme.profile.ProfilePicture
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
+import com.app.techzone.utils.formatDateLong
 import com.app.techzone.utils.getProductCharacteristics
 
 
@@ -475,35 +478,43 @@ fun Review(review: Review) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         val textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-        Column {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    review.user.ifBlank { "Неопознанный покупатель" },
-                    style = textStyle,
-                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    for (index in 0..4) {
-                        val starIcon =
-                            if (index < review.rating) Icons.Filled.Star else Icons.Outlined.StarOutline
-                        Icon(
-                            modifier = Modifier.size(17.dp),
-                            imageVector = starIcon,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)){
+            ProfilePicture(
+                Modifier.size(40.dp),
+                userPhotoUrl = review.photoUrl,
+                imageUri = null,
+                iconTint = ForStroke
+            )
+            Column {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        review.user.ifBlank { "Неопознанный покупатель" },
+                        style = textStyle,
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        for (index in 0..4) {
+                            val starIcon =
+                                if (index < review.rating) Icons.Filled.Star else Icons.Outlined.StarOutline
+                            Icon(
+                                modifier = Modifier.size(17.dp),
+                                imageVector = starIcon,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
-            }
-            Row(Modifier.padding(top = 4.dp)) {
-                Text(
-                    "1 марта 2024", // TODO: поставить обратно product.dateCreated, когда баг на беке пофиксится
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.scrim
-                )
+                Row(Modifier.padding(top = 4.dp)) {
+                    Text(
+                        formatDateLong(review.dateCreated),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)
+                    )
+                }
             }
         }
 
@@ -511,7 +522,7 @@ fun Review(review: Review) {
             Text(
                 review.text,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.scrim
+                color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)
             )
         }
     }
@@ -533,10 +544,12 @@ fun ProductDetailReviews(
         if (showAllReviews || reviews.size < 4) {
             reviews.forEach { reviewData: Review ->
                 Review(reviewData)
+                HorizontalDivider(color = ForStroke)
             }
         } else {
             for (index in 0..2) {
                 Review(reviews[index])
+                HorizontalDivider(color = ForStroke)
             }
             Button(
                 onClick = onShowAllReviewsChange,

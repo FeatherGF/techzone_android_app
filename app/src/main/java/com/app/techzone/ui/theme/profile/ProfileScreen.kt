@@ -1,8 +1,15 @@
 package com.app.techzone.ui.theme.profile
 
+import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +37,6 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,7 +58,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -61,12 +71,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.app.techzone.LocalNavController
 import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.validateUserInfo
+import com.app.techzone.data.remote.repository.ContentUriRequestBody
 import com.app.techzone.utils.formatPhoneNumber
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.RoundBorder100
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.utils.MaskVisualTransformation
@@ -103,23 +116,28 @@ fun EditUserProfile(userViewModel: UserViewModel) {
     val user by userViewModel.user.collectAsStateWithLifecycle()
 
     BackHandler(onBack = navController::popBackStack)
-
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        imageUri = uri
+        println(imageUri)
+    }
+    val userPhotoUrl by remember { mutableStateOf(user?.photoUrl) }
     val (firstName, onFirstNameChange) = remember { mutableStateOf(user?.firstName ?: "") }
     val (lastName, onLastNameChange) = remember { mutableStateOf(user?.lastName ?: "") }
     val (phoneNumber, onPhoneNumberChange) = remember { mutableStateOf(user?.phoneNumber ?: "") }
+    val context = LocalContext.current
 
-    fun saveUserChanges() {
+    suspend fun saveUserChanges() {
         val (isValid, reason) = validateUserInfo(firstName, lastName, phoneNumber)
         if (!isValid){
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(reason)
-            }
+            snackbarHostState.showSnackbar(reason)
             return
         }
         userViewModel.updateUser(
-            firstName = firstName.takeIf { it.isNotBlank() } ?: "",
-            lastName = lastName.takeIf { it.isNotBlank() } ?: "",
-            phoneNumber = phoneNumber.takeIf { it.isNotBlank() } ?: ""
+            imageFile = imageUri?.let { ContentUriRequestBody(context.contentResolver, it) },
+            firstName = firstName,
+            lastName = lastName,
+            phoneNumber = phoneNumber,
         )
         navController.navigate(ScreenRoutes.PROFILE)
     }
@@ -162,17 +180,34 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.AccountCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(100.dp),
-                        tint = Color(0xFF272727).copy(alpha = 0.3f)
+                    val interactionSource = remember { MutableInteractionSource() }
+                    val isHovered by interactionSource.collectIsHoveredAsState()
+                    val isPressed by interactionSource.collectIsPressedAsState()
+                    ProfilePicture(
+                        Modifier
+                            .size(100.dp)
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = null,
+                                onClick = { launcher.launch("image/*") }
+                            ),
+                        userPhotoUrl = userPhotoUrl,
+                        imageUri = imageUri
                     )
-                    Icon(
-                        imageVector = Icons.Outlined.CameraAlt,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
+                    if (isHovered || isPressed){
+                        val size = if (userPhotoUrl != null || imageUri != null) 100.dp else 84.dp
+                        Box(
+                            Modifier
+                                .size(size)
+                                .clip(RoundBorder100)
+                                .background(ForStroke.copy(alpha = 0.4f))
+                        )
+                        Icon(
+                            imageVector = Icons.Outlined.CameraAlt,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
                 }
 
                 UserInfoFields(
@@ -185,7 +220,9 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                     email = user?.email!!,
                     phoneFieldActions = KeyboardActions(
                         onSend = {
-                            saveUserChanges()
+                            coroutineScope.launch {
+                                saveUserChanges()
+                            }
                             // if text fields contained errors, hide keyboard to make snackbar visible
                             keyboardController?.hide()
                         }
@@ -234,7 +271,11 @@ fun EditUserProfile(userViewModel: UserViewModel) {
         ) {
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { saveUserChanges() }
+                onClick = {
+                    coroutineScope.launch {
+                        saveUserChanges()
+                    }
+                }
             ) {
                 Text(
                     "Сохранить изменения",
@@ -243,6 +284,31 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ProfilePicture(
+    modifier: Modifier = Modifier,
+    userPhotoUrl: String? = null,
+    imageUri: Uri? = null,
+    iconTint: Color = ForStroke.copy(alpha = 0.3f)
+) {
+    if (userPhotoUrl == null && imageUri == null) {
+        Icon(
+            imageVector = Icons.Filled.AccountCircle,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = modifier
+        )
+    } else {
+        AsyncImage(
+            model = imageUri ?: userPhotoUrl,
+            contentDescription = null,
+            modifier = modifier.clip(RoundBorder100),
+            filterQuality = FilterQuality.None,
+            contentScale = ContentScale.Crop
+        )
     }
 }
 
@@ -374,7 +440,7 @@ fun ConfirmationModalSheet(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun UserProfile(userViewModel: UserViewModel) {
-    LaunchedEffect(userViewModel) { userViewModel.loadUser() }
+    LaunchedEffect(userViewModel.user) { userViewModel.loadUser() }
     val navController = LocalNavController.current
     val user by userViewModel.user.collectAsStateWithLifecycle()
     Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
@@ -409,11 +475,11 @@ fun UserProfile(userViewModel: UserViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    modifier = Modifier.size(80.dp),
-                    imageVector = Icons.Rounded.AccountCircle,
-                    contentDescription = null,
-                    tint = ForStroke.copy(alpha = 0.1f)
+                ProfilePicture(
+                    Modifier.size(80.dp),
+                    userPhotoUrl = user?.photoUrl,
+                    imageUri = null,
+                    iconTint = ForStroke
                 )
                 FlowColumn(
                     verticalArrangement = Arrangement.SpaceBetween,

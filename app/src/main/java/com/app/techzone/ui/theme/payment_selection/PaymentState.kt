@@ -1,7 +1,5 @@
 package com.app.techzone.ui.theme.payment_selection
 
-import android.icu.text.SimpleDateFormat
-import java.util.Locale
 
 enum class PaymentScreens {
     CHOOSE_PAYMENT,
