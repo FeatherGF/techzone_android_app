@@ -26,6 +26,7 @@ import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.ui.theme.orders.OrderScreenRoot
 import com.app.techzone.ui.theme.payment_selection.PaymentSelectionRoot
 import com.app.techzone.ui.theme.payment_selection.PaymentViewModel
+import com.app.techzone.ui.theme.privacy_policy.PrivacyPolicy
 import com.app.techzone.ui.theme.product_detail.ProductDetailScreen
 import com.app.techzone.ui.theme.profile.UserViewModel
 import com.app.techzone.ui.theme.profile.ProfileScreen
@@ -96,6 +97,9 @@ fun Main(navController: NavHostController) {
         },
     ) {
         NavHost(navController = navController, startDestination = ScreenRoutes.MAIN) {
+            composable(ScreenRoutes.PRIVACY_POLICY) {
+                PrivacyPolicy()
+            }
             composable(ScreenRoutes.MAIN) {
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
                 MainScreen(

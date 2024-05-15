@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -29,9 +30,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import com.app.techzone.LocalNavController
 import com.app.techzone.R
@@ -80,6 +84,7 @@ fun EnterEmailAddress(
     onEmailTextChange: (String) -> Unit,
     onEmailSendCode: () -> Unit,
 ) {
+    val navController = LocalNavController.current
     var errorText by remember { (mutableStateOf("")) }
     OutlinedTextField(
         modifier = Modifier
@@ -102,7 +107,7 @@ fun EnterEmailAddress(
     )
     Button(
         modifier = Modifier
-            .padding(top = 16.dp)
+            .padding(bottom = 20.dp)
             .fillMaxWidth(),
         onClick = {
             if (!android.util.Patterns.EMAIL_ADDRESS.matcher(state.authEmail).matches()) {
@@ -115,6 +120,24 @@ fun EnterEmailAddress(
         enabled = state.authEmail.isNotBlank(),
     ) {
         Text("Получить код", style = MaterialTheme.typography.labelLarge)
+    }
+    val annotatedString = buildAnnotatedString {
+        pushStyle(SpanStyle(color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f)))
+        append("Нажимая кнопку \"Получить код\", Вы соглашаетесь c условиями ")
+        pop()
+        pushStringAnnotation(tag = "privacy", annotation = "privacy")
+        pushStyle(SpanStyle(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)))
+        append("политики конфиденциальности")
+        pop()
+    }
+    ClickableText(
+        text = annotatedString,
+        style = MaterialTheme.typography.labelLarge.copy(
+            letterSpacing = 0.25.sp,
+            fontWeight = FontWeight.Normal
+        )
+    ) {
+        navController.navigate(ScreenRoutes.PRIVACY_POLICY)
     }
     when (state.response){
         ServerResponse.LOADING -> { LoadingBox() }
