@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddCard
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
@@ -38,9 +39,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.LocalNavController
 import com.app.techzone.ui.theme.DarkText
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.profile.ConfirmationModalSheet
 import com.app.techzone.ui.theme.purchase.PaymentType
 import com.app.techzone.utils.MaskVisualTransformation
 import com.app.techzone.utils.formatMaskedCard
@@ -48,11 +51,12 @@ import com.app.techzone.utils.formatMaskedCard
 
 @Composable
 fun PaymentSelectionRoot(paymentViewModel: PaymentViewModel) {
+    val cards by paymentViewModel.cards.collectAsStateWithLifecycle()
     when (paymentViewModel.state.screen) {
         PaymentScreens.CHOOSE_PAYMENT -> {
             PaymentSelection(
                 onEvent = paymentViewModel::onEvent,
-                savedCards = paymentViewModel.getCards()
+                savedCards = cards
             )
         }
 
@@ -72,6 +76,7 @@ fun PaymentSelection(onEvent: (PaymentUiEvent) -> Unit, savedCards: List<Card>) 
             else emptyPayment
         )
     }
+    var cardToDelete: String? by remember { mutableStateOf(null) }
     val navController = LocalNavController.current
     Column(
         Modifier
@@ -91,6 +96,7 @@ fun PaymentSelection(onEvent: (PaymentUiEvent) -> Unit, savedCards: List<Card>) 
                     Modifier
                         .fillMaxWidth()
                         .height(56.dp)
+                        .padding(start = 34.dp, end = 24.dp)
                         .selectable(
                             selected = selectedPaymentMethod.first == card.cardNumber,
                             onClick = {
@@ -103,18 +109,24 @@ fun PaymentSelection(onEvent: (PaymentUiEvent) -> Unit, savedCards: List<Card>) 
                             },
                             role = Role.RadioButton
                         ),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Checkbox(
-                        modifier = Modifier.padding(start = 34.dp, end = 34.dp),
-                        checked = selectedPaymentMethod.first == card.cardNumber,
-                        onCheckedChange = null
-                    )
-                    Text(
-                        formatMaskedCard(card.cardNumber),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                    )
+                    Row {
+                        Checkbox(
+                            modifier = Modifier.padding(end = 34.dp),
+                            checked = selectedPaymentMethod.first == card.cardNumber,
+                            onCheckedChange = null
+                        )
+                        Text(
+                            formatMaskedCard(card.cardNumber),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                        )
+                    }
+                    IconButton(onClick = { cardToDelete = card.cardNumber }) {
+                        Icon(imageVector = Icons.Filled.Close, contentDescription = null)
+                    }
                 }
                 HorizontalDivider(color = ForStroke.copy(alpha = 0.1f))
             }
@@ -165,6 +177,18 @@ fun PaymentSelection(onEvent: (PaymentUiEvent) -> Unit, savedCards: List<Card>) 
                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                 )
             }
+        }
+        cardToDelete?.let { cardNumber ->
+            // make nu
+            val shortMaskedCardNumber = cardNumber.takeLast(6).replaceRange(0..1, "**")
+            ConfirmationModalSheet(
+                confirmationText = "Вы действительно хотите удалить карту $shortMaskedCardNumber из профиля? Отменить это дейстиве будет невозможно.",
+                onConfirm = {
+                    onEvent(PaymentUiEvent.DeleteCard(cardNumber))
+                    cardToDelete = null
+                },
+                onDismiss = { cardToDelete = null }
+            )
         }
     }
 }

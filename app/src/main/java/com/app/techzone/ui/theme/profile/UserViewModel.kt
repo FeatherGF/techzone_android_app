@@ -20,7 +20,11 @@ import com.app.techzone.ui.theme.profile.auth.AuthState
 import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,7 +56,7 @@ class UserViewModel @Inject constructor(
     private val _orders = MutableStateFlow(emptyList<Order>())
     val orders = _orders.asStateFlow()
 
-    fun logoutUser(){
+    fun logoutUser() {
         viewModelScope.launch {
             userRepo.logoutUser()
             _cartItems.update { emptyList() }
@@ -62,7 +66,7 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    fun deleteUser(){
+    fun deleteUser() {
         viewModelScope.launch {
             val result: AuthResult<Unit> =
                 if (userRepo.deleteUser()){
@@ -130,7 +134,6 @@ class UserViewModel @Inject constructor(
 
                 resultChannel.send(AuthResult.Authorized())
                 state = state.copy(response = ServerResponse.SUCCESS)
-                println("favorites loaded")
             }
         }
     }
@@ -180,12 +183,6 @@ class UserViewModel @Inject constructor(
             )
             return false
         }
-        if (!isSuccessful){
-            snackbarHostState.showSnackbar(
-                "Авторизуйтесь в приложение, чтобы добавлять товары в избранное"
-            )
-            return false
-        }
         isRemoved = true
         val result = snackbarHostState.showSnackbar(
             message = "Товар удален из избранного",
@@ -214,42 +211,77 @@ class UserViewModel @Inject constructor(
                 }
                 else -> {}
             }
-
             if (response is AuthResult.Authorized) {
                 response.data?.let { cart ->
                     _cartItems.update{ cart.items }
                 }
                 resultChannel.send(AuthResult.Authorized())
                 state = state.copy(response = ServerResponse.SUCCESS)
-                println("cart loaded")
             }
         }
     }
 
-    private suspend fun addToCart(productId: Int): Boolean {
-        var isSuccessful = false
-        userRepo.addToCart(productId)?.let{
-            val response: AuthResult<Cart> = userRepo.getCart()
-            if (response is AuthResult.Authorized){
-                response.data?.let{ cart ->
-                    _cartItems.update { cart.items }
-                }
-                isSuccessful = true
-            }
+    private suspend fun addToCart(productId: Int, snackbarHostState: SnackbarHostState): Boolean {
+        val isSuccessful = userRepo.addToCart(productId)
+        if (isSuccessful == null){
+            snackbarHostState.showSnackbar(
+                "Что-то пошло не так\nПроверьте подключение к интернету"
+            )
+            return false
         }
-        return isSuccessful
+        if (!isSuccessful){
+            snackbarHostState.showSnackbar(
+                "Авторизуйтесь в приложение, чтобы добавлять товары в корзину"
+            )
+            return false
+        }
+        val cartResponse: AuthResult<Cart> = userRepo.getCart()
+        if (cartResponse !is AuthResult.Authorized)
+            return false
+        cartResponse.data?.let { cart ->
+            _cartItems.update { cart.items }
+        }
+        return true
     }
 
-    private suspend fun removeFromCart(productId: Int): Boolean {
-        var isRemoved = false
-        userRepo.removeFromCart(productId)?.let{ isSuccessful ->
-            if(!isSuccessful) return false
+    private suspend fun removeFromCart(productId: Int, snackbarHostState: SnackbarHostState): Boolean {
+        val isRemoved = userRepo.removeFromCart(productId)
+        if (isRemoved == null){
+            snackbarHostState.showSnackbar(
+                "Что-то пошло не так\nПроверьте подключение к интернету"
+            )
+            return true
+        }
+        if (isRemoved) {
             _cartItems.update { listOrderItems ->
                 listOrderItems.filter { it.product.id != productId }
             }
-            isRemoved = true
         }
         return !isRemoved
+    }
+
+    private suspend fun clearCart(): Boolean {
+        return try {
+            coroutineScope {
+                _cartItems.value.map {
+                    async {
+                        userRepo.removeFromCart(it.product.id)
+                    }
+                }.awaitAll()
+            }
+            _cartItems.update { emptyList() }
+            true
+        } catch (e: CancellationException){
+            // if coroutines were cancelled load cart to represent items
+            // that weren't deleted
+            val response: AuthResult<Cart> = userRepo.getCart()
+            if(response is AuthResult.Authorized){
+                response.data?.let { cart ->
+                    _cartItems.update { cart.items }
+                }
+            }
+            false
+        }
     }
 
     private fun changeQuantityInCart(productId: Int, quantity: Int) {
@@ -279,15 +311,18 @@ class UserViewModel @Inject constructor(
     suspend fun onProductAction(action: ProductAction): Boolean {
         when (action){
             is ProductAction.AddToCart -> {
-                return addToCart(action.productId)
+                return addToCart(action.productId, action.snackbarHostState)
             }
             is ProductAction.RemoveFromCart -> {
-                return removeFromCart(action.productId)
+                return removeFromCart(action.productId, action.snackbarHostState)
             }
 
             is ProductAction.ChangeQuantityInCart -> {
                 changeQuantityInCart(action.productId, action.quantity)
                 return true
+            }
+            is ProductAction.ClearCart -> {
+                return clearCart()
             }
 
             is ProductAction.AddToFavorites -> {

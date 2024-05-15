@@ -10,6 +10,9 @@ import com.app.techzone.data.remote.repository.PreferencesKey
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.util.Locale
 import javax.inject.Inject
 
@@ -21,7 +24,14 @@ class PaymentViewModel @Inject constructor(
     private val gson = Gson()
     var state by mutableStateOf(PaymentState())
 
-    fun getCards(): List<Card> {
+    private var _cards = MutableStateFlow<List<Card>>(emptyList())
+    val cards = _cards.asStateFlow()
+
+    init {
+        _cards.update { _getCards() }
+    }
+
+    private fun _getCards(): List<Card> {
         val storedCards = prefs.getKey(PreferencesKey.savedCards) ?: return emptyList()
         val type = object : TypeToken<List<Card>>(){}.type
         return gson.fromJson(storedCards, type)
@@ -56,10 +66,26 @@ class PaymentViewModel @Inject constructor(
                     listOf(newCard) + storedDecodedCards
                 }
                 val encodedCards = gson.toJson(cards)
+                _cards.update { cards }
                 prefs.sharedPreferences.edit().putString(
                     PreferencesKey.savedCards, encodedCards
                 ).apply()
-                state = state.copy(screen = PaymentScreens.CHOOSE_PAYMENT)
+                state = state.copy(
+                    screen = PaymentScreens.CHOOSE_PAYMENT,
+                    cardNumber = "",
+                    expirationDate = "",
+                    code = ""
+                )
+            }
+            is PaymentUiEvent.DeleteCard -> {
+                var storedCards = _getCards()
+                if (storedCards.isEmpty()) return
+                storedCards = storedCards.filter {it.cardNumber != event.cardNumber}
+                val encodedCards = gson.toJson(storedCards)
+                prefs.sharedPreferences.edit().putString(
+                    PreferencesKey.savedCards, encodedCards
+                ).apply()
+                _cards.update { storedCards }
             }
             is PaymentUiEvent.CodeChanged -> {
                 state = state.copy(code = event.value)

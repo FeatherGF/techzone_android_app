@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
+import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
@@ -165,6 +167,7 @@ fun CartItemsList(
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     val navController = LocalNavController.current
+    val snackbarHostState = LocalSnackbarHostState.current
     val stateProductMapping: Map<MutableState<Boolean>, OrderItem> =
         cartItems.associate { orderItem ->
             remember { mutableStateOf(true) } to orderItem.also {
@@ -182,6 +185,7 @@ fun CartItemsList(
         .toList()
     val bottomPadding = if (selectedItems.isNotEmpty()) (12 + 72).dp else 12.dp
     var deleteProductId: Int? by remember { mutableStateOf(null) }
+    var clearCart by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     Box(
         modifier = Modifier
@@ -207,19 +211,47 @@ fun CartItemsList(
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, bottom = 16.dp)
             ) {
-                Checkbox(
-                    checked = areAllChosen,
-                    onCheckedChange = {
-                        stateProductMapping.keys.map { state -> state.value = it }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = areAllChosen,
+                        onCheckedChange = {
+                            stateProductMapping.keys.map { state -> state.value = it }
+                        }
+                    )
+                    Text(
+                        "Выбрать все",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
+                    )
+                }
+                OutlinedButton(
+                    onClick = { clearCart = true },
+                    border = null,
+                    contentPadding = PaddingValues(start = 12.dp, end = 16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .size(26.dp)
+                                .padding(end = 8.dp)
+                        )
+                        Text(
+                            "Удалить все",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
-                )
-                Text(
-                    "Выбрать все",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-                )
+                }
             }
 
             stateProductMapping.forEach { (state, product) ->
@@ -311,11 +343,23 @@ fun CartItemsList(
                 confirmationText = "Вы действительно хотите удалить товар из корзины?",
                 onConfirm = {
                     scope.launch {
-                        onProductAction(ProductAction.RemoveFromCart(productId))
+                        onProductAction(ProductAction.RemoveFromCart(productId, snackbarHostState))
                         deleteProductId = null
                     }
                 },
                 onDismiss = { deleteProductId = null }
+            )
+        }
+        if(clearCart) {
+            ConfirmationModalSheet(
+                confirmationText = "Вы действительно хотите удалить все товары из корзины?",
+                onConfirm = {
+                    scope.launch {
+                        onProductAction(ProductAction.ClearCart)
+                        clearCart = false
+                    }
+                },
+                onDismiss = { clearCart = false }
             )
         }
     }
@@ -338,7 +382,7 @@ fun CartItemCard(
         if (isFirstComposition) {
             isFirstComposition = false
         } else {
-            snapshotFlow { quantity }.debounce(500L).distinctUntilChanged().collect {
+            snapshotFlow { quantity }.debounce(1000L).distinctUntilChanged().collect {
                 onProductAction(ProductAction.ChangeQuantityInCart(orderItem.product.id, quantity))
             }
         }
