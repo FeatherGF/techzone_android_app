@@ -20,7 +20,11 @@ import com.app.techzone.ui.theme.profile.auth.AuthState
 import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -130,7 +134,6 @@ class UserViewModel @Inject constructor(
 
                 resultChannel.send(AuthResult.Authorized())
                 state = state.copy(response = ServerResponse.SUCCESS)
-                println("favorites loaded")
             }
         }
     }
@@ -221,7 +224,6 @@ class UserViewModel @Inject constructor(
                 }
                 resultChannel.send(AuthResult.Authorized())
                 state = state.copy(response = ServerResponse.SUCCESS)
-                println("cart loaded")
             }
         }
     }
@@ -250,6 +252,30 @@ class UserViewModel @Inject constructor(
             isRemoved = true
         }
         return !isRemoved
+    }
+
+    private suspend fun clearCart(): Boolean {
+        return try {
+            coroutineScope {
+                _cartItems.value.map {
+                    async {
+                        userRepo.removeFromCart(it.product.id)
+                    }
+                }.awaitAll()
+            }
+            _cartItems.update { emptyList() }
+            true
+        } catch (e: CancellationException){
+            // if coroutines were cancelled load cart to represent items
+            // that weren't deleted
+            val response: AuthResult<Cart> = userRepo.getCart()
+            if(response is AuthResult.Authorized){
+                response.data?.let { cart ->
+                    _cartItems.update { cart.items }
+                }
+            }
+            false
+        }
     }
 
     private fun changeQuantityInCart(productId: Int, quantity: Int) {
@@ -288,6 +314,9 @@ class UserViewModel @Inject constructor(
             is ProductAction.ChangeQuantityInCart -> {
                 changeQuantityInCart(action.productId, action.quantity)
                 return true
+            }
+            is ProductAction.ClearCart -> {
+                return clearCart()
             }
 
             is ProductAction.AddToFavorites -> {

@@ -6,6 +6,7 @@ sealed class ProductAction {
     data class AddToCart(val productId: Int): ProductAction()
     data class RemoveFromCart(val productId: Int): ProductAction()
     data class ChangeQuantityInCart(val productId: Int, val quantity: Int): ProductAction()
+    data object ClearCart: ProductAction()
 
     data class AddToFavorites(
         val productId: Int,
