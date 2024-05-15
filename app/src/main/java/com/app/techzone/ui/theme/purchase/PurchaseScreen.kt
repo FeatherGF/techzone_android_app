@@ -81,7 +81,8 @@ fun PurchaseScreenRoot(
     paymentViewModel: PaymentViewModel,
     orderItemIds: List<Int>
 ) {
-    PurchaseScreen(userViewModel, orderItemIds, storedCards = paymentViewModel.getCards())
+    val cards by paymentViewModel.cards.collectAsStateWithLifecycle()
+    PurchaseScreen(userViewModel, orderItemIds, storedCards = cards)
     when (userViewModel.state.response) {
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> { ErrorScreen(userViewModel::loadUser) }

@@ -7,5 +7,6 @@ sealed class PaymentUiEvent {
     data class CardNumberChanged(val value: String): PaymentUiEvent()
     data class ExpirationDateChanged(val value: String): PaymentUiEvent()
     data class CodeChanged(val value: String): PaymentUiEvent()
-    data object CheckCard: PaymentUiEvent()  // will be done in the future
+    data object CheckCard: PaymentUiEvent()
+    data class DeleteCard(val cardNumber: String): PaymentUiEvent()
 }
