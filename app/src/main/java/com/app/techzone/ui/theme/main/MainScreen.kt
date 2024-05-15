@@ -246,14 +246,14 @@ fun ProductBuyButton(
             contentColor = MaterialTheme.colorScheme.primary
         )
         text = "В корзине"
-        action = ProductAction.RemoveFromCart(product.id)
+        action = ProductAction.RemoveFromCart(product.id, LocalSnackbarHostState.current)
     } else {
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.tertiary
         )
         text = "В корзину"
-        action = ProductAction.AddToCart(product.id)
+        action = ProductAction.AddToCart(product.id, LocalSnackbarHostState.current)
     }
     Button(
         onClick = {
@@ -292,14 +292,14 @@ fun ProductBuyButton(
             contentColor = MaterialTheme.colorScheme.primary
         )
         text = "В корзине"
-        action = ProductAction.RemoveFromCart(productId)
+        action = ProductAction.RemoveFromCart(productId, LocalSnackbarHostState.current)
     } else {
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.tertiary
         )
         text = "В корзину"
-        action = ProductAction.AddToCart(productId)
+        action = ProductAction.AddToCart(productId, LocalSnackbarHostState.current)
     }
     Button(
         onClick = {

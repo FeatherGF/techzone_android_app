@@ -49,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
+import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
@@ -166,6 +167,7 @@ fun CartItemsList(
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     val navController = LocalNavController.current
+    val snackbarHostState = LocalSnackbarHostState.current
     val stateProductMapping: Map<MutableState<Boolean>, OrderItem> =
         cartItems.associate { orderItem ->
             remember { mutableStateOf(true) } to orderItem.also {
@@ -341,7 +343,7 @@ fun CartItemsList(
                 confirmationText = "Вы действительно хотите удалить товар из корзины?",
                 onConfirm = {
                     scope.launch {
-                        onProductAction(ProductAction.RemoveFromCart(productId))
+                        onProductAction(ProductAction.RemoveFromCart(productId, snackbarHostState))
                         deleteProductId = null
                     }
                 },

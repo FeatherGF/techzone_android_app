@@ -322,18 +322,19 @@ class UserRepo @Inject constructor(
         }
     }
 
-    suspend fun addToCart(productId: Int): ProductInCartResponse? {
+    suspend fun addToCart(productId: Int): Boolean? {
         authenticate()
-        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return false
         return try {
             userApi.addToCart(
                 token = accessToken,
                 request = AddToCartRequest(productId)
             )
+            true
         } catch (e: IOException) {
             null
         } catch (e: HttpException) {
-            null
+            false
         }
     }
 
