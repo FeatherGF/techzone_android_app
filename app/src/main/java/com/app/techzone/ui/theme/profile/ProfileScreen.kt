@@ -329,7 +329,8 @@ fun UserInfoFields(
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 26.dp),
+            .padding(top = 26.dp)
+            .background(MaterialTheme.colorScheme.tertiary),
         value = firstName,
         onValueChange = { onFirstNameChange(it) },
         keyboardOptions = KeyboardOptions(
@@ -343,7 +344,8 @@ fun UserInfoFields(
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp),
+            .padding(top = 12.dp)
+            .background(MaterialTheme.colorScheme.tertiary),
         value = lastName,
         onValueChange = { onLastNameChange(it) },
         keyboardOptions = KeyboardOptions(
@@ -357,7 +359,8 @@ fun UserInfoFields(
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp),
+            .padding(top = 12.dp)
+            .background(MaterialTheme.colorScheme.tertiary),
         value = phoneNumber,
         onValueChange = { textPhone ->
             if (textPhone.length < 12)
@@ -380,7 +383,8 @@ fun UserInfoFields(
         enabled = false,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp),
+            .padding(top = 12.dp)
+            .background(MaterialTheme.colorScheme.tertiary),
     )
 }
 
@@ -392,7 +396,10 @@ fun ConfirmationModalSheet(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.tertiary
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -543,7 +550,9 @@ fun UserProfile(userViewModel: UserViewModel) {
             verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
             Column(
-                modifier = Modifier.border(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.tertiary)
+                    .border(
                     width = 1.dp,
                     color = ForStroke.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(4.dp)
@@ -592,7 +601,9 @@ fun UserProfile(userViewModel: UserViewModel) {
                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                 )
                 Column(
-                    modifier = Modifier.border(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.tertiary)
+                        .border(
                         width = 1.dp,
                         color = ForStroke.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(4.dp)

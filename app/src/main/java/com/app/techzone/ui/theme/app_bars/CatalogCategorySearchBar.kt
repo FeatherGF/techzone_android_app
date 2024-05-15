@@ -2,10 +2,10 @@ package com.app.techzone.ui.theme.app_bars
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,7 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.app.techzone.ui.theme.RoundBorder28
+import com.app.techzone.ui.theme.ForStroke
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,20 +34,15 @@ fun CatalogCategorySearchBar(
     onBackClicked: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .height(176.dp)
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.tertiary
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 52.dp, start = 16.dp, end = 16.dp)
-        ) {
+        Column {
             Row(
                 modifier = Modifier
                     .padding(bottom = 4.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(top = 52.dp, start = 16.dp, end = 16.dp),
                 horizontalArrangement = Arrangement.Absolute.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -63,10 +58,16 @@ fun CatalogCategorySearchBar(
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
                 )
-                Spacer(Modifier)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null,
+                    tint = Color.Companion.Transparent,
+                )
             }
             SearchBar(
-                shape = RoundBorder28,
+                modifier = Modifier
+                    .consumeWindowInsets(PaddingValues(100.dp))
+                    .padding(start = 16.dp, bottom = 16.dp),
                 query = "",
                 onQueryChange = {},
                 onSearch = { },
@@ -88,10 +89,9 @@ fun CatalogCategorySearchBar(
                 },
                 colors = SearchBarDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.background,
-                    dividerColor = Color.Gray.copy(alpha = 0.1f),
+                    dividerColor = ForStroke,
                 ),
                 content = {},
-                modifier = Modifier.fillMaxWidth()
             )
         }
     }

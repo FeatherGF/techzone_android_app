@@ -269,7 +269,7 @@ fun Authorization(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.tertiary)
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(top = 36.dp, start = 16.dp, end = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         when (authResultState){

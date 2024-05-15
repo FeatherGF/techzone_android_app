@@ -243,6 +243,7 @@ fun PurchaseScreen(
                         Column(
                             Modifier
                                 .selectableGroup()
+                                .background(MaterialTheme.colorScheme.tertiary)
                                 .border(
                                     width = 1.dp,
                                     color = ForStroke.copy(alpha = 0.1f),

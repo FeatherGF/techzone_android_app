@@ -79,6 +79,7 @@ fun PriceRangeField(placeholderText: String, text: String, onValueChange: (Strin
             )
         },
         modifier = Modifier
+            .background(MaterialTheme.colorScheme.tertiary)
             .width(190.dp) // maybe make it dynamic according to screen size
             .height(56.dp),
     )
