@@ -16,4 +16,6 @@ object ScreenRoutes {
     const val ORDERS = "orders"
 
     const val PRODUCT_DETAIL = "catalog/{productId}"
+
+    const val PRIVACY_POLICY = "privacy_policy"
 }
