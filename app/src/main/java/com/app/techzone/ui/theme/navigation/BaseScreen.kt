@@ -1,6 +1,7 @@
 package com.app.techzone.ui.theme.navigation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
@@ -47,6 +48,7 @@ fun BaseScreen(
     val currentRoute = backStackEntry?.destination?.route ?: ""
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState,

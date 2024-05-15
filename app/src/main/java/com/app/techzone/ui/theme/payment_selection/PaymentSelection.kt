@@ -215,7 +215,9 @@ fun EnterCardInfo(
             val cardNumberVisualTransformation = MaskVisualTransformation("#### #### #### ####")
             val expirationDateVisualTransformation = MaskVisualTransformation("##/##")
             OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.tertiary),
                 value = state.cardNumber,
                 placeholder = { PlaceholderText("Номер карты") },
                 onValueChange = {
@@ -252,7 +254,9 @@ fun EnterCardInfo(
                             Text(it, style = MaterialTheme.typography.bodySmall)
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(0.49f)
+                    modifier = Modifier
+                        .fillMaxWidth(0.49f)
+                        .background(MaterialTheme.colorScheme.tertiary)
                 )
                 OutlinedTextField(
                     value = state.code,
@@ -277,6 +281,7 @@ fun EnterCardInfo(
                     modifier = Modifier
                         .fillMaxWidth(0.51f)
                         .weight(1f)
+                        .background(MaterialTheme.colorScheme.tertiary)
                 )
             }
             Button(

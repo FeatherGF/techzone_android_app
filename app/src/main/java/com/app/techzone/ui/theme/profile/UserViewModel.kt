@@ -384,6 +384,8 @@ class UserViewModel @Inject constructor(
             resultChannel.send(result)
             if (result is AuthResult.Authorized) {
                 initialState = result
+                loadCart()
+                loadFavorites()
             }
             state = state.copy(response = ServerResponse.SUCCESS)
         }
