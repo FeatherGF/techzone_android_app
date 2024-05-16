@@ -12,6 +12,7 @@ import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.Cart
 import com.app.techzone.data.remote.model.FavoritesList
+import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.data.remote.model.Order
 import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.data.remote.model.User
@@ -55,6 +56,9 @@ class UserViewModel @Inject constructor(
 
     private val _orders = MutableStateFlow(emptyList<Order>())
     val orders = _orders.asStateFlow()
+
+    private val _orderItemForReview = MutableStateFlow<OrderItem?>(null)
+    val orderItemForReview = _orderItemForReview.asStateFlow()
 
     fun logoutUser() {
         viewModelScope.launch {
@@ -300,6 +304,24 @@ class UserViewModel @Inject constructor(
             }
             _orders.update { response.items }
             state = state.copy(response = ServerResponse.SUCCESS)
+        }
+    }
+
+    suspend fun addReview(productId: Int, rating: Int, text: String? = null): Boolean? {
+        return userRepo.addReview(productId, rating, text)
+    }
+
+    fun loadProductForReview(orderId: Int, productId: Int) {
+        viewModelScope.launch {
+            state = state.copy(response = ServerResponse.LOADING)
+            userRepo.getOrder(orderId)?.let { order ->
+                order.orderItems.find { it.product.id == productId }?.let { foundOrderItem ->
+                    _orderItemForReview.update { foundOrderItem }
+                    state = state.copy(response = ServerResponse.SUCCESS)
+                    return@launch
+                }
+            }
+            state = state.copy(response = ServerResponse.ERROR)
         }
     }
 

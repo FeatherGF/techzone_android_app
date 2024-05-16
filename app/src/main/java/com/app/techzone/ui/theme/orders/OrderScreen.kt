@@ -291,6 +291,7 @@ fun OrderComposition(
     onDismiss = onDismiss,
     orderStatus = OrderStatus.valueOf(order.status.uppercase()),
     onProductAction = onProductAction,
+    orderId = order.id
 )
 
 @Composable
@@ -302,6 +303,7 @@ fun OrderComposition(
     orderItems = orderItems,
     onDismiss = onDismiss,
     orderStatus = null,
+    orderId = null,
     onProductAction = onProductAction,
 )
 
@@ -312,8 +314,10 @@ private class OrderCompositionHolder {
         orderItems: List<OrderItem>,
         onDismiss: () -> Unit,
         orderStatus: OrderStatus? = null,
+        orderId: Int? = null,
         onProductAction: suspend (ProductAction) -> Boolean,
     ) {
+        val navController = LocalNavController.current
         ModalBottomSheet(
             onDismissRequest = onDismiss,
             containerColor = MaterialTheme.colorScheme.tertiary,
@@ -368,7 +372,13 @@ private class OrderCompositionHolder {
                                 ) {
                                     when (it) {
                                         OrderStatus.GOT -> {
-                                            Button(onClick = { }) {
+                                            Button(
+                                                onClick = {
+                                                    navController.navigate(
+                                                        ScreenRoutes.ADD_REVIEW + "?orderId=${orderId}&productId=${orderItem.product.id}"
+                                                    )
+                                                }
+                                            ) {
                                                 Text("Оставить отзыв")
                                             }
                                         }

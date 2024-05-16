@@ -2,16 +2,9 @@ package com.app.techzone.data.remote.repository
 
 import com.app.techzone.data.remote.api.ApiConstants
 import com.app.techzone.data.remote.api.ProductApi
-import com.app.techzone.data.remote.model.Accessory
 import com.app.techzone.data.remote.model.BaseProduct
-import com.app.techzone.data.remote.model.IBaseProduct
-import com.app.techzone.data.remote.model.Laptop
 import com.app.techzone.data.remote.model.ProductList
 import com.app.techzone.data.remote.model.ProductType
-import com.app.techzone.data.remote.model.Smartphone
-import com.app.techzone.data.remote.model.Smartwatch
-import com.app.techzone.data.remote.model.Tablet
-import com.app.techzone.data.remote.model.Television
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
@@ -42,36 +35,29 @@ class ProductRepo @Inject constructor(
         }
     }
 
-    suspend fun getProduct(productId: Int): IBaseProduct? =
-        callApiWithOptionalAccessToken { token ->
-            productApi.getProductDetail(token = token, productId = productId)
-        }
-
-    suspend fun getSmartphone(phoneId: Int): Smartphone? = callApiWithOptionalAccessToken { token ->
+    suspend fun getSmartphone(phoneId: Int) = callApiWithOptionalAccessToken { token ->
         productApi.getSmartphone(token = token, phoneId = phoneId)
     }
 
-    suspend fun getLaptop(laptopId: Int): Laptop? = callApiWithOptionalAccessToken { token ->
+    suspend fun getLaptop(laptopId: Int) = callApiWithOptionalAccessToken { token ->
         productApi.getLaptop(token = token, laptopId = laptopId)
     }
 
-    suspend fun getAccessory(accessoryId: Int): Accessory? =
-        callApiWithOptionalAccessToken { token ->
-            productApi.getAccessory(token = token, accessoryId = accessoryId)
-        }
+    suspend fun getAccessory(accessoryId: Int) = callApiWithOptionalAccessToken { token ->
+        productApi.getAccessory(token = token, accessoryId = accessoryId)
+    }
 
-    suspend fun getSmartwatch(watchId: Int): Smartwatch? = callApiWithOptionalAccessToken { token ->
+    suspend fun getSmartwatch(watchId: Int) = callApiWithOptionalAccessToken { token ->
         productApi.getSmartwatch(token = token, watchId = watchId)
     }
 
-    suspend fun getTablet(tabletId: Int): Tablet? = callApiWithOptionalAccessToken { token ->
+    suspend fun getTablet(tabletId: Int) = callApiWithOptionalAccessToken { token ->
         productApi.getTablet(token = token, tabletId = tabletId)
     }
 
-    suspend fun getTelevision(televisionId: Int): Television? =
-        callApiWithOptionalAccessToken { token ->
-            productApi.getTelevision(token = token, televisionId = televisionId)
-        }
+    suspend fun getTelevision(televisionId: Int) = callApiWithOptionalAccessToken { token ->
+        productApi.getTelevision(token = token, televisionId = televisionId)
+    }
 
     suspend fun getByCategoryOrAllProducts(
         category: String = ApiConstants.Endpoints.products,

@@ -6,6 +6,7 @@ import android.util.Base64
 import com.app.techzone.data.remote.api.AuthRepository
 import com.app.techzone.data.remote.api.UserApi
 import com.app.techzone.data.remote.model.AddFavoriteRequest
+import com.app.techzone.data.remote.model.AddReviewRequest
 import com.app.techzone.data.remote.model.AddToCartRequest
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.ChangeQuantityRequest
@@ -299,6 +300,27 @@ class UserRepo @Inject constructor(
             null
         } catch (e: HttpException) {
             null
+        }
+    }
+
+
+    // Reviews
+    suspend fun addReview(productId: Int, rating: Int, text: String? = null): Boolean? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.addReview(
+                token = accessToken,
+                productId = productId,
+                request = AddReviewRequest(
+                    text = text, rating = rating
+                )
+            )
+            true
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
+            false
         }
     }
 
