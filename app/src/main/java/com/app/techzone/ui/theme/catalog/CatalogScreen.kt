@@ -21,17 +21,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.app.techzone.LocalNavController
 import com.app.techzone.model.categories
-import com.app.techzone.ui.theme.app_bars.SearchViewModel
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.app_bars.SearchUiEvent
+import com.app.techzone.ui.theme.navigation.ScreenRoutes
 
 
 @Composable
-fun CatalogScreen(
-    navController: NavController,
-    searchViewModel: SearchViewModel
-) {
+fun CatalogScreen(onEvent: (SearchUiEvent) -> Unit) {
+    val navController = LocalNavController.current
     Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
         Text(
             text = "Каталог",
@@ -61,8 +60,10 @@ fun CatalogScreen(
                             .fillMaxWidth()
                             .height(56.dp)
                             .clickable {
-                                navController.navigate("catalog/${category.endpoint}")
-                                searchViewModel.updateCategoryNameState(category.name)
+                                navController.navigate(
+                                    "${ScreenRoutes.CATALOG}/${category.endpoint}"
+                                )
+                                onEvent(SearchUiEvent.SearchClicked(category.name))
                             }
                     ) {
                         Row {

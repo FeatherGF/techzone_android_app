@@ -78,4 +78,16 @@ class ProductRepo @Inject constructor(
             categoryEndpoint(token, pageSize, pageNumber)
         }
     }
+
+    suspend fun getSuggestions(text: String): List<String> {
+        return try {
+            productApi.getSuggestions(text).suggestions
+        } catch (e: IOException){
+            emptyList()
+        }
+    }
+
+    suspend fun searchProducts(text: String) = callApiWithOptionalAccessToken { token ->
+        productApi.search(token = token, query = text)
+    }
 }

@@ -26,7 +26,7 @@ import com.app.techzone.ui.theme.ForStroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DefaultAppBar(onSearchClicked: () -> Unit) {
+fun DefaultAppBar(onSearchOpened: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(bottomEnd = 28.dp, bottomStart = 28.dp),
@@ -46,7 +46,7 @@ fun DefaultAppBar(onSearchClicked: () -> Unit) {
                 onQueryChange = {},
                 onSearch = {},
                 active = false,
-                onActiveChange = { onSearchClicked() },
+                onActiveChange = { onSearchOpened() },
                 content = {},
                 placeholder = {
                     Text(

@@ -1,6 +1,6 @@
 package com.app.techzone.ui.theme.app_bars
 
-enum class SearchWidgetState {
+enum class SearchTopBarState {
     OPENED,
     CLOSED,
     HIDDEN,

@@ -3,7 +3,7 @@ package com.app.techzone.ui.theme.navigation
 object ScreenRoutes {
     const val MAIN = "main"
     const val CATALOG = "catalog"
-    const val CATALOG_CATEGORY = "catalog/{category}"
+    const val CATALOG_CATEGORY = "catalog/{searchText}"
     const val CART = "cart"
     const val FAVORITE = "favorite"
 
@@ -16,7 +16,7 @@ object ScreenRoutes {
     const val ORDERS = "orders"
     const val ADD_REVIEW = "add_review"
 
-    const val PRODUCT_DETAIL = "catalog/{productId}"
+    const val PRODUCT_DETAIL = "products"
 
     const val PRIVACY_POLICY = "privacy_policy"
 }
