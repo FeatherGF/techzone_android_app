@@ -33,6 +33,7 @@ import com.app.techzone.ui.theme.profile.ProfileScreen
 import com.app.techzone.ui.theme.profile.Authorization
 import com.app.techzone.ui.theme.profile.EditUserProfile
 import com.app.techzone.ui.theme.purchase.PurchaseScreenRoot
+import com.app.techzone.ui.theme.reviews.AddReviewScreenRoot
 
 @Composable
 fun Main(navController: NavHostController) {
@@ -161,6 +162,23 @@ fun Main(navController: NavHostController) {
                 OrderScreenRoot(
                     userViewModel = userViewModel,
                 )
+            }
+            composable(
+                ScreenRoutes.ADD_REVIEW + "?orderId={orderId}&productId={productId}",
+                arguments = listOf(
+                    navArgument("orderId") {type = NavType.IntType},
+                    navArgument("productId") {type = NavType.IntType},
+                )
+            ) { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getInt("orderId")
+                val productId = backStackEntry.arguments?.getInt("productId")
+                if (orderId != null && productId != null) {
+                    AddReviewScreenRoot(
+                        userViewModel, orderId, productId
+                    )
+                } else {
+                    navController.popBackStack()
+                }
             }
             composable(ScreenRoutes.PAY_METHOD){
                 searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)

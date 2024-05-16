@@ -39,6 +39,10 @@ object ApiConstants {
         const val orders = "orders"
         const val ordersDetail = "orders/{id_order}"
 
+        // reviews
+        const val addReview = "reviews/{id_product}"
+        const val editReview = "reviews/{id_review}"
+
         // cart
         const val cart = "cart"
         const val cartDetail = "cart/{id_product}"

@@ -14,6 +14,7 @@ object ScreenRoutes {
     const val PAY_METHOD = "pay_method"
 
     const val ORDERS = "orders"
+    const val ADD_REVIEW = "add_review"
 
     const val PRODUCT_DETAIL = "catalog/{productId}"
 

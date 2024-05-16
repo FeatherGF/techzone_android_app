@@ -1,6 +1,7 @@
 package com.app.techzone.data.remote.api
 
 import com.app.techzone.data.remote.model.AddFavoriteRequest
+import com.app.techzone.data.remote.model.AddReviewRequest
 import com.app.techzone.data.remote.model.AddToCartRequest
 import com.app.techzone.data.remote.model.Cart
 import com.app.techzone.data.remote.model.ChangeQuantityRequest
@@ -111,8 +112,18 @@ interface UserApi {
     @GET(ApiConstants.Endpoints.ordersDetail)
     suspend fun getOrder(
         @Header("Authorization") token: String,
-        orderId: Int
+        @Path("id_order") orderId: Int
     ): Order
+
+
+    // Reviews
+    @Headers("Accept: application/json")
+    @POST(ApiConstants.Endpoints.addReview)
+    suspend fun addReview(
+        @Header("Authorization") token: String,
+        @Path("id_product") productId: Int,
+        @Body request: AddReviewRequest,
+    )
 
     // Cart
     @Headers("Accept: application/json")

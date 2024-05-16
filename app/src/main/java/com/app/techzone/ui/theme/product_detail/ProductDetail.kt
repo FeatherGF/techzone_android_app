@@ -124,9 +124,9 @@ fun ProductDetailScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp)
+                                .height(110.dp)
                                 .background(color = MaterialTheme.colorScheme.tertiary)
-                                .padding(end = 28.dp, top = 20.dp, bottom = 20.dp, start = 28.dp),
+                                .padding(end = 28.dp, top = 50.dp, bottom = 20.dp, start = 28.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -518,12 +518,14 @@ fun Review(review: Review) {
             }
         }
 
-        Row {
-            Text(
-                review.text,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)
-            )
+        if (review.text.isNotEmpty()) {
+            Row {
+                Text(
+                    review.text,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)
+                )
+            }
         }
     }
 }
