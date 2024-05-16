@@ -391,7 +391,7 @@ fun CartItemCard(
         modifier = Modifier
             .wrapContentHeight()
             .fillMaxWidth(),
-        onClick = { navController.navigate("${ScreenRoutes.CATALOG}/${orderItem.product.id}") },
+        onClick = { navController.navigate("${ScreenRoutes.PRODUCT_DETAIL}/${orderItem.product.id}") },
         shape = RoundBorder24,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiary

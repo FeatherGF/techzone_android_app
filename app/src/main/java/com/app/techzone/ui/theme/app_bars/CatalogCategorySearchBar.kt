@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.app.techzone.LocalNavController
 import com.app.techzone.ui.theme.ForStroke
 
 
@@ -30,9 +31,9 @@ import com.app.techzone.ui.theme.ForStroke
 @Composable
 fun CatalogCategorySearchBar(
     categoryName: String,
-    onSearchTriggered: () -> Unit,
-    onBackClicked: () -> Unit
+    onSearchOpened: () -> Unit,
 ) {
+    val navController = LocalNavController.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.tertiary
@@ -46,7 +47,7 @@ fun CatalogCategorySearchBar(
                 horizontalArrangement = Arrangement.Absolute.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBackClicked) {
+                IconButton(onClick = navController::popBackStack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = null,
@@ -72,7 +73,7 @@ fun CatalogCategorySearchBar(
                 onQueryChange = {},
                 onSearch = { },
                 active = false,
-                onActiveChange = { onSearchTriggered() },
+                onActiveChange = { onSearchOpened() },
                 placeholder = {
                     Text(
                         text = "Поиск в TechZone",

@@ -10,6 +10,10 @@ object ApiConstants {
         const val productsDetail = "products/{id_product}"
         const val product_type = "products/type/{id_product}"
 
+        // search
+        const val suggestions = "products/suggestions"
+        const val search = "products/search"
+
         const val smartphones = "smartphones"
         const val smartphoneDetail = "smartphones/{id_smartphone}"
         const val tablets = "tablets"
@@ -24,7 +28,7 @@ object ApiConstants {
         const val televisionsDetail = "televisions/{id_television}"
 
         // user
-        const val users = "users/"
+        const val users = "users"
 
         // authentication
         const val sendAuthCode = "users/send-authentication-code"

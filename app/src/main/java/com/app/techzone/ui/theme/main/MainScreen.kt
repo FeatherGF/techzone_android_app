@@ -128,7 +128,7 @@ fun ProductCarousel(
     ) { index ->
         val product = products[index]
         OutlinedCard(
-            onClick = { navController.navigate("${ScreenRoutes.CATALOG}/${product.id}") },
+            onClick = { navController.navigate("${ScreenRoutes.PRODUCT_DETAIL}/${product.id}") },
             shape = RoundBorder24,
             border = BorderStroke(
                 width = 1.dp,

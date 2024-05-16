@@ -5,8 +5,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,7 +13,7 @@ import androidx.navigation.navArgument
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.ui.theme.app_bars.MainAppBar
 import com.app.techzone.ui.theme.app_bars.SearchViewModel
-import com.app.techzone.ui.theme.app_bars.SearchWidgetState
+import com.app.techzone.ui.theme.app_bars.SearchTopBarState
 import com.app.techzone.ui.theme.cart.CartScreen
 import com.app.techzone.ui.theme.catalog.CatalogCategoryScreen
 import com.app.techzone.ui.theme.catalog.CatalogScreen
@@ -38,12 +36,11 @@ import com.app.techzone.ui.theme.reviews.AddReviewScreenRoot
 @Composable
 fun Main(navController: NavHostController) {
     val userViewModel = hiltViewModel<UserViewModel>()
-    val searchViewModel = viewModel<SearchViewModel>()
+    val searchViewModel = hiltViewModel<SearchViewModel>()
     val paymentViewModel = hiltViewModel<PaymentViewModel>()
     val catalogViewModel = hiltViewModel<CatalogViewModel>()
     val productViewModel = hiltViewModel<ProductViewModel>()
 
-    val searchSuggestions by searchViewModel.searchSuggestions.collectAsStateWithLifecycle()
     val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
 
     // load user data when app launches
@@ -61,62 +58,28 @@ fun Main(navController: NavHostController) {
         navController,
         favorites = favorites,
         cartItems = cartItems,
-        topAppBar = {
-            MainAppBar(
-                // TODO: rewrite using MVI
-                searchWidgetState = searchViewModel.searchWidgetState,
-                searchTextState = searchViewModel.searchTextState,
-                searchSuggestions = searchSuggestions,
-                categoryName = searchViewModel.categoryName,
-                onTextChange = {
-                    searchViewModel.updateSearchTextState(it)
-                },
-                onCloseClicked = {
-                    searchViewModel.updateSearchTextState("")
-                    val searchWidgetState = if (
-                        navController.currentBackStackEntry?.destination?.route?.startsWith("catalog")!!
-                    ) SearchWidgetState.CATALOG_OPENED else SearchWidgetState.CLOSED
-
-                    searchViewModel.updateSearchWidgetState(searchWidgetState)
-                },
-                onSearchClicked = {
-                    if (searchViewModel.searchTextState.isNotEmpty()) {
-                        // TODO: research in case of a much more elegant solution
-                        searchViewModel.updateSearchWidgetState(SearchWidgetState.CATALOG_OPENED)
-                        searchViewModel.updateCategoryNameState(searchViewModel.searchTextState)
-                        navController.navigate(
-                            "${ScreenRoutes.CATALOG}/${searchViewModel.searchTextState}"
-                        )
-                        searchViewModel.updateSearchTextState("")
-                    }
-                },
-                onSearchTriggered = {
-                    searchViewModel.updateSearchWidgetState(SearchWidgetState.OPENED)
-                },
-                onBackClicked = { navController.popBackStack() }
-            )
-        },
+        topAppBar = { MainAppBar(searchViewModel) },
     ) {
         NavHost(navController = navController, startDestination = ScreenRoutes.MAIN) {
             composable(ScreenRoutes.PRIVACY_POLICY) {
                 PrivacyPolicy()
             }
             composable(ScreenRoutes.MAIN) {
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.CLOSED)
                 MainScreen(
                     productViewModel = productViewModel,
                     onProductAction = userViewModel::onProductAction,
                 )
             }
             composable(ScreenRoutes.CATALOG) {
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                CatalogScreen(navController = navController, searchViewModel = searchViewModel)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.CLOSED)
+                CatalogScreen(onEvent = searchViewModel::onEvent)
             }
             composable(
-                ScreenRoutes.PRODUCT_DETAIL,
+                ScreenRoutes.PRODUCT_DETAIL + "/{productId}",
                 arguments = listOf(navArgument("productId") { type = NavType.IntType})
             ) {backStackEntry ->
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
                 val productId = backStackEntry.arguments?.getInt("productId")!!
                 ProductDetailScreen(
                     productId = productId,
@@ -125,19 +88,18 @@ fun Main(navController: NavHostController) {
             }
             composable(
                 ScreenRoutes.CATALOG_CATEGORY,
-                arguments = listOf(navArgument("category") { type = NavType.StringType })
+                arguments = listOf(navArgument("searchText") { type = NavType.StringType })
             ) { backStackEntry ->
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.CATALOG_OPENED)
-                val category = backStackEntry.arguments?.getString("category")!!
+                val searchText = backStackEntry.arguments?.getString("searchText")!!
                 CatalogCategoryScreen(
-                    category = category,
-                    onChangeView = searchViewModel::updateSearchWidgetState,
+                    searchTitle = searchText,
                     catalogViewModel = catalogViewModel,
+                    onChangeView = searchViewModel::updateSearchTopBarState,
                     onProductAction = userViewModel::onProductAction
                 )
             }
             composable(ScreenRoutes.CART) {
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.CLOSED)
                 CartScreen(
                     cartItems = cartItems,
                     state = userViewModel.state,
@@ -150,7 +112,7 @@ fun Main(navController: NavHostController) {
                 arguments = listOf(navArgument("orderItem") {type = NavType.IntArrayType})
             ) { backStackEntry ->
                 val orderItemIds = backStackEntry.arguments?.getIntArray("orderItem")
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
                 PurchaseScreenRoot(
                     userViewModel = userViewModel,
                     paymentViewModel = paymentViewModel,
@@ -158,7 +120,7 @@ fun Main(navController: NavHostController) {
                 )
             }
             composable(ScreenRoutes.ORDERS) {
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
                 OrderScreenRoot(
                     userViewModel = userViewModel,
                 )
@@ -170,6 +132,7 @@ fun Main(navController: NavHostController) {
                     navArgument("productId") {type = NavType.IntType},
                 )
             ) { backStackEntry ->
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
                 val orderId = backStackEntry.arguments?.getInt("orderId")
                 val productId = backStackEntry.arguments?.getInt("productId")
                 if (orderId != null && productId != null) {
@@ -181,11 +144,11 @@ fun Main(navController: NavHostController) {
                 }
             }
             composable(ScreenRoutes.PAY_METHOD){
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
                 PaymentSelectionRoot(paymentViewModel)
             }
             composable(ScreenRoutes.FAVORITE) {
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.CLOSED)
                 FavoriteScreen(
                     favorites = favorites,
                     favoriteState = userViewModel.state.response,
@@ -194,9 +157,9 @@ fun Main(navController: NavHostController) {
                 )
             }
             composable(ScreenRoutes.PROFILE) {
-                searchViewModel.updateSearchWidgetState(
-                    if (authResultState is AuthResult.Authorized) SearchWidgetState.HIDDEN
-                    else SearchWidgetState.CLOSED
+                searchViewModel.updateSearchTopBarState(
+                    if (authResultState is AuthResult.Authorized) SearchTopBarState.HIDDEN
+                    else SearchTopBarState.CLOSED
                 )
                 ProfileScreen(
                     authResultState = authResultState,
@@ -204,11 +167,11 @@ fun Main(navController: NavHostController) {
                 )
             }
             composable(ScreenRoutes.EDIT_PROFILE){
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
                 EditUserProfile(userViewModel = userViewModel)
             }
             composable(ScreenRoutes.PROFILE_REGISTRATION){
-                searchViewModel.updateSearchWidgetState(SearchWidgetState.HIDDEN)
+                searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
                 Authorization(
                     userViewModel = userViewModel,
                     authResultState = authResultState,

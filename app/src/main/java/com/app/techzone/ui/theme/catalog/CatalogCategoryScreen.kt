@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.model.PricePreset
-import com.app.techzone.ui.theme.app_bars.SearchWidgetState
+import com.app.techzone.ui.theme.app_bars.SearchTopBarState
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
 import com.app.techzone.ui.theme.main.ProductBuyButton
@@ -88,22 +88,22 @@ fun PriceRangeField(placeholderText: String, text: String, onValueChange: (Strin
 
 @Composable
 fun CatalogCategoryScreen(
-    category: String,  // ApiConstant.Endpoints strings
+    searchTitle: String,
     catalogViewModel: CatalogViewModel,
-    onChangeView: (SearchWidgetState) -> Unit,
+    onChangeView: (SearchTopBarState) -> Unit,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     when (catalogViewModel.activeScreenState) {
         CatalogScreenEnum.DEFAULT -> {
-            onChangeView(SearchWidgetState.CATALOG_OPENED)
+            onChangeView(SearchTopBarState.CATALOG_OPENED)
             DefaultCatalogView(
-                category = category,
+                searchTitle = searchTitle,
                 catalogViewModel = catalogViewModel,
                 onProductAction = onProductAction
             )
         }
         CatalogScreenEnum.FILTERS -> {
-            onChangeView(SearchWidgetState.HIDDEN)
+            onChangeView(SearchTopBarState.HIDDEN)
             FiltersView {
                 catalogViewModel.updateActiveState(CatalogScreenEnum.DEFAULT)
             }
@@ -114,12 +114,12 @@ fun CatalogCategoryScreen(
 
 @Composable
 fun DefaultCatalogView(
-    category: String,
+    searchTitle: String,
     catalogViewModel: CatalogViewModel,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     LaunchedEffect(Unit){
-        catalogViewModel.loadByCategory(category)
+        catalogViewModel.loadByString(searchTitle)
     }
     val products by catalogViewModel.products.collectAsState()
     val state = catalogViewModel.state
@@ -137,7 +137,7 @@ fun DefaultCatalogView(
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> {
             ErrorScreen {
-                catalogViewModel.loadByCategory(category)
+                catalogViewModel.loadByCategory(searchTitle)
             }
         }
         // if response is successful all the code above will be rendered
@@ -172,7 +172,7 @@ fun LazyProductCards(
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth(),
-                onClick = { navController.navigate("${ScreenRoutes.CATALOG}/${product.id}") },
+                onClick = { navController.navigate("${ScreenRoutes.PRODUCT_DETAIL}/${product.id}") },
                 shape = RoundBorder24,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.tertiary

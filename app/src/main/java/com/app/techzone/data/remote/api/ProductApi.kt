@@ -7,6 +7,7 @@ import com.app.techzone.data.remote.model.ProductList
 import com.app.techzone.data.remote.model.ProductType
 import com.app.techzone.data.remote.model.Smartphone
 import com.app.techzone.data.remote.model.Smartwatch
+import com.app.techzone.data.remote.model.SuggestionsList
 import com.app.techzone.data.remote.model.Tablet
 import com.app.techzone.data.remote.model.Television
 import retrofit2.http.GET
@@ -24,13 +25,6 @@ interface ProductApi {
         @Query("size_page") pageSize: Int = 20,
         @Query("number_page") pageNumber: Int = 1,
     ): ProductList<BaseProduct>
-
-    @Headers("Accept: application/json")
-    @GET(ApiConstants.Endpoints.productsDetail)
-    suspend fun getProductDetail(
-        @Header("Authorization") token: String? = null,
-        @Path("id_product") productId: Int
-    ): BaseProduct
 
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.product_type)
@@ -134,4 +128,14 @@ interface ProductApi {
         @Path("id_television") televisionId: Int,
     ): Television
 
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.suggestions)
+    suspend fun getSuggestions(@Query("query") query: String): SuggestionsList
+
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.search)
+    suspend fun search(
+        @Header("Authorization") token: String? = null,
+        @Query("query") query: String
+    ): ProductList<BaseProduct>
 }
