@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
 import com.app.techzone.ui.theme.RoundBorder28
@@ -64,10 +66,12 @@ fun SearchAppBar(
             query = searchState.searchText,
             onQueryChange = { onEvent(SearchUiEvent.SearchTextChanged(it)) },
             onSearch = {
-                onEvent(SearchUiEvent.SearchClicked(it))
-                navController.navigate(
-                    "${ScreenRoutes.CATALOG}/$it"
-                )
+                if (it.length > 1) {
+                    onEvent(SearchUiEvent.SearchClicked(it))
+                    navController.navigate(
+                        "${ScreenRoutes.CATALOG}/$it"
+                    )
+                }
             },
             active = true,
             onActiveChange = { },
@@ -80,10 +84,12 @@ fun SearchAppBar(
             },
             leadingIcon = {
                 IconButton(onClick = {
-                    onEvent(SearchUiEvent.SearchClicked(searchState.searchText))
-                    navController.navigate(
-                        "${ScreenRoutes.CATALOG}/${searchState.searchText}"
-                    )
+                    if (searchState.searchText.length > 1){
+                        onEvent(SearchUiEvent.SearchClicked(searchState.searchText))
+                        navController.navigate(
+                            "${ScreenRoutes.CATALOG}/${searchState.searchText}"
+                        )
+                    }
                 }) {
                     Icon(
                         imageVector = Icons.Outlined.Search,
@@ -144,7 +150,7 @@ fun SearchAppBar(
                         horizontalArrangement = Arrangement.Absolute.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .padding(vertical = 20.dp, horizontal = 16.dp)
+                            .padding(vertical = 20.dp, horizontal = 20.dp)
                             .fillMaxSize()
                             .clickable {
                                 onEvent(SearchUiEvent.SearchClicked(suggestion))
@@ -154,9 +160,12 @@ fun SearchAppBar(
                             }
                     ) {
                         Text(
-                            text = suggestion,
+                            suggestion,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            modifier = Modifier.fillMaxWidth(0.9f)
                         )
                         Image(
                             imageVector = Icons.Outlined.ChevronRight,

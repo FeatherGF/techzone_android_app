@@ -11,7 +11,7 @@ data class Laptop(
     override val rating: Float?,
     @SerializedName("is_favourite")
     override val isFavorite: Boolean,
-    override val photos: List<Photo>,
+    override val photos: List<Photo>?,
     override val reviews: List<Review>,
     @SerializedName("reviews_count")
     override val reviewsCount: Int,
@@ -67,7 +67,7 @@ data class Laptop(
     val matrixType: String,
     override val memory: Int,
     @SerializedName("memory_variations")
-    override val memoryVariations: List<Int>,
+    override val memoryVariations: MemoryVariations,
     @SerializedName("memory_ram")
     val memoryRam: Int,
     @SerializedName("model")

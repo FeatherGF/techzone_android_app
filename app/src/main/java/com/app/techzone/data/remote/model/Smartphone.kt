@@ -64,7 +64,7 @@ data class Smartphone(
     val operatingSystem: String,
     @SerializedName("optical_stabilization")
     val opticalStabilization: Boolean,
-    override val photos: List<Photo>,
+    override val photos: List<Photo>?,
     @SerializedName("pixel_density")
     val pixelDensity: Int,
     override val price: Int,
@@ -102,7 +102,7 @@ data class Smartphone(
     @SerializedName("is_in_cart")
     override val isInCart: Boolean,
     @SerializedName("memory_variations")
-    override val memoryVariations: List<Int>,
+    override val memoryVariations: MemoryVariations,
     @SerializedName("color_variations")
     override val colorVariations: List<ColorVariation>,
 ): IDetailedProduct

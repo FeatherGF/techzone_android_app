@@ -11,6 +11,7 @@ import com.app.techzone.data.remote.model.AddToCartRequest
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.ChangeQuantityRequest
 import com.app.techzone.data.remote.model.CreateOrderRequest
+import com.app.techzone.data.remote.model.FavoritesList
 import com.app.techzone.data.remote.model.Order
 import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
@@ -216,14 +217,13 @@ class UserRepo @Inject constructor(
     }
 
     // Favorites
-    @Suppress("UNCHECKED_CAST")
-    suspend fun <T> getFavorites(): AuthResult<T> {
+    suspend fun getFavorites(): AuthResult<FavoritesList> {
         authenticate()
         val accessToken =
             prefs.getKey(PreferencesKey.accessToken) ?: return AuthResult.Unauthorized()
         return try {
             val favorites = userApi.getFavorites(accessToken)
-            AuthResult.Authorized(favorites as T)
+            AuthResult.Authorized(favorites)
         } catch (e: IOException) {
             AuthResult.UnknownError()
         } catch (e: HttpException) {

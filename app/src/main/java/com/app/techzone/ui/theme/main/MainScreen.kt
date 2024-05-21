@@ -203,13 +203,13 @@ fun ProductCarousel(
 
 @Composable
 fun ProductImageOrPreview(
-    photos: List<Photo>,
+    photos: List<Photo>? = null,
     photoIndex: Int = 0,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
     filterQuality: FilterQuality = FilterQuality.Low,
     description: String? = null
 ) {
-    if (photos.isNotEmpty()){
+    if (photos != null){
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(photos[photoIndex].url)

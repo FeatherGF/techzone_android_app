@@ -28,7 +28,7 @@ data class Accessory(
     val material: String,
     val model: String,
     override val name: String,
-    override val photos: List<Photo>,
+    override val photos: List<Photo>?,
     override val price: Int,
     val quantity: Int,
     override val reviews: List<Review>,
@@ -43,5 +43,5 @@ data class Accessory(
     // accessories won't have any memory, can't think of a better approach
     override val memory: Int? = null,
     @SerializedName("memory_variations")
-    override val memoryVariations: List<Int>? = null,
+    override val memoryVariations: MemoryVariations,
 ): IDetailedProduct

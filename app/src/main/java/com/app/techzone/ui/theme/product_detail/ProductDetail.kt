@@ -31,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -76,6 +77,7 @@ import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.utils.formatPrice
 import com.app.techzone.ui.theme.main.ProductImageOrPreview
+import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.product_detail.characteristics.ICharacteristic
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.ProductAction
@@ -223,7 +225,7 @@ fun ProductDetailScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProductImagesPager(product: IDetailedProduct) {
-    val pageCount = product.photos.size.takeIf { it > 0 } ?: 1
+    val pageCount = product.photos?.size ?: 1
     val pagerState = rememberPagerState(pageCount = { pageCount })
     Box(
         modifier = Modifier
@@ -260,6 +262,7 @@ fun ProductVariantsAndPrice(
 ) {
     val mainTextColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
     val dimTextColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f)
+    val navController = LocalNavController.current
     Column(
         modifier = Modifier
             .background(color = MaterialTheme.colorScheme.tertiary, shape = RoundBorder28)
@@ -285,7 +288,12 @@ fun ProductVariantsAndPrice(
                             }
                             FilterChip(
                                 selected = selected,
-                                onClick = { selected = !selected },
+                                onClick = {
+                                    selected = !selected
+                                    navController.navigate(
+                                        "${ScreenRoutes.PRODUCT_DETAIL}/${colorVariation.productId}"
+                                    )
+                                },
                                 border = if (selected) BorderStroke(
                                     width = 2.dp,
                                     color = MaterialTheme.colorScheme.primary
@@ -310,33 +318,37 @@ fun ProductVariantsAndPrice(
                     }
                 }
             }
-            product.memoryVariations?.let { variations ->
+            product.memoryVariations?.let { memoryVariation ->
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         "Встроенная память:",
                         style = MaterialTheme.typography.labelLarge,
                         color = dimTextColor
                     )
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        variations.forEach { size ->
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        memoryVariation.forEach { (capacity, productId) ->
                             var selected by remember {
-                                mutableStateOf(size == product.memory)
+                                mutableStateOf(capacity.toInt() == product.memory)
                             }
                             FilterChip(
                                 modifier = Modifier
                                     .height(32.dp)
                                     .width(77.dp),
                                 selected = selected,
-                                onClick = { selected = !selected },
-                                border = if (selected) BorderStroke(
-                                    width = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary
-                                ) else BorderStroke(width = 1.dp, color = dimTextColor),
+                                onClick = {
+                                    selected = !selected
+                                    navController.navigate("${ScreenRoutes.PRODUCT_DETAIL}/$productId")
+                                },
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = selected,
+                                    borderColor = dimTextColor,
+                                    selectedBorderColor = MaterialTheme.colorScheme.primary,
+                                    selectedBorderWidth = 2.dp
+                                ),
                                 label = {
                                     Text(
-                                        "$size ГБ",
+                                        "$capacity ГБ",
                                         style = MaterialTheme.typography.labelLarge,
                                         color = if (selected) MaterialTheme.colorScheme.primary else Color.Companion.Black
                                     )

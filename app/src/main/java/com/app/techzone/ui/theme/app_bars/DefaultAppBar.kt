@@ -1,8 +1,10 @@
 package com.app.techzone.ui.theme.app_bars
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,16 +34,19 @@ fun DefaultAppBar(onSearchOpened: () -> Unit) {
         shape = RoundedCornerShape(bottomEnd = 28.dp, bottomStart = 28.dp),
         color = MaterialTheme.colorScheme.primary,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                modifier = Modifier.padding(top = 60.dp),
-                painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
-            )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp, top = 60.dp)
+        ) {
+            Row(Modifier.fillMaxWidth(0.42f)) {
+                Image(
+                    painter = painterResource(R.drawable.ic_logo),
+                    contentDescription = null,
+                )
+            }
             SearchBar(
-                modifier = Modifier
-                    .consumeWindowInsets(PaddingValues(top = 25.dp))
-                    .padding(bottom = 20.dp),
+                modifier = Modifier.consumeWindowInsets(PaddingValues(10000.dp)),
                 query = "",
                 onQueryChange = {},
                 onSearch = {},

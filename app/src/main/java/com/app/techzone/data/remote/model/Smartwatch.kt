@@ -52,14 +52,14 @@ data class Smartwatch(
     val measurements: Any,
     override val memory: Int,
     @SerializedName("memory_variations")
-    override val memoryVariations: List<Int>,
+    override val memoryVariations: MemoryVariations,
     @SerializedName("memory_ram")
     val memoryRam: Int,
     val model: String,
     override val name: String,
     @SerializedName("operating_system")
     val operatingSystem: String,
-    override val photos: List<Photo>,
+    override val photos: List<Photo>?,
     @SerializedName("pixel_density")
     val pixelDensity: Int,
     override val price: Int,
