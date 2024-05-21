@@ -41,8 +41,9 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge(
                     navigationBarStyle = SystemBarStyle.light(
                         MaterialTheme.colorScheme.tertiary.toArgb(),
-                        0
-                    )
+                        MaterialTheme.colorScheme.primary.toArgb()
+                    ),
+
                 )
 
                 // avoid passing around snackbar host state and get it from localSnackbarHostState

@@ -59,7 +59,7 @@ data class Tablet(
     val matrixType: String,
     override val memory: Int,
     @SerializedName("memory_variations")
-    override val memoryVariations: List<Int>,
+    override val memoryVariations: MemoryVariations,
     @SerializedName("memory_ram")
     val memoryRam: Int,
     @SerializedName("model")
@@ -73,7 +73,7 @@ data class Tablet(
     val operatingSystem: String,
     @SerializedName("optical_stabilization")
     val opticalStabilization: Boolean,
-    override val photos: List<Photo>,
+    override val photos: List<Photo>?,
     @SerializedName("pixel_density")
     val pixelDensity: Int,
     override val price: Int,

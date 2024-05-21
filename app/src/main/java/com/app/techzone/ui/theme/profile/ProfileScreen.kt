@@ -23,9 +23,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
@@ -147,6 +149,7 @@ fun EditUserProfile(userViewModel: UserViewModel) {
         Column(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState())
                 .weight(1f)
         ) {
             Row(
@@ -450,7 +453,11 @@ fun UserProfile(userViewModel: UserViewModel) {
     LaunchedEffect(userViewModel.user) { userViewModel.loadUser() }
     val navController = LocalNavController.current
     val user by userViewModel.user.collectAsStateWithLifecycle()
-    Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
+    Column(
+        modifier = Modifier
+            .background(color = MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
+    ) {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -553,10 +560,10 @@ fun UserProfile(userViewModel: UserViewModel) {
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.tertiary)
                     .border(
-                    width = 1.dp,
-                    color = ForStroke.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(4.dp)
-                )
+                        width = 1.dp,
+                        color = ForStroke.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(4.dp)
+                    )
             ) {
                 profileItems.forEachIndexed { index, profileItemsPair ->
                     val (text, route) = profileItemsPair
@@ -604,10 +611,10 @@ fun UserProfile(userViewModel: UserViewModel) {
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.tertiary)
                         .border(
-                        width = 1.dp,
-                        color = ForStroke.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(4.dp)
-                    )
+                            width = 1.dp,
+                            color = ForStroke.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
                 ) {
                     magazineInfo.forEach { (icon, text) ->
                         Row(
@@ -663,7 +670,7 @@ fun UserProfile(userViewModel: UserViewModel) {
 
 
 @Composable
-fun LoginText(paddingTop: Dp = 12.dp) {
+internal fun LoginText(paddingTop: Dp = 12.dp) {
     Text(
         modifier = Modifier.padding(top = paddingTop),
         textAlign = TextAlign.Center,
