@@ -12,13 +12,14 @@ import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.Cart
 import com.app.techzone.data.remote.model.FavoritesList
-import com.app.techzone.data.remote.model.IBaseProduct
 import com.app.techzone.data.remote.model.Order
 import com.app.techzone.data.remote.model.OrderItem
+import com.app.techzone.data.remote.model.ReviewShort
 import com.app.techzone.data.remote.model.User
 import com.app.techzone.data.remote.repository.UserRepo
 import com.app.techzone.ui.theme.profile.auth.AuthState
 import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
+import com.app.techzone.ui.theme.reviews.ReviewAction
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -57,6 +58,9 @@ class UserViewModel @Inject constructor(
     private val _orders = MutableStateFlow(emptyList<Order>())
     val orders = _orders.asStateFlow()
 
+    private val _review = MutableStateFlow<ReviewShort?>(null)
+    val review = _review.asStateFlow()
+
     private val _orderItemForReview = MutableStateFlow<OrderItem?>(null)
     val orderItemForReview = _orderItemForReview.asStateFlow()
 
@@ -86,9 +90,9 @@ class UserViewModel @Inject constructor(
 
     suspend fun updateUser(
         imageFile: RequestBody? = null,
-        firstName: String? = null,
-        lastName: String? = null,
-        phoneNumber: String? = null
+        firstName: String,
+        lastName: String,
+        phoneNumber: String
     ) {
         state = state.copy(response = ServerResponse.LOADING)
         val result = userRepo.updateUser(
@@ -307,9 +311,24 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    suspend fun addReview(productId: Int, rating: Int, text: String? = null): Boolean? {
-        return userRepo.addReview(productId, rating, text)
+    suspend fun getDetailedOrder(orderId: Int) = userRepo.getOrder(orderId)
+
+    suspend fun onReviewAction(action: ReviewAction): Boolean? {
+        return when (action) {
+            is ReviewAction.AddReview -> {
+                addReview(action.productId, action.rating, action.text)
+            }
+            is ReviewAction.EditReview -> {
+                editReview(action.reviewId, action.rating, action.text)
+            }
+        }
     }
+
+    private suspend fun addReview(productId: Int, rating: Int, text: String? = null) =
+        userRepo.addReview(productId, rating, text)
+
+    private suspend fun editReview(reviewId: Int, rating: Int, text: String? = null) =
+        userRepo.editReview(reviewId, rating, text)
 
     fun loadProductForReview(orderId: Int, productId: Int) {
         viewModelScope.launch {
@@ -317,6 +336,11 @@ class UserViewModel @Inject constructor(
             userRepo.getOrder(orderId)?.let { order ->
                 order.orderItems.find { it.product.id == productId }?.let { foundOrderItem ->
                     _orderItemForReview.update { foundOrderItem }
+                    _review.update {
+                        if (foundOrderItem.product.reviewId != null) {
+                            userRepo.getReview(foundOrderItem.product.reviewId)
+                        } else null
+                    }
                     state = state.copy(response = ServerResponse.SUCCESS)
                     return@launch
                 }

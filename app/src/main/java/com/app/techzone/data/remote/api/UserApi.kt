@@ -12,6 +12,7 @@ import com.app.techzone.data.remote.model.Order
 import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
 import com.app.techzone.data.remote.model.ProductInCartResponse
+import com.app.techzone.data.remote.model.ReviewShort
 import com.app.techzone.data.remote.model.User
 import com.app.techzone.model.AuthenticationRequest
 import com.app.techzone.model.AuthorizationRequest
@@ -27,6 +28,7 @@ import retrofit2.http.Headers
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 
@@ -38,7 +40,7 @@ interface UserApi {
 
     @Headers("Accept: application/json")
     @Multipart
-    @PATCH(ApiConstants.Endpoints.users)
+    @PUT(ApiConstants.Endpoints.users)
     suspend fun updateUser(
         @Header("Authorization") token: String,
         @Part photo: MultipartBody.Part,
@@ -49,7 +51,7 @@ interface UserApi {
 
     @Headers("Accept: application/json")
     @Multipart
-    @PATCH(ApiConstants.Endpoints.users)
+    @PUT(ApiConstants.Endpoints.users)
     suspend fun updateUserWithoutPhoto(
         @Header("Authorization") token: String,
         @Part("first_name") firstName: RequestBody,
@@ -122,6 +124,21 @@ interface UserApi {
     suspend fun addReview(
         @Header("Authorization") token: String,
         @Path("id_product") productId: Int,
+        @Body request: AddReviewRequest,
+    )
+
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.reviewDetail)
+    suspend fun getReview(
+        @Header("Authorization") token: String,
+        @Path("id_review") reviewId: Int
+    ): ReviewShort
+
+    @Headers("Accept: application/json")
+    @PATCH(ApiConstants.Endpoints.reviewDetail)
+    suspend fun editReview(
+        @Header("Authorization") token: String,
+        @Path("id_review") reviewId: Int,
         @Body request: AddReviewRequest,
     )
 

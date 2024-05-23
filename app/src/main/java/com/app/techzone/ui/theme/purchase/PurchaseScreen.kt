@@ -112,7 +112,10 @@ fun PurchaseScreen(
     orderItemIds: List<Int>,
     storedCards: List<Card>
 ) {
-    LaunchedEffect(userViewModel) { userViewModel.loadUser() }
+    LaunchedEffect(userViewModel) {
+        userViewModel.loadCart()
+        userViewModel.loadUser()
+    }
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
     val user by userViewModel.user.collectAsStateWithLifecycle()
@@ -230,7 +233,7 @@ fun PurchaseScreen(
                             lastName = lastName,
                             onLastNameChange = onLastNameChange,
                             phoneNumber = phoneNumber,
-                            onPhoneUmberChange = onPhoneNumberChange,
+                            onPhoneNumberChange = onPhoneNumberChange,
                             email = currentUser.email
                         )
                     }

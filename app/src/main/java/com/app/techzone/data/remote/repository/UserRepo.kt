@@ -9,6 +9,7 @@ import com.app.techzone.data.remote.model.AddFavoriteRequest
 import com.app.techzone.data.remote.model.AddReviewRequest
 import com.app.techzone.data.remote.model.AddToCartRequest
 import com.app.techzone.data.remote.model.AuthResult
+import com.app.techzone.data.remote.model.Cart
 import com.app.techzone.data.remote.model.ChangeQuantityRequest
 import com.app.techzone.data.remote.model.CreateOrderRequest
 import com.app.techzone.data.remote.model.FavoritesList
@@ -16,6 +17,7 @@ import com.app.techzone.data.remote.model.Order
 import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
 import com.app.techzone.data.remote.model.ProductInCartResponse
+import com.app.techzone.data.remote.model.ReviewShort
 import com.app.techzone.data.remote.model.User
 import com.app.techzone.model.AuthenticationRequest
 import com.app.techzone.model.AuthorizationRequest
@@ -91,9 +93,9 @@ class UserRepo @Inject constructor(
 
     suspend fun updateUser(
         imageFile: RequestBody? = null,
-        firstName: String? = null,
-        lastName: String? = null,
-        phoneNumber: String? = null
+        firstName: String,
+        lastName: String,
+        phoneNumber: String
     ): AuthResult<Unit> {
         return handleExceptions {
             authenticate()
@@ -108,16 +110,16 @@ class UserRepo @Inject constructor(
                 userApi.updateUser(
                     token = accessToken,
                     photo = imagePart,
-                    firstName = firstName.orEmpty().toRequestBody(firstName?.toMediaTypeOrNull()),
-                    lastName = lastName.orEmpty().toRequestBody(lastName?.toMediaTypeOrNull()),
-                    phoneNumber = phoneNumber.orEmpty().toRequestBody(phoneNumber?.toMediaTypeOrNull())
+                    firstName = firstName.toRequestBody(),
+                    lastName = lastName.toRequestBody(),
+                    phoneNumber = phoneNumber.toRequestBody()
                 )
             } else {
                 userApi.updateUserWithoutPhoto(
                     token = accessToken,
-                    firstName = firstName.orEmpty().toRequestBody(firstName?.toMediaTypeOrNull()),
-                    lastName = lastName.orEmpty().toRequestBody(lastName?.toMediaTypeOrNull()),
-                    phoneNumber = phoneNumber.orEmpty().toRequestBody(phoneNumber?.toMediaTypeOrNull())
+                    firstName = firstName.toRequestBody(),
+                    lastName = lastName.toRequestBody(),
+                    phoneNumber = phoneNumber.toRequestBody()
                 )
             }
             AuthResult.Authorized()
@@ -324,15 +326,48 @@ class UserRepo @Inject constructor(
         }
     }
 
+    suspend fun getReview(reviewId: Int): ReviewShort? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.getReview(
+                token = accessToken,
+                reviewId = reviewId
+            )
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
+            null
+        }
+    }
+
+    suspend fun editReview(reviewId: Int, rating: Int, reviewText: String? = null): Boolean? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.editReview(
+                token = accessToken,
+                reviewId = reviewId,
+                request = AddReviewRequest(
+                    text = reviewText ?: "", rating = rating
+                )
+            )
+            true
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
+            false
+        }
+    }
+
     // Cart
-    @Suppress("UNCHECKED_CAST")
-    suspend fun <T> getCart(): AuthResult<T> {
+    suspend fun getCart(): AuthResult<Cart> {
         authenticate()
         val accessToken =
             prefs.getKey(PreferencesKey.accessToken) ?: return AuthResult.Unauthorized()
         return try {
             val cart = userApi.getCart(accessToken)
-            AuthResult.Authorized(cart as T)
+            AuthResult.Authorized(cart)
         } catch (e: IOException) {
             AuthResult.UnknownError()
         } catch (e: HttpException) {

@@ -34,5 +34,8 @@ fun validateUserInfo(
     if (phoneNumber.any { it.isLetter() })
         return false to "Введите корректный номер телефона"
 
+    if (phoneNumber.isNotBlank() && phoneNumber.length < 11)
+        return false to "Введите полный 12-значный номер телефона"
+
    return true to ""
 }

@@ -34,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +65,7 @@ import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.utils.formatDateShort
 import com.app.techzone.utils.formatPrice
+import kotlinx.coroutines.launch
 
 @Composable
 fun OrderScreenRoot(
@@ -91,7 +93,13 @@ fun OrderScreenRoot(
             if (orders.isEmpty()) {
                 EmptyOrderHistory()
             } else {
-                OrderHistory(orders, userViewModel::onProductAction)
+                OrderHistory(
+                    orders,
+                    onProductAction = userViewModel::onProductAction, 
+                    getOrderDetail = userViewModel::getDetailedOrder,
+//                    state = userViewModel.state,
+//                    selectedOrder = userViewModel.or
+                )
             }
         }
     }
@@ -175,15 +183,17 @@ fun OrdersTopBar() {
 fun OrderHistory(
     orders: List<Order>,
     onProductAction: suspend (ProductAction) -> Boolean,
+    getOrderDetail: suspend (Int) -> Order?,
 ) {
+    val scope = rememberCoroutineScope()
     var selectedOrderId: Int? by remember { mutableStateOf(null) }
+    var selectedOrder: Order? by remember { mutableStateOf(null)}
     Column(
         Modifier
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
         OrdersTopBar()
-
         orders.forEach { order ->
             Row(
                 Modifier
@@ -270,10 +280,18 @@ fun OrderHistory(
             HorizontalDivider(thickness = 1.dp, color = ForStroke)
         }
         selectedOrderId?.let { selectedId ->
-            orders.find { it.id == selectedId }?.let { selectedOrder ->
+            scope.launch {
+                getOrderDetail(selectedId)?.let { order ->
+                    selectedOrder = order
+                }
+            }
+            selectedOrder?.let{ order ->
                 OrderComposition(
-                    selectedOrder,
-                    onDismiss = { selectedOrderId = null },
+                    order,
+                    onDismiss = {
+                        selectedOrderId = null
+                        selectedOrder = null
+                    },
                     onProductAction = onProductAction
                 )
             }
@@ -379,7 +397,12 @@ private class OrderCompositionHolder {
                                                     )
                                                 }
                                             ) {
-                                                Text("Оставить отзыв")
+                                                Text(
+                                                    if (orderItem.product.reviewId != null)
+                                                        "Изменить отзыв"
+                                                    else
+                                                        "Оставить отзыв"
+                                                )
                                             }
                                         }
                                         else -> {
