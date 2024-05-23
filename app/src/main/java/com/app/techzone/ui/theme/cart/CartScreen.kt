@@ -382,7 +382,7 @@ fun CartItemCard(
         if (isFirstComposition) {
             isFirstComposition = false
         } else {
-            snapshotFlow { quantity }.debounce(1000L).distinctUntilChanged().collect {
+            snapshotFlow { quantity }.debounce(500L).distinctUntilChanged().collect {
                 onProductAction(ProductAction.ChangeQuantityInCart(orderItem.product.id, quantity))
             }
         }

@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.LocalNavController
 import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.OrderItem
+import com.app.techzone.data.remote.model.ReviewShort
 import com.app.techzone.ui.theme.DarkText
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.main.ProductCrossedPrice
@@ -51,11 +52,12 @@ import com.app.techzone.utils.formatPrice
 import kotlinx.coroutines.launch
 
 @Composable
-fun AddReviewScreenRoot(userViewModel: UserViewModel, orderId: Int, productId: Int) {
+fun ReviewScreenRoot(userViewModel: UserViewModel, orderId: Int, productId: Int) {
+    val orderItem by userViewModel.orderItemForReview.collectAsStateWithLifecycle()
+    val review by userViewModel.review.collectAsStateWithLifecycle()
     LaunchedEffect(userViewModel.orderItemForReview) {
         userViewModel.loadProductForReview(orderId, productId)
     }
-    val orderItem by userViewModel.orderItemForReview.collectAsStateWithLifecycle()
     when (userViewModel.state.response){
         ServerResponse.LOADING -> { LoadingBox() }
         ServerResponse.ERROR -> {
@@ -65,9 +67,11 @@ fun AddReviewScreenRoot(userViewModel: UserViewModel, orderId: Int, productId: I
         }
         ServerResponse.SUCCESS -> {
             orderItem?.let {
-                AddReviewScreen(orderItem = it) { text: String?, rating: Int ->
-                    userViewModel.addReview(productId, rating, text)
-                }
+                ReviewScreen(
+                    orderItem = it,
+                    review = review,
+                    onReviewAction = userViewModel::onReviewAction
+                )
             }
         }
         ServerResponse.UNAUTHORIZED -> {}
@@ -75,7 +79,7 @@ fun AddReviewScreenRoot(userViewModel: UserViewModel, orderId: Int, productId: I
 }
 
 @Composable
-private fun AddReviewTopBar(){
+private fun ReviewTopBar(){
     val navController = LocalNavController.current
     Row(
         Modifier
@@ -107,7 +111,11 @@ private fun AddReviewTopBar(){
 
 
 @Composable
-fun AddReviewScreen(orderItem: OrderItem, addReview: suspend (String?, Int) -> Boolean?) {
+fun ReviewScreen(
+    orderItem: OrderItem,
+    review: ReviewShort?,
+    onReviewAction: suspend (ReviewAction) -> Boolean?
+) {
     val navController = LocalNavController.current
     val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
@@ -117,7 +125,7 @@ fun AddReviewScreen(orderItem: OrderItem, addReview: suspend (String?, Int) -> B
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
     ) {
-        AddReviewTopBar()
+        ReviewTopBar()
 
         // Product Info
         Row(
@@ -150,15 +158,13 @@ fun AddReviewScreen(orderItem: OrderItem, addReview: suspend (String?, Int) -> B
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     ProductCrossedPrice(product = orderItem.product, large = true)
-                    Text(
-                        formatPrice(orderItem.product.price), style = style, color = color
-                    )
+                    Text(formatPrice(orderItem.product.price), style = style, color = color)
                 }
             }
         }
 
         // Review description
-        val (reviewText, onReviewTextChange) = remember { mutableStateOf("")}
+        val (reviewText, onReviewTextChange) = remember { mutableStateOf(review?.text ?: "")}
         Column(
             Modifier
                 .fillMaxSize()
@@ -176,10 +182,19 @@ fun AddReviewScreen(orderItem: OrderItem, addReview: suspend (String?, Int) -> B
                         color = DarkText
                     )
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.tertiary),
                 minLines = 3,
             )
-            val starsStateMapping = (0..4).associateBy { remember {mutableStateOf(false) } }
+            val starsStateMapping = (0..4).associateBy {
+                remember {
+                    if (review != null)
+                        mutableStateOf(review.rating >= it + 1)
+                    else
+                        mutableStateOf(false)
+                }
+            }
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -217,7 +232,11 @@ fun AddReviewScreen(orderItem: OrderItem, addReview: suspend (String?, Int) -> B
                 onClick = {
                     scope.launch {
                         val rating = starsStateMapping.keys.filter { it.value }.size
-                        val response = addReview(reviewText, rating)
+                        val action = if (review != null)
+                            ReviewAction.EditReview(review.id, reviewText, rating)
+                        else
+                            ReviewAction.AddReview(orderItem.product.id, reviewText, rating)
+                        val response = onReviewAction(action)
                         if (response == null){
                             snackbarHostState.showSnackbar(
                                 "Что-то пошло не так\nПроверьте подключение к интернету"

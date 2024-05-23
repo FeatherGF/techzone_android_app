@@ -121,7 +121,6 @@ fun EditUserProfile(userViewModel: UserViewModel) {
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         imageUri = uri
-        println(imageUri)
     }
     val userPhotoUrl by remember { mutableStateOf(user?.photoUrl) }
     val (firstName, onFirstNameChange) = remember { mutableStateOf(user?.firstName ?: "") }
@@ -219,7 +218,7 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                     lastName = lastName,
                     onLastNameChange = onLastNameChange,
                     phoneNumber = phoneNumber,
-                    onPhoneUmberChange = onPhoneNumberChange,
+                    onPhoneNumberChange = onPhoneNumberChange,
                     email = user?.email!!,
                     phoneFieldActions = KeyboardActions(
                         onSend = {
@@ -323,7 +322,7 @@ fun UserInfoFields(
     lastName: String,
     onLastNameChange: (String) -> Unit,
     phoneNumber: String,
-    onPhoneUmberChange: (String) -> Unit,
+    onPhoneNumberChange: (String) -> Unit,
     email: String,
     phoneFieldActions: KeyboardActions = KeyboardActions.Default
 ) {
@@ -366,11 +365,14 @@ fun UserInfoFields(
             .background(MaterialTheme.colorScheme.tertiary),
         value = phoneNumber,
         onValueChange = { textPhone ->
-            if (textPhone.length < 12)
-                onPhoneUmberChange(textPhone.filter { it.isDigit() })
+            if (textPhone.length < 12) {
+                onPhoneNumberChange(
+                    textPhone.replaceFirstChar { if (it == '8') '7' else it }
+                )
+            }
         },
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Phone,
+            keyboardType = KeyboardType.NumberPassword,
             imeAction = if (phoneFieldActions != KeyboardActions.Default) ImeAction.Send else ImeAction.Next
         ),
         keyboardActions = phoneFieldActions,

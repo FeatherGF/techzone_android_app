@@ -107,9 +107,10 @@ fun FiltersView(onBackClicked: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 PriceRangeField(
+                    Modifier.weight(0.45f),
                     placeholderText = "от 5 000 ₽",
                     text = textLowerBoundPrice,
                     onValueChange = {
@@ -124,6 +125,7 @@ fun FiltersView(onBackClicked: () -> Unit) {
                     }
                 )
                 PriceRangeField(
+                    Modifier.weight(0.45f),
                     placeholderText = "до 250 000 ₽",
                     text = textHigherBoundPrice,
                     onValueChange = {

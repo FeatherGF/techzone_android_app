@@ -31,7 +31,7 @@ import com.app.techzone.ui.theme.profile.ProfileScreen
 import com.app.techzone.ui.theme.profile.Authorization
 import com.app.techzone.ui.theme.profile.EditUserProfile
 import com.app.techzone.ui.theme.purchase.PurchaseScreenRoot
-import com.app.techzone.ui.theme.reviews.AddReviewScreenRoot
+import com.app.techzone.ui.theme.reviews.ReviewScreenRoot
 
 @Composable
 fun Main(navController: NavHostController) {
@@ -136,7 +136,7 @@ fun Main(navController: NavHostController) {
                 val orderId = backStackEntry.arguments?.getInt("orderId")
                 val productId = backStackEntry.arguments?.getInt("productId")
                 if (orderId != null && productId != null) {
-                    AddReviewScreenRoot(
+                    ReviewScreenRoot(
                         userViewModel, orderId, productId
                     )
                 } else {

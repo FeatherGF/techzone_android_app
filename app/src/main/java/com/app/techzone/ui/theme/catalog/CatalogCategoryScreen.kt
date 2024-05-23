@@ -61,7 +61,12 @@ val UNSELECTED_PRICING = PricePreset("", 0, 0)
 
 val priceMask = CurrencyVisualTransformation("RUB")
 @Composable
-fun PriceRangeField(placeholderText: String, text: String, onValueChange: (String) -> Unit) {
+fun PriceRangeField(
+    modifier: Modifier = Modifier,
+    placeholderText: String,
+    text: String,
+    onValueChange: (String) -> Unit,
+) {
     OutlinedTextField(
         value = text,
         onValueChange = onValueChange,
@@ -78,9 +83,8 @@ fun PriceRangeField(placeholderText: String, text: String, onValueChange: (Strin
                 color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
             )
         },
-        modifier = Modifier
+        modifier = modifier
             .background(MaterialTheme.colorScheme.tertiary)
-            .width(190.dp) // maybe make it dynamic according to screen size
             .height(56.dp),
     )
 }

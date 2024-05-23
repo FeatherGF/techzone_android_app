@@ -7,7 +7,6 @@ object ApiConstants {
 
         // products
         const val products = "products"
-        const val productsDetail = "products/{id_product}"
         const val product_type = "products/type/{id_product}"
 
         // search
@@ -44,8 +43,8 @@ object ApiConstants {
         const val ordersDetail = "orders/{id_order}"
 
         // reviews
+        const val reviewDetail = "reviews/{id_review}"
         const val addReview = "reviews/{id_product}"
-        const val editReview = "reviews/{id_review}"
 
         // cart
         const val cart = "cart"

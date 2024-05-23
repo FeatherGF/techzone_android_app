@@ -530,7 +530,7 @@ fun Review(review: Review) {
             }
         }
 
-        if (review.text.isNotEmpty()) {
+        if (!review.text.isNullOrEmpty()) {
             Row {
                 Text(
                     review.text,

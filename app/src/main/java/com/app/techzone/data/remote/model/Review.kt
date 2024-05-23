@@ -10,8 +10,14 @@ data class Review(
     @SerializedName("photo_url")
     val photoUrl: String?,
     val rating: Int,
-    val text: String,
+    val text: String?,
     val user: String
+)
+
+data class ReviewShort(
+    val id: Int,
+    val text: String?,
+    val rating: Int
 )
 
 

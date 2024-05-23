@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -226,16 +227,22 @@ fun EnterCardInfo(
                 },
                 visualTransformation = cardNumberVisualTransformation,
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
+                    keyboardType = KeyboardType.NumberPassword,
                     imeAction = ImeAction.Next
                 ),
             )
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 20.dp),
+                    .padding(top = 12.dp, bottom = 20.dp)
+                    .background(MaterialTheme.colorScheme.background),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                val colors = OutlinedTextFieldDefaults.colors(
+                    errorContainerColor = MaterialTheme.colorScheme.background,
+                    focusedContainerColor = MaterialTheme.colorScheme.tertiary,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.tertiary
+                )
                 OutlinedTextField(
                     value = state.expirationDate,
                     placeholder = { PlaceholderText("ММ/ГГ") },
@@ -245,18 +252,21 @@ fun EnterCardInfo(
                     },
                     visualTransformation = expirationDateVisualTransformation,
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
+                        keyboardType = KeyboardType.NumberPassword,
                         imeAction = ImeAction.Next
                     ),
                     isError = state.cardExpiredText != null,
                     supportingText = {
                         state.cardExpiredText?.let {
-                            Text(it, style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                            )
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth(0.49f)
-                        .background(MaterialTheme.colorScheme.tertiary)
+                    colors = colors,
+                    modifier = Modifier.fillMaxWidth(0.49f)
                 )
                 OutlinedTextField(
                     value = state.code,
@@ -266,7 +276,7 @@ fun EnterCardInfo(
                             onEvent(PaymentUiEvent.CodeChanged(it))
                     },
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
+                        keyboardType = KeyboardType.NumberPassword,
                         imeAction = ImeAction.Send
                     ),
                     keyboardActions = KeyboardActions(
@@ -275,13 +285,14 @@ fun EnterCardInfo(
                     supportingText = {
                         Text(
                             "3 цифры на обороте",
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.background(MaterialTheme.colorScheme.background)
                         )
                     },
+                    colors = colors,
                     modifier = Modifier
                         .fillMaxWidth(0.51f)
                         .weight(1f)
-                        .background(MaterialTheme.colorScheme.tertiary)
                 )
             }
             Button(
