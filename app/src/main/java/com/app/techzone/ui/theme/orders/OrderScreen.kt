@@ -97,8 +97,6 @@ fun OrderScreenRoot(
                     orders,
                     onProductAction = userViewModel::onProductAction, 
                     getOrderDetail = userViewModel::getDetailedOrder,
-//                    state = userViewModel.state,
-//                    selectedOrder = userViewModel.or
                 )
             }
         }

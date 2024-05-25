@@ -2,6 +2,7 @@ package com.app.techzone.data.remote.api
 
 import com.app.techzone.data.remote.model.Accessory
 import com.app.techzone.data.remote.model.BaseProduct
+import com.app.techzone.data.remote.model.FiltersType
 import com.app.techzone.data.remote.model.Laptop
 import com.app.techzone.data.remote.model.ProductList
 import com.app.techzone.data.remote.model.ProductType
@@ -15,6 +16,7 @@ import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
 interface ProductApi {
 
@@ -22,23 +24,44 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.products)
     suspend fun getProducts(
         @Header("Authorization") token: String? = null,
-        @Query("size_page") pageSize: Int = 20,
-        @Query("number_page") pageNumber: Int = 1,
+        @Query("sort") sort: String,
+        @QueryMap(encoded = true) queryParams: Map<String, String>,
+        @Query("size_page") pageSize: Int? = null,
+        @Query("number_page") pageNumber: Int? = null,
     ): ProductList<BaseProduct>
 
     @Headers("Accept: application/json")
-    @GET(ApiConstants.Endpoints.product_type)
+    @GET(ApiConstants.Endpoints.productType)
     suspend fun getProductType(
         @Path("id_product") productId: Int
     ): ProductType
+
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.productsFilters)
+    suspend fun getFilters(@Query("model") category: String): FiltersType
+
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.suggestions)
+    suspend fun getSuggestions(@Query("query") query: String): SuggestionsList
+
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.search)
+    suspend fun search(
+        @Header("Authorization") token: String? = null,
+        @Query("query") query: String,
+        @Query("sort") sort: String,
+        @QueryMap(encoded = true) queryParams: Map<String, String>,
+    ): ProductList<BaseProduct>
 
 
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.tablets)
     suspend fun getTablets(
         @Header("Authorization") token: String? = null,
-        @Query("size_page") pageSize: Int = 20,
-        @Query("number_page") pageNumber: Int = 1,
+        @Query("sort") sort: String,
+        @QueryMap(encoded = true) queryParams: Map<String, String>,
+        @Query("size_page") pageSize: Int? = null,
+        @Query("number_page") pageNumber: Int? = null,
     ): ProductList<BaseProduct>
 
     @Headers("Accept: application/json")
@@ -53,8 +76,10 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.smartphones)
     suspend fun getSmartphones(
         @Header("Authorization") token: String? = null,
-        @Query("size_page") pageSize: Int = 20,
-        @Query("number_page") pageNumber: Int = 1,
+        @Query("sort") sort: String,
+        @QueryMap(encoded = true) queryParams: Map<String, String>,
+        @Query("size_page") pageSize: Int? = null,
+        @Query("number_page") pageNumber: Int? = null,
     ): ProductList<BaseProduct>
 
     @Headers("Accept: application/json")
@@ -69,8 +94,10 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.accessories)
     suspend fun getAccessories(
         @Header("Authorization") token: String? = null,
-        @Query("size_page") pageSize: Int = 20,
-        @Query("number_page") pageNumber: Int = 1,
+        @Query("sort") sort: String,
+        @QueryMap(encoded = true) queryParams: Map<String, String>,
+        @Query("size_page") pageSize: Int? = null,
+        @Query("number_page") pageNumber: Int? = null,
     ): ProductList<BaseProduct>
 
     @Headers("Accept: application/json")
@@ -85,8 +112,10 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.smartwatches)
     suspend fun getSmartwatches(
         @Header("Authorization") token: String? = null,
-        @Query("size_page") pageSize: Int = 20,
-        @Query("number_page") pageNumber: Int = 1,
+        @Query("sort") sort: String,
+        @QueryMap(encoded = true) queryParams: Map<String, String>,
+        @Query("size_page") pageSize: Int? = null,
+        @Query("number_page") pageNumber: Int? = null,
     ): ProductList<BaseProduct>
 
     @Headers("Accept: application/json")
@@ -101,8 +130,10 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.laptops)
     suspend fun getLaptops(
         @Header("Authorization") token: String? = null,
-        @Query("size_page") pageSize: Int = 20,
-        @Query("number_page") pageNumber: Int = 1,
+        @Query("sort") sort: String,
+        @QueryMap(encoded = true) queryParams: Map<String, String>,
+        @Query("size_page") pageSize: Int? = null,
+        @Query("number_page") pageNumber: Int? = null,
     ): ProductList<BaseProduct>
 
     @Headers("Accept: application/json")
@@ -117,8 +148,10 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.televisions)
     suspend fun getTelevisions(
         @Header("Authorization") token: String? = null,
-        @Query("size_page") pageSize: Int = 20,
-        @Query("number_page") pageNumber: Int = 1,
+        @Query("sort") sort: String,
+        @QueryMap(encoded = true) queryParams: Map<String, String>,
+        @Query("size_page") pageSize: Int? = null,
+        @Query("number_page") pageNumber: Int? = null,
     ): ProductList<BaseProduct>
 
     @Headers("Accept: application/json")
@@ -127,15 +160,4 @@ interface ProductApi {
         @Header("Authorization") token: String? = null,
         @Path("id_television") televisionId: Int,
     ): Television
-
-    @Headers("Accept: application/json")
-    @GET(ApiConstants.Endpoints.suggestions)
-    suspend fun getSuggestions(@Query("query") query: String): SuggestionsList
-
-    @Headers("Accept: application/json")
-    @GET(ApiConstants.Endpoints.search)
-    suspend fun search(
-        @Header("Authorization") token: String? = null,
-        @Query("query") query: String
-    ): ProductList<BaseProduct>
 }

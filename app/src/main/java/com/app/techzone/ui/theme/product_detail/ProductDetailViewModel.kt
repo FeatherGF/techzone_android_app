@@ -43,6 +43,7 @@ class ProductDetailViewModel @Inject constructor(
                 ProductTypeEnum.TABLET -> productRepo.getTablet(productId)
                 ProductTypeEnum.SMARTWATCH -> productRepo.getSmartwatch(productId)
                 ProductTypeEnum.TELEVISION -> productRepo.getTelevision(productId)
+                else -> return@launch
             }
             if (response == null) {
                 state = state.copy(response = ServerResponse.ERROR)

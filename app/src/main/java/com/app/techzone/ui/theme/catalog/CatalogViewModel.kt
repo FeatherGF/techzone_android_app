@@ -1,18 +1,28 @@
 package com.app.techzone.ui.theme.catalog
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.techzone.data.remote.api.ApiConstants
 import com.app.techzone.data.remote.model.BaseProduct
+import com.app.techzone.data.remote.model.IFilter
+import com.app.techzone.data.remote.model.PriceFilter
+import com.app.techzone.data.remote.model.PriceVariant
+import com.app.techzone.data.remote.model.ProductTypeEnum
+import com.app.techzone.data.remote.model.getProductType
 import com.app.techzone.data.remote.repository.ProductRepo
+import com.app.techzone.model.sortingOptions
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.ui.theme.server_response.ServerResponseState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,26 +38,99 @@ class CatalogViewModel @Inject constructor(
     private val _products = MutableStateFlow(emptyList<BaseProduct>())
     val products = _products.asStateFlow()
 
+    private val _filters = MutableStateFlow<Map<String, IFilter>?>(null)
+
+    val priceFilters: StateFlow<PriceFilter?> =
+        _filters.map {
+            it?.let{ filtersMapping ->
+                filtersMapping["Цена"] as PriceFilter
+            }
+        }.stateIn(
+            viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = null
+        )
+
+    val filtersExceptPrice: StateFlow<Map<String, IFilter>?> =
+        _filters.map {
+            it?.let { catalogFilters ->
+                catalogFilters.filterKeys { title -> title != "Цена" }
+            }
+        }.stateIn(
+            viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = null
+        )
+
+    val mutableSelectedFilters = MutableStateFlow(mutableMapOf<String, MutableList<Any>>())
+    val selectedFilters = mutableSelectedFilters.asStateFlow()
+
+    val selectedPriceRanges = mutableStateListOf<PriceVariant>()
+    val selectedSorting = mutableStateOf(sortingOptions.first())
+
     fun loadByString(text: String) {
-        if (text in listOf(
-                ApiConstants.Endpoints.televisions,
-                ApiConstants.Endpoints.laptops,
-                ApiConstants.Endpoints.tablets,
-                ApiConstants.Endpoints.smartphones,
-                ApiConstants.Endpoints.smartwatches,
-                ApiConstants.Endpoints.accessories
-            )
-        ) {
-            loadByCategory(text)
+        val productType = getProductType(text)
+        if (productType != ProductTypeEnum.PRODUCT) {
+            loadByCategory(productType)
         } else {
             loadBySearch(text)
+        }
+        loadFilters(productType)
+    }
+
+    fun clearFilters() {
+        mutableSelectedFilters.update {
+            it.apply {
+                values.forEach { list -> list.clear() }
+            }
+        }
+        selectedPriceRanges.clear()
+        selectedSorting.value = sortingOptions.first()
+    }
+
+    private fun getQueryFilters(): Map<String, String> {
+        val filters = selectedFilters.value.map { (queryName, queryParams)  ->
+            if (queryParams.isEmpty()) return@map "" to ""
+            "${queryName}_in" to queryParams.joinToString(prefix = "[", postfix = "]") {
+                // TODO: remove after backend fix.
+                //  needed for screen diagonal with this BS ["6.1", "20"]
+                if (queryName == "screen_diagonal") {
+                    "\"$it\""
+                } else {
+                    it.toString().toIntOrNull()?.toString() ?: "\"$it\""
+                }
+            }
+        }.toMap()
+        val priceFilters = mutableMapOf<String, String>().apply {
+            selectedPriceRanges
+                .sortedWith(compareBy(nullsFirst()) { it.min })
+                .firstOrNull()?.min
+                ?.let { put("price_gte", it.toString()) }
+            selectedPriceRanges
+                .sortedWith(compareByDescending(nullsLast()) { it.max })
+                .firstOrNull()?.max
+                ?.let { put("price_lte", it.toString()) }
+        }
+        return priceFilters + filters
+    }
+
+    private fun loadFilters(type: ProductTypeEnum) {
+        viewModelScope.launch {
+            val workaround = if (type == ProductTypeEnum.ACCESSORY) ProductTypeEnum.PRODUCT else type
+            productRepo.getFilters(workaround.name.lowercase())?.let { filters ->
+                _filters.update { filters }
+            }
         }
     }
 
     private fun loadBySearch(text: String) {
         viewModelScope.launch {
             state = state.copy(response = ServerResponse.LOADING)
-            val response = productRepo.searchProducts(text)
+            val response = productRepo.searchProducts(
+                text = text,
+                sorting = selectedSorting.value.queryName,
+                queryFilters = getQueryFilters()
+            )
             if (response == null){
                 state = state.copy(response = ServerResponse.ERROR)
                 return@launch
@@ -58,10 +141,14 @@ class CatalogViewModel @Inject constructor(
         }
     }
 
-    fun loadByCategory(category: String) {
+    private fun loadByCategory(categoryType: ProductTypeEnum) {
         viewModelScope.launch {
             state = state.copy(response = ServerResponse.LOADING)
-            val response = productRepo.getByCategoryOrAllProducts(category)
+            val response = productRepo.getByCategoryOrAllProducts(
+                categoryType,
+                sorting = selectedSorting.value.queryName,
+                queryFilters = getQueryFilters(),
+            )
             if (response == null){
                 state = state.copy(response = ServerResponse.ERROR)
                 return@launch
@@ -75,3 +162,4 @@ class CatalogViewModel @Inject constructor(
         activeScreenState = newValue
     }
 }
+

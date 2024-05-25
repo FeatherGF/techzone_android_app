@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,11 +18,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,183 +33,430 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.app.techzone.model.pricePresets
+import com.app.techzone.data.remote.model.IFilter
+import com.app.techzone.data.remote.model.PriceFilter
+import com.app.techzone.data.remote.model.PriceVariant
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.utils.formatPrice
+import com.app.techzone.utils.getDateObject
+import com.google.gson.internal.LinkedTreeMap
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import java.util.Locale
 import kotlin.math.roundToInt
 
 
 @Composable
-fun FiltersView(onBackClicked: () -> Unit) {
-    BackHandler(onBack = onBackClicked)
-    Column(
-        modifier = Modifier.background(color = MaterialTheme.colorScheme.background)
-    ) {
-        Surface(
-            modifier = Modifier
-                .height(120.dp)
-                .fillMaxWidth(),
-            color = MaterialTheme.colorScheme.tertiary,
-            border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
-        ) {
-            Row(
+fun FiltersView(
+    priceFilters: PriceFilter?,
+    filtersExceptPrice: Map<String, IFilter>?,
+    selectedPriceRanges: SnapshotStateList<PriceVariant>,
+    mutableSelectedFilters: MutableStateFlow<MutableMap<String, MutableList<Any>>>,
+    selectedFilters: MutableMap<String, MutableList<Any>>,
+    onFiltersApplied: () -> Unit,
+    clearFilters: () -> Unit,
+    onBackClicked: () -> Unit
+) {
+    val minPrice: Int
+    val maxPrice: Int
+    if (priceFilters != null) {
+        minPrice = priceFilters.min?.toDoubleOrNull()?.roundToInt() ?: DEFAULT_MIN_PRICE
+        maxPrice = priceFilters.max?.toDoubleOrNull()?.roundToInt() ?: DEFAULT_MAX_PRICE
+    } else {
+        minPrice = DEFAULT_MIN_PRICE
+        maxPrice = DEFAULT_MAX_PRICE
+    }
+
+    var lowerBoundPrice: Int
+    var higherBoundPrice: Int
+    if (selectedPriceRanges.isNotEmpty()) {
+        lowerBoundPrice = remember {
+            mutableIntStateOf(
+                selectedPriceRanges
+                    .sortedWith(compareBy(nullsFirst()) { it.min })
+                    .first().min ?: minPrice
+            )
+        }.intValue
+        higherBoundPrice = remember {
+            mutableIntStateOf(
+                selectedPriceRanges
+                    .sortedWith(compareByDescending(nullsLast()) { it.max })
+                    .first().max ?: maxPrice
+            )
+        }.intValue
+    } else {
+        lowerBoundPrice = remember { mutableIntStateOf(minPrice) }.intValue
+        higherBoundPrice = remember { mutableIntStateOf(maxPrice) }.intValue
+    }
+
+    var sliderPosition by remember {
+        mutableStateOf(lowerBoundPrice.toFloat()..higherBoundPrice.toFloat())
+    }
+    var textLowerBoundPrice by remember {
+        mutableStateOf(lowerBoundPrice.takeIf { lowerBoundPrice != minPrice }?.toString() ?: "")
+    }
+    var textHigherBoundPrice by remember {
+        mutableStateOf(higherBoundPrice.takeIf { higherBoundPrice != maxPrice }?.toString() ?: "")
+    }
+    val steps = (maxPrice - minPrice) / 5100
+
+    BackHandler {
+        onBackClicked()
+        clearFilters()
+    }
+    Box {
+        Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
+            Surface(
                 modifier = Modifier
-                    .padding(start = 16.dp, top = 56.dp, end = 16.dp, bottom = 16.dp)
-                    .fillMaxWidth()
-                    .height(48.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .height(120.dp)
+                    .fillMaxWidth(),
+                color = MaterialTheme.colorScheme.tertiary,
+                border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary // invisible only for simplicity of development
-                )
-                Text(
-                    "Фильтры",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                )
-                IconButton(onClick = onBackClicked) {
+                Row(
+                    modifier = Modifier
+                        .padding(start = 16.dp, top = 56.dp, end = 16.dp, bottom = 16.dp)
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                        tint = MaterialTheme.colorScheme.tertiary
                     )
+                    Text(
+                        "Фильтры",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                    )
+                    IconButton(onClick = {
+                        clearFilters()
+                        onBackClicked()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                        )
+                    }
                 }
             }
-        }
-
-        Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, top = 28.dp, end = 16.dp)
-        ) {
-            Text(
-                "Цена",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-            )
-            var lowerBoundPrice by rememberSaveable { mutableIntStateOf(MIN_PRICE) }
-            var higherBoundPrice by rememberSaveable { mutableIntStateOf(MAX_PRICE) }
-            var sliderPosition by remember {
-                mutableStateOf(lowerBoundPrice.toFloat()..higherBoundPrice.toFloat())
-            }
-            var textLowerBoundPrice by remember { mutableStateOf("") }
-            var textHigherBoundPrice by remember { mutableStateOf("") }
-
-            // approximately 50 steps with the 5 000 rubles between each step
-            val steps = (MAX_PRICE - MIN_PRICE) / 5100
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                PriceRangeField(
-                    Modifier.weight(0.45f),
-                    placeholderText = "от 5 000 ₽",
-                    text = textLowerBoundPrice,
-                    onValueChange = {
-                        textLowerBoundPrice = it
-                        it.toIntOrNull()?.let { price ->
-                            if (price in 0..MAX_PRICE) {
-                                lowerBoundPrice = price
-                                sliderPosition =
-                                    lowerBoundPrice.toFloat()..higherBoundPrice.toFloat()
-                            }
-                        }
-                    }
-                )
-                PriceRangeField(
-                    Modifier.weight(0.45f),
-                    placeholderText = "до 250 000 ₽",
-                    text = textHigherBoundPrice,
-                    onValueChange = {
-                        textHigherBoundPrice = it
-                        it.toIntOrNull()?.let { price ->
-                            if (price in lowerBoundPrice..MAX_PRICE) {
-                                higherBoundPrice = price
-                                sliderPosition =
-                                    lowerBoundPrice.toFloat()..higherBoundPrice.toFloat()
-                            }
-                        }
-                    }
-                )
-            }
-
-            RangeSlider(
-                value = sliderPosition,
-                steps = steps,
-                valueRange = MIN_PRICE.toFloat()..MAX_PRICE.toFloat(),
-                onValueChange = { range ->
-                    sliderPosition = range
-
-                    val rangeStart = range.start.roundToInt()
-                    val rangeEnd = range.endInclusive.roundToInt()
-
-                    // if value is default -> don't replace placeholder
-                    textLowerBoundPrice = if (rangeStart != MIN_PRICE) rangeStart.toString() else ""
-                    textHigherBoundPrice = if (rangeEnd != MAX_PRICE) rangeEnd.toString() else ""
-                },
-            )
-
-            val (selectedPricing, onPricingSelected) = remember { mutableStateOf(UNSELECTED_PRICING) }
 
             Column(
-                Modifier
-                    .selectableGroup()
-                    .background(MaterialTheme.colorScheme.tertiary)
-                    .border(
-                        width = 1.dp,
-                        color = ForStroke.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(4.dp)
-                    )
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 144.dp),
+                verticalArrangement = Arrangement.spacedBy(28.dp)
             ) {
-                pricePresets.forEachIndexed { index, pricePreset ->
+                Column {
+                    Text(
+                        "Цена",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
-                            .selectable(
-                                selected = selectedPricing.text == pricePreset.text,
-                                onClick = {
-                                    // if the same is
-                                    if (selectedPricing.text != pricePreset.text) {
-                                        onPricingSelected(pricePreset)
-                                    } else {
-                                        onPricingSelected(UNSELECTED_PRICING)
-                                    }
-                                },
-                                role = Role.RadioButton
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Checkbox(
-                            modifier = Modifier.padding(start = 34.dp, end = 34.dp),
-                            checked = selectedPricing.text == pricePreset.text,
-                            onCheckedChange = null
+                        PriceRangeField(
+                            Modifier.weight(0.45f),
+                            placeholderText = "от ${formatPrice(minPrice)}",
+                            text = textLowerBoundPrice,
+                            onValueChange = {
+                                textLowerBoundPrice = it
+                                it.toIntOrNull()?.let { price ->
+                                    if (price in 0..higherBoundPrice) {
+                                        selectedPriceRanges.clear()
+                                        sliderPosition = (
+                                                textLowerBoundPrice.toFloatOrNull() ?: 0f
+                                                )..(
+                                                textHigherBoundPrice.toFloatOrNull()
+                                                    ?: maxPrice.toFloat()
+                                                )
+                                        lowerBoundPrice = price
+                                        selectedPriceRanges.add(
+                                            PriceVariant(
+                                                min = textLowerBoundPrice.toIntOrNull(),
+                                                max = textHigherBoundPrice.toIntOrNull()
+                                            )
+                                        )
+                                    }
+                                }
+                            }
                         )
-                        Text(
-                            pricePreset.text,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                        PriceRangeField(
+                            Modifier.weight(0.45f),
+                            placeholderText = "до ${formatPrice(maxPrice)}",
+                            text = textHigherBoundPrice,
+                            onValueChange = {
+                                textHigherBoundPrice = it
+                                it.toIntOrNull()?.let { price ->
+                                    if (price in lowerBoundPrice..maxPrice) {
+                                        selectedPriceRanges.clear()
+                                        sliderPosition = (
+                                                textLowerBoundPrice.toFloatOrNull() ?: 0f
+                                                )..(
+                                                textHigherBoundPrice.toFloatOrNull()
+                                                    ?: maxPrice.toFloat()
+                                                )
+                                        higherBoundPrice = price
+                                        selectedPriceRanges.add(
+                                            PriceVariant(
+                                                min = textLowerBoundPrice.toIntOrNull(),
+                                                max = textHigherBoundPrice.toIntOrNull()
+                                            )
+                                        )
+                                    }
+                                }
+                            }
                         )
                     }
-                    if (index != pricePresets.size - 1) {
-                        HorizontalDivider(color = ForStroke.copy(alpha = 0.1f))
+                    RangeSlider(
+                        value = sliderPosition,
+                        steps = steps,
+                        valueRange = minPrice.toFloat()..maxPrice.toFloat(),
+                        onValueChange = { range ->
+                            sliderPosition = range
+
+                            val rangeStart = range.start.roundToInt()
+                            val rangeEnd = range.endInclusive.roundToInt()
+
+                            selectedPriceRanges.clear()
+
+                            // if value is default -> don't replace placeholder
+                            textLowerBoundPrice = if (rangeStart in minPrice..maxPrice) {
+                                selectedPriceRanges.add(
+                                    PriceVariant(
+                                        min = rangeStart,
+                                        max = rangeEnd
+                                    )
+                                )
+                                rangeStart.toString()
+                            } else {
+                                selectedPriceRanges.add(PriceVariant(min = null, max = rangeEnd))
+                                ""
+                            }
+                            textHigherBoundPrice = if (rangeEnd in minPrice..maxPrice) {
+                                selectedPriceRanges.add(
+                                    PriceVariant(
+                                        min = rangeStart,
+                                        max = rangeEnd
+                                    )
+                                )
+                                rangeEnd.toString()
+                            } else {
+                                selectedPriceRanges.add(PriceVariant(min = rangeStart, max = null))
+                                ""
+                            }
+                        },
+                    )
+                    Column(
+                        Modifier
+                            .selectableGroup()
+                            .background(MaterialTheme.colorScheme.tertiary)
+                            .border(
+                                width = 1.dp,
+                                color = ForStroke.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                    ) {
+                        priceFilters?.let { prices ->
+                            prices.variants.forEachIndexed { index, f ->
+                                val filter = f as LinkedTreeMap<*, *>
+                                val label = filter["label"].toString()
+                                val min = filter["min"].toString().toDoubleOrNull()?.roundToInt()
+                                val max = filter["max"].toString().toDoubleOrNull()?.roundToInt()
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp)
+                                        .selectable(
+                                            selected = selectedPriceRanges.any { it.label == label },
+                                            onClick = {
+                                                selectedPriceRanges.removeIf { it.label.isEmpty() }
+                                                val selectedPrice =
+                                                    selectedPriceRanges.find { it.label == label }
+                                                if (selectedPrice == null)
+                                                    selectedPriceRanges.add(
+                                                        PriceVariant(label, min, max)
+                                                    )
+                                                else
+                                                    selectedPriceRanges.remove(selectedPrice)
+                                                val selectedMinimum = selectedPriceRanges
+                                                    .sortedWith(compareBy(nullsFirst()) { it.min })
+                                                    .firstOrNull()?.min
+                                                val selectedMaximum = selectedPriceRanges
+                                                    .sortedWith(compareByDescending(nullsLast()) { it.max })
+                                                    .firstOrNull()?.max
+                                                textLowerBoundPrice =
+                                                    selectedMinimum?.toString() ?: ""
+                                                textHigherBoundPrice =
+                                                    selectedMaximum?.toString() ?: ""
+                                                sliderPosition = (
+                                                        selectedMinimum ?: minPrice
+                                                        ).toFloat()..(
+                                                        selectedMaximum ?: maxPrice
+                                                        ).toFloat()
+                                            },
+                                            role = Role.Checkbox
+                                        ),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        modifier = Modifier.padding(start = 34.dp, end = 34.dp),
+                                        checked = selectedPriceRanges.any { it.label == label },
+                                        onCheckedChange = null
+                                    )
+                                    Text(
+                                        label,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                                    )
+                                }
+
+                                if (index != prices.variants.size - 1)
+                                    HorizontalDivider(color = ForStroke.copy(alpha = 0.1f))
+                            }
+                        }
+                    }
+                }
+
+                // Other filters
+                filtersExceptPrice?.let {
+                    it.forEach { (title, filter) ->
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Text(
+                                title,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                            )
+                            Column(
+                                Modifier
+                                    .selectableGroup()
+                                    .background(MaterialTheme.colorScheme.tertiary)
+                                    .border(
+                                        width = 1.dp,
+                                        color = ForStroke.copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                            ) {
+                                filter.variants.forEachIndexed { index, value ->
+                                    val filterValue = parseFilterValue(value)
+                                    var selected by remember {
+                                        mutableStateOf(
+                                            selectedFilters
+                                                .getOrDefault(filter.id, mutableListOf())
+                                                .contains(filterValue)
+                                        )
+                                    }
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(56.dp)
+                                            .selectable(
+                                                selected = selected,
+                                                onClick = {
+                                                    mutableSelectedFilters.update { mapping ->
+                                                        val sf = mapping.getOrDefault(
+                                                            filter.id,
+                                                            mutableListOf()
+                                                        )
+                                                        if (sf.contains(filterValue))
+                                                            sf.remove(filterValue)
+                                                        else
+                                                            sf.add(filterValue)
+                                                        selected = !selected
+                                                        mapping[filter.id] = sf
+                                                        mapping
+                                                    }
+                                                },
+                                                role = Role.Checkbox
+                                            ),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Checkbox(
+                                            modifier = Modifier.padding(start = 34.dp, end = 34.dp),
+                                            checked = selected,
+                                            onCheckedChange = null
+                                        )
+                                        Text(
+                                            filterValue.toString(),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                                        )
+                                    }
+
+                                    if (index != filter.variants.size - 1)
+                                        HorizontalDivider(color = ForStroke.copy(alpha = 0.1f))
+                                }
+                            }
+                        }
                     }
                 }
             }
-
-            // TODO: append when backend will be hosted
         }
-
+        Surface(
+            Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter),
+            color = MaterialTheme.colorScheme.tertiary,
+            shadowElevation = 12.dp,
+            border = BorderStroke(width = 1.dp, color = ForStroke),
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        clearFilters()
+                        onFiltersApplied()
+                        onBackClicked()
+                    },
+                    border = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("Сбросить фильтры")
+                }
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        onFiltersApplied()
+                        onBackClicked()
+                    },
+                    border = null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text("Применить")
+                }
+            }
+        }
     }
+}
+
+fun parseFilterValue(value: Any): Any {
+    val strValue = value.toString()
+    strValue.toDoubleOrNull()?.let {
+        if (it % 1.0 == 0.0) return it.roundToInt()
+        return it
+    }
+    getDateObject(strValue)?.let {
+        val dateFormatter = java.text.SimpleDateFormat("yyyy", Locale("ru"))
+        return dateFormatter.format(it)
+    }
+    return strValue
 }

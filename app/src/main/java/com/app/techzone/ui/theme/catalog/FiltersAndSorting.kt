@@ -34,15 +34,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.app.techzone.model.Sorting
 import com.app.techzone.model.sortingOptions
 import com.app.techzone.ui.theme.ForStroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FiltersAndSorting(showFilters: () -> Unit) {
+fun FiltersAndSorting(
+    selectedSorting: Sorting,
+    onSortingSelected: (Sorting) -> Unit,
+    showFilters: () -> Unit,
+) {
     var showSortingSheet by remember { mutableStateOf(false) }
 
-    val (selectedSorting, onSortingSelected) = remember { mutableStateOf(sortingOptions[0]) }
     if (showSortingSheet) {
         ModalBottomSheet(
             onDismissRequest = { showSortingSheet = false },
