@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.techzone.data.remote.model.IBaseProduct
+import com.app.techzone.data.remote.model.ProductTypeEnum
 import com.app.techzone.data.remote.repository.ProductRepo
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.ui.theme.server_response.ServerResponseState
@@ -28,7 +29,7 @@ class ProductViewModel @Inject constructor(
     fun loadMainProducts() {
         viewModelScope.launch {
             state = state.copy(response = ServerResponse.LOADING)
-            val response = productRepo.getByCategoryOrAllProducts()
+            val response = productRepo.getByCategoryOrAllProducts(ProductTypeEnum.PRODUCT)
             if (response == null){
                 state = state.copy(response = ServerResponse.ERROR)
                 return@launch

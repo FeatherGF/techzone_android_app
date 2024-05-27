@@ -38,6 +38,7 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -120,7 +121,13 @@ fun PurchaseScreen(
     val scope = rememberCoroutineScope()
     val user by userViewModel.user.collectAsStateWithLifecycle()
     val cartItems by userViewModel.cartItems.collectAsStateWithLifecycle()
-    val orderItems = cartItems.filter { it.id in orderItemIds }
+    val orderItems = cartItems
+        .filter { it.id in orderItemIds }
+        .map {
+            it.apply {
+                mutableQuantity = remember { mutableIntStateOf(it.quantity) }
+            }
+        }
 
     var showOrderComposition by remember { mutableStateOf(false) }
 

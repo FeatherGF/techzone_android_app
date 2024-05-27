@@ -1,10 +1,12 @@
 package com.app.techzone.data.remote.repository
 
-import com.app.techzone.data.remote.api.ApiConstants
 import com.app.techzone.data.remote.api.ProductApi
 import com.app.techzone.data.remote.model.BaseProduct
+import com.app.techzone.data.remote.model.IFilter
 import com.app.techzone.data.remote.model.ProductList
 import com.app.techzone.data.remote.model.ProductType
+import com.app.techzone.data.remote.model.ProductTypeEnum
+import com.app.techzone.model.SortingOptions
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
@@ -35,6 +37,14 @@ class ProductRepo @Inject constructor(
         }
     }
 
+    suspend fun getFilters(category: String): Map<String, IFilter>? {
+        return try {
+            productApi.getFilters(category)
+        } catch (e: IOException) {
+            null
+        }
+    }
+
     suspend fun getSmartphone(phoneId: Int) = callApiWithOptionalAccessToken { token ->
         productApi.getSmartphone(token = token, phoneId = phoneId)
     }
@@ -60,22 +70,23 @@ class ProductRepo @Inject constructor(
     }
 
     suspend fun getByCategoryOrAllProducts(
-        category: String = ApiConstants.Endpoints.products,
-        pageSize: Int = 20,
-        pageNumber: Int = 1
+        category: ProductTypeEnum,
+        queryFilters: Map<String, String> = mapOf(),
+        sorting: SortingOptions = SortingOptions.POPULAR,
+        pageSize: Int? = null,
+        pageNumber: Int? = null,
     ): ProductList<BaseProduct>? {
         val categoryEndpoint = when (category) {
-            ApiConstants.Endpoints.products -> productApi::getProducts
-            ApiConstants.Endpoints.smartphones -> productApi::getSmartphones
-            ApiConstants.Endpoints.smartwatches -> productApi::getSmartwatches
-            ApiConstants.Endpoints.tablets -> productApi::getTablets
-            ApiConstants.Endpoints.accessories -> productApi::getAccessories
-            ApiConstants.Endpoints.laptops -> productApi::getLaptops
-            ApiConstants.Endpoints.televisions -> productApi::getTelevisions
-            else -> return null
+            ProductTypeEnum.PRODUCT -> productApi::getProducts
+            ProductTypeEnum.SMARTPHONE -> productApi::getSmartphones
+            ProductTypeEnum.SMARTWATCH -> productApi::getSmartwatches
+            ProductTypeEnum.TABLET -> productApi::getTablets
+            ProductTypeEnum.ACCESSORY -> productApi::getAccessories
+            ProductTypeEnum.LAPTOP -> productApi::getLaptops
+            ProductTypeEnum.TELEVISION -> productApi::getTelevisions
         }
         return callApiWithOptionalAccessToken { token ->
-            categoryEndpoint(token, pageSize, pageNumber)
+            categoryEndpoint(token, sorting.name.lowercase(), queryFilters, pageSize, pageNumber)
         }
     }
 
@@ -87,7 +98,16 @@ class ProductRepo @Inject constructor(
         }
     }
 
-    suspend fun searchProducts(text: String) = callApiWithOptionalAccessToken { token ->
-        productApi.search(token = token, query = text)
+    suspend fun searchProducts(
+        text: String,
+        sorting: SortingOptions,
+        queryFilters: Map<String, String>
+    ) = callApiWithOptionalAccessToken { token ->
+        productApi.search(
+            token = token,
+            query = text,
+            queryParams = queryFilters,
+            sort = sorting.name.lowercase()
+        )
     }
 }

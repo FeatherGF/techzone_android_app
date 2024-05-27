@@ -1,13 +1,14 @@
 package com.app.techzone.data.remote.api
 
 object ApiConstants {
-    const val BASE_URL = "http://wis-techzone.ru/api/v1/"
+    const val BASE_URL = "https://wis-techzone.ru/api/v1/"
 
     object Endpoints {
 
         // products
         const val products = "products"
-        const val product_type = "products/type/{id_product}"
+        const val productType = "products/type/{id_product}"
+        const val productsFilters = "products/filters"
 
         // search
         const val suggestions = "products/suggestions"

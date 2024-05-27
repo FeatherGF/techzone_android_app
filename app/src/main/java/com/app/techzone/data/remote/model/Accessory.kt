@@ -17,7 +17,7 @@ data class Accessory(
     override val discountPercentage: Int,
     val equipment: String,
     val features: String,
-    val height: Int,
+    val height: Double,
     override val id: Int,
     @SerializedName("id_provider")
     val idProvider: Int,
@@ -34,10 +34,10 @@ data class Accessory(
     override val reviews: List<Review>,
     @SerializedName("reviews_count")
     override val reviewsCount: Int,
-    val thickness: Int,
+    val thickness: Double,
     override val type: String,
     val weight: Double,
-    val width: Int,
+    val width: Double,
     @SerializedName("is_in_cart")
     override val isInCart: Boolean,
     // accessories won't have any memory, can't think of a better approach

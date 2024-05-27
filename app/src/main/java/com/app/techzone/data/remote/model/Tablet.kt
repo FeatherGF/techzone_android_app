@@ -30,7 +30,6 @@ data class Tablet(
     val description: String,
     @SerializedName("discount")
     override val discountPercentage: Int,
-    @SerializedName("equipment")
     val equipment: String,
     @SerializedName("fast_charge")
     val fastCharge: Boolean,
@@ -38,8 +37,7 @@ data class Tablet(
     val frontCameraQuality: String,
     @SerializedName("headphone_output")
     val headphoneOutput: Boolean,
-    @SerializedName("height")
-    val height: Int,
+    val height: Double,
     override val id: Int,
     @SerializedName("id_provider")
     val idProvider: Int,
@@ -47,7 +45,6 @@ data class Tablet(
     val isActive: Boolean,
     @SerializedName("is_favourite")
     override val isFavorite: Boolean,
-    @SerializedName("material")
     val material: String,
     @SerializedName("matrix_brightness")
     val matrixBrightness: String,
@@ -62,7 +59,6 @@ data class Tablet(
     override val memoryVariations: MemoryVariations,
     @SerializedName("memory_ram")
     val memoryRam: Int,
-    @SerializedName("model")
     val model: String,
     override val name: String,
     @SerializedName("number_cameras")
@@ -81,7 +77,6 @@ data class Tablet(
     val processorFrequency: Int,
     @SerializedName("processor_model")
     val processorModel: String,
-    @SerializedName("quantity")
     val quantity: Int,
     override val reviews: List<Review>,
     @SerializedName("reviews_count")
@@ -94,7 +89,6 @@ data class Tablet(
     val screenResolution: String,
     @SerializedName("screen_type")
     val screenType: String,
-    @SerializedName("sensors")
     val sensors: String,
     @SerializedName("sim_card_format")
     val simCardFormat: String,
@@ -102,15 +96,12 @@ data class Tablet(
     val soundTechnology: String,
     @SerializedName("support_lte")
     val supportLte: Boolean,
-    @SerializedName("thickness")
     val thickness: Double,
     override val type: String,
     @SerializedName("video_format")
     val videoFormat: String,
-    @SerializedName("weight")
     val weight: Double,
-    @SerializedName("width")
     val width: Double,
     @SerializedName("is_in_cart")
-override val isInCart: Boolean
+    override val isInCart: Boolean,
 ): IDetailedProduct

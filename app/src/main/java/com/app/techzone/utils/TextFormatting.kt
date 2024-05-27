@@ -2,6 +2,7 @@ package com.app.techzone.utils
 
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.text.ParseException
 import java.util.Date
 import java.util.Locale
 
@@ -60,9 +61,13 @@ fun formatDateShort(s: String): String {
     return dateFormatter.format(date)
 }
 
-private fun getDateObject(s: String): Date? {
+fun getDateObject(s: String): Date? {
     val dateParser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale("ru"))
-    return dateParser.parse(s)
+    return try {
+        dateParser.parse(s)
+    } catch (e: ParseException){
+        null
+    }
 }
 
 fun formatDateLong(s: String): String {

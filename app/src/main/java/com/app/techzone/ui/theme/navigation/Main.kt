@@ -92,7 +92,7 @@ fun Main(navController: NavHostController) {
             ) { backStackEntry ->
                 val searchText = backStackEntry.arguments?.getString("searchText")!!
                 CatalogCategoryScreen(
-                    searchTitle = searchText,
+                    searchText = searchText,
                     catalogViewModel = catalogViewModel,
                     onChangeView = searchViewModel::updateSearchTopBarState,
                     onProductAction = userViewModel::onProductAction

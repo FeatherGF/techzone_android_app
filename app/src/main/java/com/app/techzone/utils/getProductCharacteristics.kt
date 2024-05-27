@@ -19,12 +19,14 @@ import com.app.techzone.ui.theme.product_detail.characteristics.TelevisionCharac
 
 
 fun getProductCharacteristics(product: IDetailedProduct): ICharacteristicClass {
-    return when(getProductType(product.type)) {
+    return when (getProductType(product.type)) {
         ProductTypeEnum.SMARTPHONE -> SmartphoneCharacteristics(product as Smartphone)
         ProductTypeEnum.LAPTOP -> LaptopCharacteristics(product as Laptop)
         ProductTypeEnum.ACCESSORY -> AccessoryCharacteristics(product as Accessory)
         ProductTypeEnum.TABLET -> TabletCharacteristics(product as Tablet)
         ProductTypeEnum.SMARTWATCH -> SmartwatchCharacteristics(product as Smartwatch)
         ProductTypeEnum.TELEVISION -> TelevisionCharacteristics(product as Television)
+        // TODO: remake. probably append default characteristic class for base product
+        else -> SmartphoneCharacteristics(product as Smartphone)
     }
 }

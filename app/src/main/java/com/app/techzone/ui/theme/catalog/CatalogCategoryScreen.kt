@@ -23,30 +23,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.BaseProduct
-import com.app.techzone.model.PricePreset
-import com.app.techzone.ui.theme.app_bars.SearchTopBarState
+import com.app.techzone.model.Sorting
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
+import com.app.techzone.ui.theme.app_bars.SearchTopBarState
 import com.app.techzone.ui.theme.main.ProductBuyButton
 import com.app.techzone.ui.theme.main.ProductCrossedPrice
 import com.app.techzone.ui.theme.main.ProductFavoriteIcon
+import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.main.ProductRating
 import com.app.techzone.ui.theme.main.ProductReviewCount
-import com.app.techzone.utils.calculateDiscount
-import com.app.techzone.utils.formatPrice
-import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
+import com.app.techzone.ui.theme.server_response.ServerResponseState
 import com.app.techzone.utils.CurrencyVisualTransformation
+import com.app.techzone.utils.calculateDiscount
+import com.app.techzone.utils.formatPrice
 
 enum class CatalogScreenEnum {
     DEFAULT,
@@ -54,63 +57,94 @@ enum class CatalogScreenEnum {
 }
 
 
-const val MAX_PRICE = 250_000  // TODO: получать значения с бека
-const val MIN_PRICE = 5_000
-val UNSELECTED_PRICING = PricePreset("", 0, 0)
+const val DEFAULT_MAX_PRICE = 250_000
+const val DEFAULT_MIN_PRICE = 5_000
 
 
 val priceMask = CurrencyVisualTransformation("RUB")
+
 @Composable
 fun PriceRangeField(
     modifier: Modifier = Modifier,
     placeholderText: String,
     text: String,
     onValueChange: (String) -> Unit,
-) {
-    OutlinedTextField(
-        value = text,
-        onValueChange = onValueChange,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Decimal
-        ),
-        textStyle = MaterialTheme.typography.bodyLarge,
-        shape = RoundedCornerShape(4.dp),
-        singleLine = true,
-        visualTransformation = priceMask,
-        placeholder = {
-            Text(
-                placeholderText,
-                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-            )
-        },
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.tertiary)
-            .height(56.dp),
-    )
-}
+) = OutlinedTextField(
+    value = text,
+    onValueChange = onValueChange,
+    keyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.NumberPassword
+    ),
+    textStyle = MaterialTheme.typography.bodyLarge,
+    shape = RoundedCornerShape(4.dp),
+    singleLine = true,
+    visualTransformation = priceMask,
+    placeholder = {
+        Text(
+            placeholderText,
+            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+        )
+    },
+    modifier = modifier
+        .background(MaterialTheme.colorScheme.tertiary)
+        .height(56.dp),
+)
 
 
 @Composable
 fun CatalogCategoryScreen(
-    searchTitle: String,
+    searchText: String,
     catalogViewModel: CatalogViewModel,
     onChangeView: (SearchTopBarState) -> Unit,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
+    val products by catalogViewModel.products.collectAsStateWithLifecycle()
+    val priceFilters by catalogViewModel.priceFilters.collectAsState()
+    val filtersExceptPrice by catalogViewModel.filtersExceptPrice.collectAsState()
+    val selectedFilters by catalogViewModel.selectedFilters.collectAsState()
+    val selectedPriceRanges = catalogViewModel.selectedPriceRanges
+    val (selectedSorting, onSortingSelected) = remember { catalogViewModel.selectedSorting }
+
+    LaunchedEffect(selectedSorting) {
+        catalogViewModel.loadByString(searchText)
+    }
+    LaunchedEffect(searchText) {
+        catalogViewModel.clearFilters()
+        catalogViewModel.loadByString(searchText)
+    }
+
     when (catalogViewModel.activeScreenState) {
         CatalogScreenEnum.DEFAULT -> {
             onChangeView(SearchTopBarState.CATALOG_OPENED)
             DefaultCatalogView(
-                searchTitle = searchTitle,
-                catalogViewModel = catalogViewModel,
-                onProductAction = onProductAction
+                products = products,
+                state = catalogViewModel.state,
+                onProductAction = onProductAction,
+                onChangeView = catalogViewModel::updateActiveState,
+                selectedSorting = selectedSorting,
+                onSortingSelected = onSortingSelected,
+                onRefreshSearch = {
+                    catalogViewModel.loadByString(searchText)
+                }
             )
         }
+
         CatalogScreenEnum.FILTERS -> {
             onChangeView(SearchTopBarState.HIDDEN)
-            FiltersView {
-                catalogViewModel.updateActiveState(CatalogScreenEnum.DEFAULT)
-            }
+            FiltersView(
+                priceFilters = priceFilters,
+                filtersExceptPrice = filtersExceptPrice,
+                selectedPriceRanges = selectedPriceRanges,
+                mutableSelectedFilters = catalogViewModel.mutableSelectedFilters,
+                selectedFilters = selectedFilters,
+                clearFilters = catalogViewModel::clearFilters,
+                onFiltersApplied = {
+                    catalogViewModel.loadByString(searchText)
+                },
+                onBackClicked = {
+                    catalogViewModel.updateActiveState(CatalogScreenEnum.DEFAULT)
+                },
+            )
         }
     }
 }
@@ -118,35 +152,34 @@ fun CatalogCategoryScreen(
 
 @Composable
 fun DefaultCatalogView(
-    searchTitle: String,
-    catalogViewModel: CatalogViewModel,
+    products: List<BaseProduct>,
+    state: ServerResponseState,
+    onRefreshSearch: () -> Unit,
+    onChangeView: (CatalogScreenEnum) -> Unit,
     onProductAction: suspend (ProductAction) -> Boolean,
+    selectedSorting: Sorting,
+    onSortingSelected: (Sorting) -> Unit
 ) {
-    LaunchedEffect(Unit){
-        catalogViewModel.loadByString(searchTitle)
-    }
-    val products by catalogViewModel.products.collectAsState()
-    val state = catalogViewModel.state
-
-    Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
-        FiltersAndSorting {
-            catalogViewModel.updateActiveState(CatalogScreenEnum.FILTERS)
+    when (state.response) {
+        ServerResponse.LOADING -> {
+            LoadingBox()
         }
-        LazyProductCards(
-            products = products,
-            onProductAction = onProductAction
-        )
-    }
-    when(state.response) {
-        ServerResponse.LOADING -> { LoadingBox() }
+
         ServerResponse.ERROR -> {
-            ErrorScreen {
-                catalogViewModel.loadByCategory(searchTitle)
+            ErrorScreen(onRefreshSearch)
+        }
+
+        else -> {
+            Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
+                FiltersAndSorting(selectedSorting, onSortingSelected) {
+                    onChangeView(CatalogScreenEnum.FILTERS)
+                }
+                LazyProductCards(
+                    products = products,
+                    onProductAction = onProductAction
+                )
             }
         }
-        // if response is successful all the code above will be rendered
-        ServerResponse.SUCCESS -> {}
-        ServerResponse.UNAUTHORIZED -> {}
     }
 }
 
@@ -170,7 +203,7 @@ fun LazyProductCards(
         items(
             count = products.size,
             key = { index -> products[index].id }
-        ) {index ->
+        ) { index ->
             val product = products[index]
             Card(
                 modifier = Modifier
@@ -192,7 +225,7 @@ fun LazyProductCards(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         ProductImageOrPreview(product.photos, modifier = Modifier.size(110.dp))
-                        Column (
+                        Column(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
@@ -200,20 +233,26 @@ fun LazyProductCards(
                                 color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                            Row (horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                ProductRating(product = product, textStyle = MaterialTheme.typography.labelLarge)
-                                ProductReviewCount(product = product, textStyle = MaterialTheme.typography.labelLarge)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                ProductRating(
+                                    product = product,
+                                    textStyle = MaterialTheme.typography.labelLarge
+                                )
+                                ProductReviewCount(
+                                    product = product,
+                                    textStyle = MaterialTheme.typography.labelLarge
+                                )
                             }
                         }
                     }
-                    Row (
+                    Row(
                         modifier = Modifier
                             .height(40.dp)
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column{
+                        Column {
                             ProductCrossedPrice(product = product, large = true)
                             Text(
                                 formatPrice(
@@ -226,7 +265,7 @@ fun LazyProductCards(
                                 color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                             )
                         }
-                        Row (
+                        Row(
                             modifier = Modifier.width(190.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),

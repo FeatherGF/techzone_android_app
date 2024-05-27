@@ -350,7 +350,7 @@ fun CartItemsList(
                 onDismiss = { deleteProductId = null }
             )
         }
-        if(clearCart) {
+        if (clearCart) {
             ConfirmationModalSheet(
                 confirmationText = "Вы действительно хотите удалить все товары из корзины?",
                 onConfirm = {

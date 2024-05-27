@@ -33,7 +33,7 @@ data class Television(
     val hdrSupport: Boolean,
     @SerializedName("headphone_output")
     val headphoneOutput: Boolean,
-    val height: Int,
+    val height: Double,
     override val id: Int,
     @SerializedName("id_provider")
     val idProvider: Int,
@@ -90,7 +90,7 @@ data class Television(
     @SerializedName("voice_assistant")
     val voiceAssistant: String,
     val weight: Double,
-    val width: Int,
+    val width: Double,
     @SerializedName("wifi_availability")
     val wifiAvailability: Boolean,
     @SerializedName("wifi_standard")
