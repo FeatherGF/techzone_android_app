@@ -77,7 +77,7 @@ data class Smartwatch(
     val screenType: String,
     @SerializedName("sound_technology")
     val soundTechnology: String,
-    val thickness: Int,
+    val thickness: Double,
     override val type: String,
     @SerializedName("water_resistance")
     val waterResistance: Int,

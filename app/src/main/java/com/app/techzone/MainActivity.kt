@@ -12,6 +12,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -39,11 +40,14 @@ class MainActivity : ComponentActivity() {
                 // support transparent status bar and appropriately
                 // colored navigation bar with action buttons
                 enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.light(
+                        Color.Transparent.toArgb(),
+                        MaterialTheme.colorScheme.scrim.toArgb()
+                    ),
                     navigationBarStyle = SystemBarStyle.light(
                         MaterialTheme.colorScheme.tertiary.toArgb(),
-                        MaterialTheme.colorScheme.primary.toArgb()
+                        MaterialTheme.colorScheme.scrim.toArgb()
                     ),
-
                 )
 
                 // avoid passing around snackbar host state and get it from localSnackbarHostState
