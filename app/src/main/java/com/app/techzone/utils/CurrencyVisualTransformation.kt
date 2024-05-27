@@ -62,3 +62,5 @@ class CurrencyVisualTransformation(currencyCode: String) : VisualTransformation 
         )
     }
 }
+
+val priceMask = CurrencyVisualTransformation("RUB")

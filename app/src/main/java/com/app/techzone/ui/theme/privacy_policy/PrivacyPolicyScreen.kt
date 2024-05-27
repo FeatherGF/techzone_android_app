@@ -80,14 +80,14 @@ fun PrivacyPolicy() {
 
 
 @Composable
-fun PrivacyParagraph(paragraph: IPrivacyPolicyParagraph) {
+private fun PrivacyParagraph(paragraph: IPrivacyPolicyParagraph) {
     Text(
         paragraph.title,
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
         modifier = Modifier.padding(bottom = 12.dp)
     )
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)){
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         paragraph.subParagraphs.forEach { subParagraph ->
             Text(
                 subParagraph,

@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -26,29 +25,22 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,29 +54,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.app.techzone.LocalNavController
 import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.data.remote.model.validateUserInfo
 import com.app.techzone.data.remote.repository.ContentUriRequestBody
-import com.app.techzone.utils.formatPhoneNumber
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder100
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
+import com.app.techzone.ui.theme.reusables.ConfirmationModalSheet
+import com.app.techzone.ui.theme.reusables.ProfilePicture
+import com.app.techzone.ui.theme.reusables.UserInfoFields
 import com.app.techzone.ui.theme.server_response.ErrorScreen
-import com.app.techzone.utils.MaskVisualTransformation
+import com.app.techzone.ui.theme.server_response.UnauthorizedScreen
+import com.app.techzone.utils.formatPhoneNumber
 import kotlinx.coroutines.launch
 
 
@@ -97,10 +87,15 @@ fun ProfileScreen(
         is AuthResult.Authorized -> {
             UserProfile(userViewModel)
         }
+
         is AuthResult.Unauthorized -> {
             UnauthorizedScreen()
         }
-        is AuthResult.UnknownError -> { ErrorScreen(userViewModel::loadUser) }
+
+        is AuthResult.UnknownError -> {
+            ErrorScreen(userViewModel::loadUser)
+        }
+
         else -> {}
     }
 }
@@ -119,9 +114,10 @@ fun EditUserProfile(userViewModel: UserViewModel) {
 
     BackHandler(onBack = navController::popBackStack)
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        imageUri = uri
-    }
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            imageUri = uri
+        }
     val userPhotoUrl by remember { mutableStateOf(user?.photoUrl) }
     val (firstName, onFirstNameChange) = remember { mutableStateOf(user?.firstName ?: "") }
     val (lastName, onLastNameChange) = remember { mutableStateOf(user?.lastName ?: "") }
@@ -130,7 +126,7 @@ fun EditUserProfile(userViewModel: UserViewModel) {
 
     suspend fun saveUserChanges() {
         val (isValid, reason) = validateUserInfo(firstName, lastName, phoneNumber)
-        if (!isValid){
+        if (!isValid) {
             snackbarHostState.showSnackbar(reason)
             return
         }
@@ -196,7 +192,7 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                         userPhotoUrl = userPhotoUrl,
                         imageUri = imageUri
                     )
-                    if (isHovered || isPressed){
+                    if (isHovered || isPressed) {
                         val size = if (userPhotoUrl != null || imageUri != null) 100.dp else 84.dp
                         Box(
                             Modifier
@@ -259,7 +255,7 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                         confirmationText = "Вы действительно хотите удалить свой профиль? " +
                                 "Отменить это действие будет невозможно.",
                         onConfirm = { userViewModel.deleteUser() },
-                        onDismiss = { isBottomSheetDeleteUserShown = false}
+                        onDismiss = { isBottomSheetDeleteUserShown = false }
                     )
                 }
             }
@@ -289,169 +285,10 @@ fun EditUserProfile(userViewModel: UserViewModel) {
     }
 }
 
-@Composable
-fun ProfilePicture(
-    modifier: Modifier = Modifier,
-    userPhotoUrl: String? = null,
-    imageUri: Uri? = null,
-    iconTint: Color = ForStroke.copy(alpha = 0.3f)
-) {
-    if (userPhotoUrl == null && imageUri == null) {
-        Icon(
-            imageVector = Icons.Filled.AccountCircle,
-            contentDescription = null,
-            tint = iconTint,
-            modifier = modifier
-        )
-    } else {
-        AsyncImage(
-            model = imageUri ?: userPhotoUrl,
-            contentDescription = null,
-            modifier = modifier.clip(RoundBorder100),
-            filterQuality = FilterQuality.None,
-            contentScale = ContentScale.Crop
-        )
-    }
-}
-
-@Composable
-fun UserInfoFields(
-    // TODO: rewrite to AuthUIEvent
-    firstName: String,
-    onFirstNameChange: (String) -> Unit,
-    lastName: String,
-    onLastNameChange: (String) -> Unit,
-    phoneNumber: String,
-    onPhoneNumberChange: (String) -> Unit,
-    email: String,
-    phoneFieldActions: KeyboardActions = KeyboardActions.Default
-) {
-    val phoneNumberVisualTransformation = MaskVisualTransformation("+# (###) ###-##-##")
-
-    OutlinedTextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 26.dp)
-            .background(MaterialTheme.colorScheme.tertiary),
-        value = firstName,
-        onValueChange = { onFirstNameChange(it) },
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Next
-        ),
-        placeholder = {
-            Text("Имя", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
-        },
-        textStyle = MaterialTheme.typography.bodyLarge
-    )
-    OutlinedTextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp)
-            .background(MaterialTheme.colorScheme.tertiary),
-        value = lastName,
-        onValueChange = { onLastNameChange(it) },
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Next,
-        ),
-        placeholder = {
-            Text("Фамилия", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
-        },
-        textStyle = MaterialTheme.typography.bodyLarge
-    )
-    OutlinedTextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp)
-            .background(MaterialTheme.colorScheme.tertiary),
-        value = phoneNumber,
-        onValueChange = { textPhone ->
-            if (textPhone.length < 12) {
-                onPhoneNumberChange(
-                    textPhone.replaceFirstChar { if (it == '8') '7' else it }
-                )
-            }
-        },
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.NumberPassword,
-            imeAction = if (phoneFieldActions != KeyboardActions.Default) ImeAction.Send else ImeAction.Next
-        ),
-        keyboardActions = phoneFieldActions,
-        visualTransformation = phoneNumberVisualTransformation,
-        placeholder = {
-            Text("Телефон", color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f))
-        },
-        textStyle = MaterialTheme.typography.bodyLarge
-    )
-    OutlinedTextField(
-        value = email,
-        onValueChange = {},
-        enabled = false,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp)
-            .background(MaterialTheme.colorScheme.tertiary),
-    )
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ConfirmationModalSheet(
-    confirmationText: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.tertiary
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 23.dp, end = 23.dp, bottom = 23.dp),
-        ) {
-            Text(
-                confirmationText,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 8.dp)
-                    .height(40.dp),
-                onClick = onConfirm
-            ) {
-                Text(
-                    "Удалить",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.tertiary
-                )
-            }
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp),
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-            ) {
-                Text(
-                    "Отменить",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun UserProfile(userViewModel: UserViewModel) {
+private fun UserProfile(userViewModel: UserViewModel) {
     LaunchedEffect(userViewModel.user) { userViewModel.loadUser() }
     val navController = LocalNavController.current
     val user by userViewModel.user.collectAsStateWithLifecycle()
@@ -672,7 +509,7 @@ fun UserProfile(userViewModel: UserViewModel) {
 
 
 @Composable
-internal fun LoginText(paddingTop: Dp = 12.dp) {
+internal fun LoginText(paddingTop: Dp = 12.dp) =
     Text(
         modifier = Modifier.padding(top = paddingTop),
         textAlign = TextAlign.Center,
@@ -680,43 +517,3 @@ internal fun LoginText(paddingTop: Dp = 12.dp) {
         style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
     )
-}
-
-@Composable
-fun UnauthorizedScreen() {
-    val navController = LocalNavController.current
-    Column(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
-            .padding(start = 16.dp, top = 100.dp, end = 16.dp)
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            modifier = Modifier.size(80.dp),
-            imageVector = Icons.Outlined.Person,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
-        LoginText()
-        Text(
-            modifier = Modifier.padding(top = 8.dp),
-            textAlign = TextAlign.Center,
-            text = "Чтобы сохранять товары\n и совершать покупки",
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-            color = MaterialTheme.colorScheme.scrim
-        )
-        Button(
-            modifier = Modifier
-                .padding(top = 16.dp)
-                .fillMaxWidth(),
-            onClick = { navController.navigate(ScreenRoutes.PROFILE_REGISTRATION) }
-        ) {
-            Text(
-                text = "Войти или зарегистрироваться",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.tertiary
-            )
-        }
-    }
-}

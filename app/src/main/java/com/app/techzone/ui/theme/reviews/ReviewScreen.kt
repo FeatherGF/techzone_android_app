@@ -42,10 +42,10 @@ import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.data.remote.model.ReviewShort
 import com.app.techzone.ui.theme.DarkText
 import com.app.techzone.ui.theme.ForStroke
-import com.app.techzone.ui.theme.main.ProductCrossedPrice
-import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.UserViewModel
+import com.app.techzone.ui.theme.reusables.ProductCrossedPrice
+import com.app.techzone.ui.theme.reusables.ProductImageOrPreview
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.utils.formatPrice
@@ -58,13 +58,17 @@ fun ReviewScreenRoot(userViewModel: UserViewModel, orderId: Int, productId: Int)
     LaunchedEffect(userViewModel.orderItemForReview) {
         userViewModel.loadProductForReview(orderId, productId)
     }
-    when (userViewModel.state.response){
-        ServerResponse.LOADING -> { LoadingBox() }
+    when (userViewModel.state.response) {
+        ServerResponse.LOADING -> {
+            LoadingBox()
+        }
+
         ServerResponse.ERROR -> {
             ErrorScreen {
                 userViewModel.loadProductForReview(orderId, productId)
             }
         }
+
         ServerResponse.SUCCESS -> {
             orderItem?.let {
                 ReviewScreen(
@@ -74,12 +78,13 @@ fun ReviewScreenRoot(userViewModel: UserViewModel, orderId: Int, productId: Int)
                 )
             }
         }
+
         ServerResponse.UNAUTHORIZED -> {}
     }
 }
 
 @Composable
-private fun ReviewTopBar(){
+private fun ReviewTopBar() {
     val navController = LocalNavController.current
     Row(
         Modifier
@@ -111,7 +116,7 @@ private fun ReviewTopBar(){
 
 
 @Composable
-fun ReviewScreen(
+private fun ReviewScreen(
     orderItem: OrderItem,
     review: ReviewShort?,
     onReviewAction: suspend (ReviewAction) -> Boolean?
@@ -137,9 +142,9 @@ fun ReviewScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ProductImageOrPreview(
+                Modifier.size(60.dp),
                 photos = orderItem.product.photos,
                 filterQuality = FilterQuality.None,
-                modifier = Modifier.size(60.dp)
             )
             val style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = FontWeight.Medium,
@@ -156,15 +161,19 @@ fun ReviewScreen(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
-                ){
-                    ProductCrossedPrice(product = orderItem.product, large = true)
+                ) {
+                    ProductCrossedPrice(
+                        price = orderItem.product.price,
+                        discountPercentage = orderItem.product.discountPercentage,
+                        large = true
+                    )
                     Text(formatPrice(orderItem.product.price), style = style, color = color)
                 }
             }
         }
 
         // Review description
-        val (reviewText, onReviewTextChange) = remember { mutableStateOf(review?.text ?: "")}
+        val (reviewText, onReviewTextChange) = remember { mutableStateOf(review?.text ?: "") }
         Column(
             Modifier
                 .fillMaxSize()
@@ -210,7 +219,7 @@ fun ReviewScreen(
                             }
                         },
                     ) {
-                        if (state.value){
+                        if (state.value) {
                             Icon(
                                 modifier = Modifier.size(40.dp),
                                 imageVector = Icons.Filled.StarRate,
@@ -237,7 +246,7 @@ fun ReviewScreen(
                         else
                             ReviewAction.AddReview(orderItem.product.id, reviewText, rating)
                         val response = onReviewAction(action)
-                        if (response == null){
+                        if (response == null) {
                             snackbarHostState.showSnackbar(
                                 "Что-то пошло не так\nПроверьте подключение к интернету"
                             )

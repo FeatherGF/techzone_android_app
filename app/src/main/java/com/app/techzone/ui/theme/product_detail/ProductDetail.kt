@@ -53,7 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import android.graphics.Color as GraphicsColor
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,30 +66,33 @@ import com.app.techzone.data.remote.model.Review
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder100
 import com.app.techzone.ui.theme.RoundBorder28
-import com.app.techzone.ui.theme.main.ProductBuyButton
-import com.app.techzone.ui.theme.main.ProductCarousel
-import com.app.techzone.ui.theme.main.ProductCrossedPrice
-import com.app.techzone.ui.theme.main.ProductFavoriteIcon
-import com.app.techzone.ui.theme.main.ProductRating
-import com.app.techzone.ui.theme.main.ProductReviewCount
 import com.app.techzone.ui.theme.main.ProductViewModel
-import com.app.techzone.utils.calculateDiscount
-import com.app.techzone.utils.formatPrice
-import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.product_detail.characteristics.ICharacteristic
+import com.app.techzone.ui.theme.profile.CheckProductStatus
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.ProductAction
-import com.app.techzone.ui.theme.profile.ProfilePicture
+import com.app.techzone.ui.theme.reusables.ProductBuyButton
+import com.app.techzone.ui.theme.reusables.ProductCarousel
+import com.app.techzone.ui.theme.reusables.ProductCrossedPrice
+import com.app.techzone.ui.theme.reusables.ProductFavoriteIcon
+import com.app.techzone.ui.theme.reusables.ProductImageOrPreview
+import com.app.techzone.ui.theme.reusables.ProductRating
+import com.app.techzone.ui.theme.reusables.ProductReviewCount
+import com.app.techzone.ui.theme.reusables.ProfilePicture
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
+import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.utils.formatDateLong
+import com.app.techzone.utils.formatPrice
 import com.app.techzone.utils.getProductCharacteristics
+import android.graphics.Color as GraphicsColor
 
 
 @Composable
 fun ProductDetailScreen(
     productId: Int,
+    onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     val detailProductViewModel = hiltViewModel<ProductDetailViewModel>()
@@ -99,11 +101,11 @@ fun ProductDetailScreen(
 
     LaunchedEffect(detailProductViewModel) {
         detailProductViewModel.loadProduct(productId)
-        recommendations.loadMainProducts()
+        recommendations.loadBestSellerProducts()
     }
 
     val product by detailProductViewModel.product.collectAsStateWithLifecycle()
-    val recommendedProducts by recommendations.allProducts.collectAsStateWithLifecycle()
+    val recommendedProducts by recommendations.popularProducts.collectAsStateWithLifecycle()
     val state = detailProductViewModel.state
 
     val lazyListState = rememberLazyListState()
@@ -115,7 +117,9 @@ fun ProductDetailScreen(
     BackHandler(onBack = navController::popBackStack)
     Column {
         product?.let {
-            val (isInCart, onIsInCartChange) = remember { mutableStateOf(it.isInCart)}
+            val (isInCart, onIsInCartChange) = remember {
+                mutableStateOf(onProductCheckStatus(CheckProductStatus.CheckProductInCart(it.id)))
+            }
 
             Column(Modifier.weight(1f)) {
                 LazyColumn(
@@ -140,7 +144,8 @@ fun ProductDetailScreen(
                                 )
                             }
                             ProductFavoriteIcon(
-                                product = it,
+                                productId = it.id,
+                                onProductCheckStatus = onProductCheckStatus,
                                 onProductAction = onProductAction
                             )
                         }
@@ -208,8 +213,11 @@ fun ProductDetailScreen(
         }
     }
 
-    when(state.response) {
-        ServerResponse.LOADING -> { LoadingBox() }
+    when (state.response) {
+        ServerResponse.LOADING -> {
+            LoadingBox()
+        }
+
         ServerResponse.ERROR -> {
             ErrorScreen {
                 detailProductViewModel.loadProduct(productId)
@@ -224,7 +232,7 @@ fun ProductDetailScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ProductImagesPager(product: IDetailedProduct) {
+private fun ProductImagesPager(product: IDetailedProduct) {
     val pageCount = product.photos?.size ?: 1
     val pagerState = rememberPagerState(pageCount = { pageCount })
     Box(
@@ -240,11 +248,11 @@ fun ProductImagesPager(product: IDetailedProduct) {
             pageSpacing = 8.dp,
         ) { index ->
             ProductImageOrPreview(
-                product.photos,
-                photoIndex = index,
-                modifier = Modifier
+                Modifier
                     .fillMaxWidth()
                     .background(color = Color.White, shape = RoundBorder28),
+                photos = product.photos,
+                photoIndex = index,
                 filterQuality = FilterQuality.Medium
             )
         }
@@ -254,7 +262,7 @@ fun ProductImagesPager(product: IDetailedProduct) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProductVariantsAndPrice(
+private fun ProductVariantsAndPrice(
     product: IDetailedProduct,
     onProductAction: suspend (ProductAction) -> Boolean,
     isInCart: Boolean,
@@ -276,7 +284,7 @@ fun ProductVariantsAndPrice(
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            if (product.colorVariations.isNotEmpty()){
+            if (product.colorVariations.isNotEmpty()) {
                 Column {
                     Text("Цвет:", style = MaterialTheme.typography.labelLarge, color = dimTextColor)
                     FlowRow(
@@ -365,7 +373,11 @@ fun ProductVariantsAndPrice(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    ProductCrossedPrice(product, large = true)
+                    ProductCrossedPrice(
+                        price = product.price,
+                        discountPercentage = product.discountPercentage,
+                        large = true
+                    )
                     Text(
                         text = formatPrice(
                             calculateDiscount(
@@ -420,7 +432,7 @@ fun ProductVariantsAndPrice(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReviewAndCharacteristicsTabs(product: IDetailedProduct) {
+private fun ReviewAndCharacteristicsTabs(product: IDetailedProduct) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val titles = listOf(
         "Отзывы ${if (product.reviewsCount > 0) product.reviewsCount else ""}",
@@ -482,7 +494,7 @@ fun ReviewAndCharacteristicsTabs(product: IDetailedProduct) {
 
 
 @Composable
-fun Review(review: Review) {
+private fun Review(review: Review) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -490,7 +502,10 @@ fun Review(review: Review) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         val textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)){
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             ProfilePicture(
                 Modifier.size(40.dp),
                 userPhotoUrl = review.photoUrl,
@@ -544,7 +559,7 @@ fun Review(review: Review) {
 
 
 @Composable
-fun ProductDetailReviews(
+private fun ProductDetailReviews(
     reviews: List<Review>,
     showAllReviews: Boolean,
     onShowAllReviewsChange: () -> Unit
@@ -585,7 +600,7 @@ fun ProductDetailReviews(
 
 
 @Composable
-fun ProductCharacteristics(
+private fun ProductCharacteristics(
     product: IDetailedProduct,
     showFullInfo: Boolean,
     onShowFullChange: () -> Unit
@@ -622,7 +637,7 @@ fun ProductCharacteristics(
 
 
 @Composable
-fun Characteristic(characteristic: ICharacteristic) {
+private fun Characteristic(characteristic: ICharacteristic) {
     Text(
         modifier = Modifier.padding(top = 28.dp),
         text = characteristic.label,
@@ -661,7 +676,7 @@ fun Characteristic(characteristic: ICharacteristic) {
 
 
 @Composable
-fun ProductDetail(
+private fun ProductDetail(
     product: IDetailedProduct,
     isInCart: Boolean,
     onInCartChange: (Boolean) -> Unit,
@@ -699,11 +714,14 @@ fun ProductDetail(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             ProductRating(
-                product,
+                product.rating,
                 textStyle = MaterialTheme.typography.labelLarge,
                 isStarFilled = true
             )
-            ProductReviewCount(product, textStyle = MaterialTheme.typography.labelLarge)
+            ProductReviewCount(
+                product.reviewsCount,
+                textStyle = MaterialTheme.typography.labelLarge
+            )
         }
     }
     ProductVariantsAndPrice(

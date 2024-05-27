@@ -24,7 +24,7 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.products)
     suspend fun getProducts(
         @Header("Authorization") token: String? = null,
-        @Query("sort") sort: String,
+        @Query("sort") sort: String? = null,
         @QueryMap(encoded = true) queryParams: Map<String, String>,
         @Query("size_page") pageSize: Int? = null,
         @Query("number_page") pageNumber: Int? = null,
@@ -49,7 +49,7 @@ interface ProductApi {
     suspend fun search(
         @Header("Authorization") token: String? = null,
         @Query("query") query: String,
-        @Query("sort") sort: String,
+        @Query("sort") sort: String? = null,
         @QueryMap(encoded = true) queryParams: Map<String, String>,
     ): ProductList<BaseProduct>
 
@@ -58,7 +58,7 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.tablets)
     suspend fun getTablets(
         @Header("Authorization") token: String? = null,
-        @Query("sort") sort: String,
+        @Query("sort") sort: String? = null,
         @QueryMap(encoded = true) queryParams: Map<String, String>,
         @Query("size_page") pageSize: Int? = null,
         @Query("number_page") pageNumber: Int? = null,
@@ -76,7 +76,7 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.smartphones)
     suspend fun getSmartphones(
         @Header("Authorization") token: String? = null,
-        @Query("sort") sort: String,
+        @Query("sort") sort: String? = null,
         @QueryMap(encoded = true) queryParams: Map<String, String>,
         @Query("size_page") pageSize: Int? = null,
         @Query("number_page") pageNumber: Int? = null,
@@ -94,7 +94,7 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.accessories)
     suspend fun getAccessories(
         @Header("Authorization") token: String? = null,
-        @Query("sort") sort: String,
+        @Query("sort") sort: String? = null,
         @QueryMap(encoded = true) queryParams: Map<String, String>,
         @Query("size_page") pageSize: Int? = null,
         @Query("number_page") pageNumber: Int? = null,
@@ -112,7 +112,7 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.smartwatches)
     suspend fun getSmartwatches(
         @Header("Authorization") token: String? = null,
-        @Query("sort") sort: String,
+        @Query("sort") sort: String? = null,
         @QueryMap(encoded = true) queryParams: Map<String, String>,
         @Query("size_page") pageSize: Int? = null,
         @Query("number_page") pageNumber: Int? = null,
@@ -130,7 +130,7 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.laptops)
     suspend fun getLaptops(
         @Header("Authorization") token: String? = null,
-        @Query("sort") sort: String,
+        @Query("sort") sort: String? = null,
         @QueryMap(encoded = true) queryParams: Map<String, String>,
         @Query("size_page") pageSize: Int? = null,
         @Query("number_page") pageNumber: Int? = null,
@@ -148,7 +148,7 @@ interface ProductApi {
     @GET(ApiConstants.Endpoints.televisions)
     suspend fun getTelevisions(
         @Header("Authorization") token: String? = null,
-        @Query("sort") sort: String,
+        @Query("sort") sort: String? = null,
         @QueryMap(encoded = true) queryParams: Map<String, String>,
         @Query("size_page") pageSize: Int? = null,
         @Query("number_page") pageNumber: Int? = null,

@@ -51,22 +51,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.LocalNavController
+import com.app.techzone.model.PaymentType
 import com.app.techzone.ui.theme.DarkText
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder100
-import com.app.techzone.ui.theme.cart.totalDiscountPrice
-import com.app.techzone.ui.theme.cart.totalPrice
+import com.app.techzone.data.remote.model.totalDiscountPrice
+import com.app.techzone.data.remote.model.totalPrice
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
-import com.app.techzone.ui.theme.orders.OrderComposition
 import com.app.techzone.ui.theme.payment_selection.Card
 import com.app.techzone.ui.theme.payment_selection.PaymentViewModel
 import com.app.techzone.ui.theme.payment_selection.emptyPayment
 import com.app.techzone.ui.theme.profile.LoadingBox
-import com.app.techzone.ui.theme.profile.UnauthorizedScreen
-import com.app.techzone.ui.theme.profile.UserInfoFields
 import com.app.techzone.ui.theme.profile.UserViewModel
+import com.app.techzone.ui.theme.reusables.OrderComposition
+import com.app.techzone.ui.theme.reusables.UserInfoFields
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
+import com.app.techzone.ui.theme.server_response.UnauthorizedScreen
 import com.app.techzone.utils.formatCommonCase
 import com.app.techzone.utils.formatMaskedCard
 import com.app.techzone.utils.formatPrice
@@ -75,6 +76,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+
+val defaultPaymentTypes = mutableListOf(
+    "Оплата картой" to PaymentType.CARD,
+    "Наличный расчет" to PaymentType.CASH
+)
 
 @Composable
 fun PurchaseScreenRoot(
@@ -85,26 +92,21 @@ fun PurchaseScreenRoot(
     val cards by paymentViewModel.cards.collectAsStateWithLifecycle()
     PurchaseScreen(userViewModel, orderItemIds, storedCards = cards)
     when (userViewModel.state.response) {
-        ServerResponse.LOADING -> { LoadingBox() }
-        ServerResponse.ERROR -> { ErrorScreen(userViewModel::loadUser) }
+        ServerResponse.LOADING -> {
+            LoadingBox()
+        }
+
+        ServerResponse.ERROR -> {
+            ErrorScreen(userViewModel::loadUser)
+        }
+
         ServerResponse.UNAUTHORIZED -> {
             UnauthorizedScreen()
         }
-        ServerResponse.SUCCESS -> { }
+
+        ServerResponse.SUCCESS -> {}
     }
 }
-
-enum class PaymentType{
-    CASH,
-    CARD,
-    MASKED_CARD,
-    NOT_SET
-}
-
-val defaultPaymentTypes = mutableListOf(
-    "Оплата картой" to PaymentType.CARD,
-    "Наличный расчет" to PaymentType.CASH
-)
 
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
@@ -132,14 +134,22 @@ fun PurchaseScreen(
     var showOrderComposition by remember { mutableStateOf(false) }
 
     BackHandler(onBack = navController::popBackStack)
-    user?.let{ currentUser ->
+    user?.let { currentUser ->
         // i have no idea why but this three variables just don't want to get the value
         // if it isn't in let block
-        val (firstName, onFirstNameChange) = remember { mutableStateOf(currentUser.firstName ?: "") }
+        val (firstName, onFirstNameChange) = remember {
+            mutableStateOf(
+                currentUser.firstName ?: ""
+            )
+        }
         val (lastName, onLastNameChange) = remember { mutableStateOf(currentUser.lastName ?: "") }
-        val (phoneNumber, onPhoneNumberChange) = remember { mutableStateOf(currentUser.phoneNumber ?: "") }
+        val (phoneNumber, onPhoneNumberChange) = remember {
+            mutableStateOf(
+                currentUser.phoneNumber ?: ""
+            )
+        }
 
-        val paymentTypes = if (storedCards.isNotEmpty()){
+        val paymentTypes = if (storedCards.isNotEmpty()) {
             storedCards.map { it.cardNumber to PaymentType.MASKED_CARD } + listOf(
                 "Новая карта" to PaymentType.CARD,
                 defaultPaymentTypes.last()
@@ -159,7 +169,7 @@ fun PurchaseScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())){
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -194,7 +204,7 @@ fun PurchaseScreen(
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ){
+                    ) {
                         Text(
                             formatCommonCase(orderItems.size, "товар"),
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
@@ -203,7 +213,7 @@ fun PurchaseScreen(
                         val totalDiscountPrice = orderItems.totalDiscountPrice()
                         val totalPrice = orderItems.totalPrice()
                         val profit = totalPrice - totalDiscountPrice
-                        if (profit > 0){
+                        if (profit > 0) {
                             Text(
                                 "Скидка: ${formatPrice(profit)}",
                                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
@@ -346,18 +356,23 @@ fun PurchaseScreen(
                     )
                     Button(
                         onClick = {
-                            val paymentMethod = when (paymentType.second){
+                            val paymentMethod = when (paymentType.second) {
                                 PaymentType.CASH -> {
                                     PaymentType.CASH.name.lowercase()
                                 }
+
                                 PaymentType.CARD -> {
                                     navController.navigate(ScreenRoutes.PAY_METHOD)
                                     return@Button
                                 }
+
                                 PaymentType.MASKED_CARD -> {
                                     PaymentType.CARD.name.lowercase()
                                 }
-                                PaymentType.NOT_SET -> {return@Button}
+
+                                PaymentType.NOT_SET -> {
+                                    return@Button
+                                }
                             }
                             scope.launch {
                                 if (userViewModel.createOrder(orderItemIds, paymentMethod)) {
@@ -374,11 +389,11 @@ fun PurchaseScreen(
                             }
                         },
                         enabled = (
-                            firstName.isNotBlank() &&
-                            lastName.isNotBlank() &&
-                            phoneNumber.isNotBlank() &&
-                            paymentType.first.isNotBlank()
-                        ),
+                                firstName.isNotBlank() &&
+                                        lastName.isNotBlank() &&
+                                        phoneNumber.isNotBlank() &&
+                                        paymentType.first.isNotBlank()
+                                ),
                         colors = ButtonDefaults.buttonColors(
                             contentColor = MaterialTheme.colorScheme.tertiary,
                             disabledContentColor = Color(29, 27, 32, 38)
@@ -392,10 +407,11 @@ fun PurchaseScreen(
                     }
                 }
             }
-            if (showOrderComposition){
+            if (showOrderComposition) {
                 OrderComposition(
                     orderItems = orderItems,
                     onDismiss = { showOrderComposition = false },
+                    onProductCheckStatus = userViewModel::onCheckProduct,
                     onProductAction = userViewModel::onProductAction
                 )
             }
@@ -404,7 +420,7 @@ fun PurchaseScreen(
 }
 
 @Composable
-fun PurchaseStep(stepIndex: Int, stepTitle: String) {
+private fun PurchaseStep(stepIndex: Int, stepTitle: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -416,7 +432,7 @@ fun PurchaseStep(stepIndex: Int, stepTitle: String) {
                 )
                 .size(32.dp),
             contentAlignment = Alignment.Center
-        ){
+        ) {
             Text(
                 stepIndex.toString(),
                 style = MaterialTheme.typography.bodyLarge,

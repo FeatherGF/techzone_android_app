@@ -42,13 +42,17 @@ import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.LocalNavController
-import com.app.techzone.ui.theme.DarkText
 import com.app.techzone.ui.theme.ForStroke
-import com.app.techzone.ui.theme.profile.ConfirmationModalSheet
-import com.app.techzone.ui.theme.purchase.PaymentType
+import com.app.techzone.model.PaymentType
+import com.app.techzone.ui.theme.reusables.ConfirmationModalSheet
+import com.app.techzone.ui.theme.reusables.PlaceholderText
 import com.app.techzone.utils.MaskVisualTransformation
 import com.app.techzone.utils.formatMaskedCard
 
+val emptyPayment = Pair("", PaymentType.NOT_SET)
+val paymentTypes = listOf(
+    "Наличный расчет" to PaymentType.CASH
+)
 
 @Composable
 fun PaymentSelectionRoot(paymentViewModel: PaymentViewModel) {
@@ -66,8 +70,6 @@ fun PaymentSelectionRoot(paymentViewModel: PaymentViewModel) {
         }
     }
 }
-
-val emptyPayment = Pair("", PaymentType.NOT_SET)
 
 @Composable
 fun PaymentSelection(onEvent: (PaymentUiEvent) -> Unit, savedCards: List<Card>) {
@@ -194,9 +196,6 @@ fun PaymentSelection(onEvent: (PaymentUiEvent) -> Unit, savedCards: List<Card>) 
     }
 }
 
-val paymentTypes = listOf(
-    "Наличный расчет" to PaymentType.CASH
-)
 
 @Composable
 fun EnterCardInfo(
@@ -298,10 +297,10 @@ fun EnterCardInfo(
             Button(
                 onClick = { onEvent(PaymentUiEvent.CheckCard) },
                 enabled = (
-                    state.cardNumber.isNotEmpty()
-                    && state.expirationDate.isNotEmpty()
-                    && state.code.isNotEmpty()
-                ),
+                        state.cardNumber.isNotEmpty()
+                                && state.expirationDate.isNotEmpty()
+                                && state.code.isNotEmpty()
+                        ),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Привязать карту", style = MaterialTheme.typography.labelLarge)
@@ -311,16 +310,7 @@ fun EnterCardInfo(
 }
 
 @Composable
-fun PlaceholderText(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.bodyLarge,
-        color = DarkText
-    )
-}
-
-@Composable
-fun TopBar(text: String, onBackClicked: () -> Unit) {
+private fun TopBar(text: String, onBackClicked: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
