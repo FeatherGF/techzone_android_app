@@ -19,7 +19,7 @@ import com.app.techzone.ui.theme.catalog.CatalogCategoryScreen
 import com.app.techzone.ui.theme.catalog.CatalogScreen
 import com.app.techzone.ui.theme.catalog.CatalogViewModel
 import com.app.techzone.ui.theme.favorite.FavoriteScreen
-import com.app.techzone.ui.theme.main.MainScreen
+import com.app.techzone.ui.theme.main.MainScreenRoot
 import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.ui.theme.orders.OrderScreenRoot
 import com.app.techzone.ui.theme.payment_selection.PaymentSelectionRoot
@@ -56,8 +56,8 @@ fun Main(navController: NavHostController) {
 
     BaseScreen(
         navController,
-        favorites = favorites,
-        cartItems = cartItems,
+        favoritesCount = favorites.size,
+        cartItemsCount = cartItems.size,
         topAppBar = { MainAppBar(searchViewModel) },
     ) {
         NavHost(navController = navController, startDestination = ScreenRoutes.MAIN) {
@@ -66,8 +66,9 @@ fun Main(navController: NavHostController) {
             }
             composable(ScreenRoutes.MAIN) {
                 searchViewModel.updateSearchTopBarState(SearchTopBarState.CLOSED)
-                MainScreen(
+                MainScreenRoot(
                     productViewModel = productViewModel,
+                    onProductCheckStatus = userViewModel::onCheckProduct,
                     onProductAction = userViewModel::onProductAction,
                 )
             }
@@ -83,6 +84,7 @@ fun Main(navController: NavHostController) {
                 val productId = backStackEntry.arguments?.getInt("productId")!!
                 ProductDetailScreen(
                     productId = productId,
+                    onProductCheckStatus = userViewModel::onCheckProduct,
                     onProductAction = userViewModel::onProductAction
                 )
             }
@@ -95,6 +97,7 @@ fun Main(navController: NavHostController) {
                     searchText = searchText,
                     catalogViewModel = catalogViewModel,
                     onChangeView = searchViewModel::updateSearchTopBarState,
+                    onProductCheckStatus = userViewModel::onCheckProduct,
                     onProductAction = userViewModel::onProductAction
                 )
             }
@@ -104,6 +107,7 @@ fun Main(navController: NavHostController) {
                     cartItems = cartItems,
                     state = userViewModel.state,
                     loadCart = userViewModel::loadCart,
+                    onProductCheckStatus = userViewModel::onCheckProduct,
                     onProductAction = userViewModel::onProductAction
                 )
             }
@@ -153,6 +157,7 @@ fun Main(navController: NavHostController) {
                     favorites = favorites,
                     favoriteState = userViewModel.state.response,
                     loadFavorites = userViewModel::loadFavorites,
+                    onProductCheckStatus = userViewModel::onCheckProduct,
                     onProductAction = userViewModel::onProductAction
                 )
             }

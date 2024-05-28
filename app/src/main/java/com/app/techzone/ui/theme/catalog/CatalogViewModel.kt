@@ -10,8 +10,8 @@ import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.IFilter
 import com.app.techzone.data.remote.model.PriceFilter
 import com.app.techzone.data.remote.model.PriceVariant
-import com.app.techzone.data.remote.model.ProductTypeEnum
-import com.app.techzone.data.remote.model.getProductType
+import com.app.techzone.model.ProductTypeEnum
+import com.app.techzone.model.getProductType
 import com.app.techzone.data.remote.repository.ProductRepo
 import com.app.techzone.model.sortingOptions
 import com.app.techzone.ui.theme.server_response.ServerResponse

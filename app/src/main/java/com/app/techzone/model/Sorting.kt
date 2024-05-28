@@ -2,14 +2,10 @@ package com.app.techzone.model
 
 
 enum class SortingOptions {
-    POPULAR,
-    PRICE_ASC,
-    PRICE_DESC,
-    DISCOUNT_DESC,
-    RATING_DESC;
+    POPULAR, PRICE_ASC, PRICE_DESC, DISCOUNT_DESC, RATING_DESC;
 }
 
-data class Sorting (
+data class Sorting(
     val text: String,
     val queryName: SortingOptions,
 )

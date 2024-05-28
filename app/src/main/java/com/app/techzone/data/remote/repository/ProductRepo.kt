@@ -5,7 +5,7 @@ import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.IFilter
 import com.app.techzone.data.remote.model.ProductList
 import com.app.techzone.data.remote.model.ProductType
-import com.app.techzone.data.remote.model.ProductTypeEnum
+import com.app.techzone.model.ProductTypeEnum
 import com.app.techzone.model.SortingOptions
 import retrofit2.HttpException
 import java.io.IOException
@@ -72,7 +72,7 @@ class ProductRepo @Inject constructor(
     suspend fun getByCategoryOrAllProducts(
         category: ProductTypeEnum,
         queryFilters: Map<String, String> = mapOf(),
-        sorting: SortingOptions = SortingOptions.POPULAR,
+        sorting: SortingOptions? = null,
         pageSize: Int? = null,
         pageNumber: Int? = null,
     ): ProductList<BaseProduct>? {
@@ -86,7 +86,7 @@ class ProductRepo @Inject constructor(
             ProductTypeEnum.TELEVISION -> productApi::getTelevisions
         }
         return callApiWithOptionalAccessToken { token ->
-            categoryEndpoint(token, sorting.name.lowercase(), queryFilters, pageSize, pageNumber)
+            categoryEndpoint(token, sorting?.name?.lowercase(), queryFilters, pageSize, pageNumber)
         }
     }
 

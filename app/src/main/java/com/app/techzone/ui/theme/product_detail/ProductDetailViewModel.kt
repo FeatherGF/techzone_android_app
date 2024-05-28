@@ -6,8 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.techzone.data.remote.model.IDetailedProduct
-import com.app.techzone.data.remote.model.ProductTypeEnum
-import com.app.techzone.data.remote.model.getProductType
+import com.app.techzone.model.ProductTypeEnum
+import com.app.techzone.model.getProductType
 import com.app.techzone.data.remote.repository.ProductRepo
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.ui.theme.server_response.ServerResponseState

@@ -388,6 +388,17 @@ class UserViewModel @Inject constructor(
         }
     }
 
+    fun onCheckProduct(event: CheckProductStatus): Boolean {
+        return when(event) {
+            is CheckProductStatus.CheckProductIsFavorite -> {
+                event.productId in _favorites.value.map { it.id }
+            }
+            is CheckProductStatus.CheckProductInCart -> {
+                event.productId in _cartItems.value.map { it.product.id }
+            }
+        }
+    }
+
     fun onAuthEvent(event: AuthUiEvent) {
         when (event){
             is AuthUiEvent.AuthEmailChanged -> {

@@ -25,22 +25,20 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.app.techzone.LocalSnackbarHostState
-import com.app.techzone.data.remote.model.IBaseProduct
-import com.app.techzone.data.remote.model.OrderItem
 
 @Composable
 fun BaseScreen(
     navController: NavController,
-    favorites: List<IBaseProduct>,
-    cartItems: List<OrderItem>,
+    favoritesCount: Int,
+    cartItemsCount: Int,
     topAppBar: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
     val screens = listOf(
         BottomItem.MainScreen,
         BottomItem.SearchScreen,
-        BottomItem.CartScreen.updateCartCount(cartItems.size),
-        BottomItem.FavoriteScreen.updateFavoriteCount(favorites.size),
+        BottomItem.CartScreen.updateCartCount(cartItemsCount),
+        BottomItem.FavoriteScreen.updateFavoriteCount(favoritesCount),
         BottomItem.ProfileScreen,
     )
     val snackbarHostState = LocalSnackbarHostState.current

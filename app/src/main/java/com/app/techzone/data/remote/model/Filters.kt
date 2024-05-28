@@ -5,13 +5,13 @@ interface IFilter {
     val variants: List<Any>
 }
 
-data class PriceVariant (
+data class PriceVariant(
     val label: String = "",
     val min: Int? = null,
     val max: Int? = null,
 )
 
-interface IPriceFilters: IFilter {
+interface IPriceFilters : IFilter {
     override val id: String
     val min: String?
     val max: String?
@@ -23,6 +23,6 @@ data class PriceFilter(
     override val max: String?,
     override val min: String?,
     override val variants: List<Any>
-): IPriceFilters
+) : IPriceFilters
 
 typealias FiltersType = Map<String, PriceFilter>

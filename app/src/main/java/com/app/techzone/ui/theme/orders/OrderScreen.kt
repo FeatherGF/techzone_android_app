@@ -21,12 +21,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,25 +44,21 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.Order
-import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.data.remote.model.OrderStatus
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.Success
 import com.app.techzone.ui.theme.SuccessHalfOpacity
-import com.app.techzone.ui.theme.main.ProductBuyButton
-import com.app.techzone.ui.theme.main.ProductCrossedPrice
-import com.app.techzone.ui.theme.main.ProductFavoriteIcon
-import com.app.techzone.ui.theme.main.ProductImageOrPreview
+import com.app.techzone.ui.theme.reusables.ProductImageOrPreview
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
+import com.app.techzone.ui.theme.profile.CheckProductStatus
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.ProductAction
-import com.app.techzone.ui.theme.profile.UnauthorizedScreen
+import com.app.techzone.ui.theme.server_response.UnauthorizedScreen
 import com.app.techzone.ui.theme.profile.UserViewModel
+import com.app.techzone.ui.theme.reusables.OrderComposition
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
-import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.utils.formatDateShort
-import com.app.techzone.utils.formatPrice
 import kotlinx.coroutines.launch
 
 @Composable
@@ -95,7 +89,8 @@ fun OrderScreenRoot(
             } else {
                 OrderHistory(
                     orders,
-                    onProductAction = userViewModel::onProductAction, 
+                    onProductCheckStatus = userViewModel::onCheckProduct,
+                    onProductAction = userViewModel::onProductAction,
                     getOrderDetail = userViewModel::getDetailedOrder,
                 )
             }
@@ -104,7 +99,7 @@ fun OrderScreenRoot(
 }
 
 @Composable
-fun EmptyOrderHistory() {
+private fun EmptyOrderHistory() {
     val navController = LocalNavController.current
     Column {
         OrdersTopBar()
@@ -142,7 +137,7 @@ fun EmptyOrderHistory() {
 }
 
 @Composable
-fun OrdersTopBar() {
+private fun OrdersTopBar() {
     val navController = LocalNavController.current
     BackHandler { navController.navigate(ScreenRoutes.PROFILE) }
     Row(
@@ -178,14 +173,15 @@ fun OrdersTopBar() {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun OrderHistory(
+private fun OrderHistory(
     orders: List<Order>,
+    onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean,
     getOrderDetail: suspend (Int) -> Order?,
 ) {
     val scope = rememberCoroutineScope()
     var selectedOrderId: Int? by remember { mutableStateOf(null) }
-    var selectedOrder: Order? by remember { mutableStateOf(null)}
+    var selectedOrder: Order? by remember { mutableStateOf(null) }
     Column(
         Modifier
             .background(MaterialTheme.colorScheme.background)
@@ -259,8 +255,8 @@ fun OrderHistory(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         order.orderItems.forEach { orderItem ->
                             ProductImageOrPreview(
+                                Modifier.size(60.dp),
                                 photos = orderItem.product.photos,
-                                modifier = Modifier.size(60.dp),
                                 filterQuality = FilterQuality.None
                             )
                         }
@@ -283,143 +279,16 @@ fun OrderHistory(
                     selectedOrder = order
                 }
             }
-            selectedOrder?.let{ order ->
+            selectedOrder?.let { order ->
                 OrderComposition(
                     order,
                     onDismiss = {
                         selectedOrderId = null
                         selectedOrder = null
                     },
+                    onProductCheckStatus = onProductCheckStatus,
                     onProductAction = onProductAction
                 )
-            }
-        }
-    }
-}
-
-@Composable
-fun OrderComposition(
-    order: Order,
-    onDismiss: () -> Unit,
-    onProductAction: suspend (ProductAction) -> Boolean,
-) = OrderCompositionHolder().OrderCompositionInternal(
-    orderItems = order.orderItems,
-    onDismiss = onDismiss,
-    orderStatus = OrderStatus.valueOf(order.status.uppercase()),
-    onProductAction = onProductAction,
-    orderId = order.id
-)
-
-@Composable
-fun OrderComposition(
-    orderItems: List<OrderItem>,
-    onDismiss: () -> Unit,
-    onProductAction: suspend (ProductAction) -> Boolean,
-) = OrderCompositionHolder().OrderCompositionInternal(
-    orderItems = orderItems,
-    onDismiss = onDismiss,
-    orderStatus = null,
-    orderId = null,
-    onProductAction = onProductAction,
-)
-
-private class OrderCompositionHolder {
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun OrderCompositionInternal(
-        orderItems: List<OrderItem>,
-        onDismiss: () -> Unit,
-        orderStatus: OrderStatus? = null,
-        orderId: Int? = null,
-        onProductAction: suspend (ProductAction) -> Boolean,
-    ) {
-        val navController = LocalNavController.current
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-        ) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                Text("Состав заказа", style = MaterialTheme.typography.titleLarge)
-                orderItems.forEach { orderItem ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        ProductImageOrPreview(
-                            photos = orderItem.product.photos,
-                            modifier = Modifier.size(60.dp),
-                            filterQuality = FilterQuality.None
-                        )
-                        Column(
-                            Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                "${orderItem.product.name} (${orderItem.quantity} шт.)",
-                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                            )
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                ProductCrossedPrice(
-                                    product = orderItem.product,
-                                    large = true
-                                )
-                                Text(
-                                    formatPrice(
-                                        calculateDiscount(
-                                            orderItem.product.price,
-                                            orderItem.product.discountPercentage
-                                        )
-                                    ),
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                )
-                            }
-                            orderStatus?.let {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    when (it) {
-                                        OrderStatus.GOT -> {
-                                            Button(
-                                                onClick = {
-                                                    navController.navigate(
-                                                        ScreenRoutes.ADD_REVIEW + "?orderId=${orderId}&productId=${orderItem.product.id}"
-                                                    )
-                                                }
-                                            ) {
-                                                Text(
-                                                    if (orderItem.product.reviewId != null)
-                                                        "Изменить отзыв"
-                                                    else
-                                                        "Оставить отзыв"
-                                                )
-                                            }
-                                        }
-                                        else -> {
-                                            ProductBuyButton(
-                                                product = orderItem.product,
-                                                onProductAction = onProductAction
-                                            )
-                                            ProductFavoriteIcon(
-                                                product = orderItem.product,
-                                                sizeDp = 32.dp,
-                                                onProductAction = onProductAction
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
     }

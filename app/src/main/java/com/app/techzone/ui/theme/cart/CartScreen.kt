@@ -51,19 +51,22 @@ import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
 import com.app.techzone.LocalSnackbarHostState
 import com.app.techzone.data.remote.model.OrderItem
+import com.app.techzone.data.remote.model.totalDiscountPrice
+import com.app.techzone.data.remote.model.totalPrice
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
-import com.app.techzone.ui.theme.main.ProductCrossedPrice
-import com.app.techzone.ui.theme.main.ProductFavoriteIcon
-import com.app.techzone.ui.theme.main.ProductImageOrPreview
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
-import com.app.techzone.ui.theme.profile.ConfirmationModalSheet
+import com.app.techzone.ui.theme.profile.CheckProductStatus
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.ProductAction
-import com.app.techzone.ui.theme.profile.UnauthorizedScreen
 import com.app.techzone.ui.theme.profile.auth.AuthState
+import com.app.techzone.ui.theme.reusables.ConfirmationModalSheet
+import com.app.techzone.ui.theme.reusables.ProductCrossedPrice
+import com.app.techzone.ui.theme.reusables.ProductFavoriteIcon
+import com.app.techzone.ui.theme.reusables.ProductImageOrPreview
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
+import com.app.techzone.ui.theme.server_response.UnauthorizedScreen
 import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.utils.formatCommonCase
 import com.app.techzone.utils.formatPrice
@@ -78,6 +81,7 @@ fun CartScreen(
     cartItems: List<OrderItem>,
     state: AuthState,
     loadCart: () -> Unit,
+    onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     LaunchedEffect(cartItems.size) { loadCart() }
@@ -100,6 +104,7 @@ fun CartScreen(
             } else {
                 CartItemsList(
                     cartItems = cartItems,
+                    onProductCheckStatus = onProductCheckStatus,
                     onProductAction = onProductAction,
                 )
             }
@@ -109,7 +114,7 @@ fun CartScreen(
 
 
 @Composable
-fun EmptyCartScreen() {
+private fun EmptyCartScreen() {
     val navController = LocalNavController.current
     Box(
         modifier = Modifier
@@ -143,27 +148,10 @@ fun EmptyCartScreen() {
 }
 
 
-fun List<OrderItem>.totalPrice(): Int {
-    return this.map { it.product.price * it.mutableQuantity.intValue }.reduce { acc, i -> acc + i }
-}
-
-fun List<OrderItem>.totalDiscountPrice(): Int {
-    return this
-        .associate {
-            (it.product.price to it.product.discountPercentage) to it.mutableQuantity.intValue
-        }
-        .map { (pair, quantity) ->
-            calculateDiscount(
-                initialPrice = pair.first,
-                discountPercentage = pair.second
-            ) * quantity
-        }
-        .reduce { acc, i -> acc + i }
-}
-
 @Composable
-fun CartItemsList(
+private fun CartItemsList(
     cartItems: List<OrderItem>,
+    onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     val navController = LocalNavController.current
@@ -266,6 +254,7 @@ fun CartItemsList(
                     )
                     CartItemCard(
                         orderItem = product,
+                        onProductCheckStatus = onProductCheckStatus,
                         onProductAction = onProductAction,
                         onShowModal = { deleteProductId = it }
                     )
@@ -368,8 +357,9 @@ fun CartItemsList(
 
 @OptIn(FlowPreview::class)
 @Composable
-fun CartItemCard(
+private fun CartItemCard(
     orderItem: OrderItem,
+    onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean,
     onShowModal: (Int) -> Unit,
 ) {
@@ -406,14 +396,18 @@ fun CartItemCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ProductImageOrPreview(orderItem.product.photos, modifier = Modifier.size(110.dp))
+                ProductImageOrPreview(Modifier.size(110.dp), photos = orderItem.product.photos)
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         orderItem.product.name,
                         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
                         style = MaterialTheme.typography.labelLarge
                     )
-                    ProductCrossedPrice(product = orderItem.product, large = true)
+                    ProductCrossedPrice(
+                        price = orderItem.product.price,
+                        discountPercentage = orderItem.product.discountPercentage,
+                        large = true
+                    )
                     Text(
                         formatPrice(
                             calculateDiscount(
@@ -438,9 +432,10 @@ fun CartItemCard(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     ProductFavoriteIcon(
-                        product = orderItem.product,
+                        Modifier.size(28.dp),
+                        productId = orderItem.product.id,
+                        onProductCheckStatus = onProductCheckStatus,
                         onProductAction = onProductAction,
-                        sizeDp = 28.dp
                     )
                     IconButton(
                         onClick = { onShowModal(orderItem.product.id) },

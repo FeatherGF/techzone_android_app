@@ -43,6 +43,9 @@ import com.app.techzone.data.remote.model.IFilter
 import com.app.techzone.data.remote.model.PriceFilter
 import com.app.techzone.data.remote.model.PriceVariant
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.reusables.PriceRangeField
+import com.app.techzone.utils.DEFAULT_MAX_PRICE
+import com.app.techzone.utils.DEFAULT_MIN_PRICE
 import com.app.techzone.utils.formatPrice
 import com.app.techzone.utils.getDateObject
 import com.google.gson.internal.LinkedTreeMap
@@ -78,15 +81,13 @@ fun FiltersView(
     if (selectedPriceRanges.isNotEmpty()) {
         lowerBoundPrice = remember {
             mutableIntStateOf(
-                selectedPriceRanges
-                    .sortedWith(compareBy(nullsFirst()) { it.min })
-                    .first().min ?: minPrice
+                selectedPriceRanges.sortedWith(compareBy(nullsFirst()) { it.min }).first().min
+                    ?: minPrice
             )
         }.intValue
         higherBoundPrice = remember {
             mutableIntStateOf(
-                selectedPriceRanges
-                    .sortedWith(compareByDescending(nullsLast()) { it.max })
+                selectedPriceRanges.sortedWith(compareByDescending(nullsLast()) { it.max })
                     .first().max ?: maxPrice
             )
         }.intValue
@@ -218,8 +219,7 @@ fun FiltersView(
                                         )
                                     }
                                 }
-                            }
-                        )
+                            })
                     }
                     RangeSlider(
                         value = sliderPosition,
@@ -237,8 +237,7 @@ fun FiltersView(
                             textLowerBoundPrice = if (rangeStart in minPrice..maxPrice) {
                                 selectedPriceRanges.add(
                                     PriceVariant(
-                                        min = rangeStart,
-                                        max = rangeEnd
+                                        min = rangeStart, max = rangeEnd
                                     )
                                 )
                                 rangeStart.toString()
@@ -249,8 +248,7 @@ fun FiltersView(
                             textHigherBoundPrice = if (rangeEnd in minPrice..maxPrice) {
                                 selectedPriceRanges.add(
                                     PriceVariant(
-                                        min = rangeStart,
-                                        max = rangeEnd
+                                        min = rangeStart, max = rangeEnd
                                     )
                                 )
                                 rangeEnd.toString()
@@ -286,12 +284,10 @@ fun FiltersView(
                                                 selectedPriceRanges.removeIf { it.label.isEmpty() }
                                                 val selectedPrice =
                                                     selectedPriceRanges.find { it.label == label }
-                                                if (selectedPrice == null)
-                                                    selectedPriceRanges.add(
-                                                        PriceVariant(label, min, max)
-                                                    )
-                                                else
-                                                    selectedPriceRanges.remove(selectedPrice)
+                                                if (selectedPrice == null) selectedPriceRanges.add(
+                                                    PriceVariant(label, min, max)
+                                                )
+                                                else selectedPriceRanges.remove(selectedPrice)
                                                 val selectedMinimum = selectedPriceRanges
                                                     .sortedWith(compareBy(nullsFirst()) { it.min })
                                                     .firstOrNull()?.min
@@ -302,15 +298,12 @@ fun FiltersView(
                                                     selectedMinimum?.toString() ?: ""
                                                 textHigherBoundPrice =
                                                     selectedMaximum?.toString() ?: ""
-                                                sliderPosition = (
-                                                        selectedMinimum ?: minPrice
-                                                        ).toFloat()..(
-                                                        selectedMaximum ?: maxPrice
-                                                        ).toFloat()
+                                                sliderPosition = (selectedMinimum
+                                                    ?: minPrice).toFloat()..(selectedMaximum
+                                                    ?: maxPrice).toFloat()
                                             },
                                             role = Role.Checkbox
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically
+                                        ), verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Checkbox(
                                         modifier = Modifier.padding(start = 34.dp, end = 34.dp),
@@ -324,8 +317,11 @@ fun FiltersView(
                                     )
                                 }
 
-                                if (index != prices.variants.size - 1)
-                                    HorizontalDivider(color = ForStroke.copy(alpha = 0.1f))
+                                if (index != prices.variants.size - 1) HorizontalDivider(
+                                    color = ForStroke.copy(
+                                        alpha = 0.1f
+                                    )
+                                )
                             }
                         }
                     }
@@ -354,8 +350,7 @@ fun FiltersView(
                                     val filterValue = parseFilterValue(value)
                                     var selected by remember {
                                         mutableStateOf(
-                                            selectedFilters
-                                                .getOrDefault(filter.id, mutableListOf())
+                                            selectedFilters.getOrDefault(filter.id, mutableListOf())
                                                 .contains(filterValue)
                                         )
                                     }
@@ -364,25 +359,21 @@ fun FiltersView(
                                             .fillMaxWidth()
                                             .height(56.dp)
                                             .selectable(
-                                                selected = selected,
-                                                onClick = {
+                                                selected = selected, onClick = {
                                                     mutableSelectedFilters.update { mapping ->
                                                         val sf = mapping.getOrDefault(
-                                                            filter.id,
-                                                            mutableListOf()
+                                                            filter.id, mutableListOf()
                                                         )
-                                                        if (sf.contains(filterValue))
-                                                            sf.remove(filterValue)
-                                                        else
-                                                            sf.add(filterValue)
+                                                        if (sf.contains(filterValue)) sf.remove(
+                                                            filterValue
+                                                        )
+                                                        else sf.add(filterValue)
                                                         selected = !selected
                                                         mapping[filter.id] = sf
                                                         mapping
                                                     }
-                                                },
-                                                role = Role.Checkbox
-                                            ),
-                                        verticalAlignment = Alignment.CenterVertically
+                                                }, role = Role.Checkbox
+                                            ), verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Checkbox(
                                             modifier = Modifier.padding(start = 34.dp, end = 34.dp),
@@ -396,8 +387,11 @@ fun FiltersView(
                                         )
                                     }
 
-                                    if (index != filter.variants.size - 1)
-                                        HorizontalDivider(color = ForStroke.copy(alpha = 0.1f))
+                                    if (index != filter.variants.size - 1) HorizontalDivider(
+                                        color = ForStroke.copy(
+                                            alpha = 0.1f
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -415,14 +409,11 @@ fun FiltersView(
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
                 OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
+                    modifier = Modifier.fillMaxWidth(), onClick = {
                         clearFilters()
                         onFiltersApplied()
                         onBackClicked()
-                    },
-                    border = null,
-                    colors = ButtonDefaults.buttonColors(
+                    }, border = null, colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.primary
                     )
@@ -430,13 +421,10 @@ fun FiltersView(
                     Text("Сбросить фильтры")
                 }
                 OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
+                    modifier = Modifier.fillMaxWidth(), onClick = {
                         onFiltersApplied()
                         onBackClicked()
-                    },
-                    border = null,
-                    colors = ButtonDefaults.buttonColors(
+                    }, border = null, colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.tertiary
                     )

@@ -11,6 +11,5 @@ data class FavoritesList(
 )
 
 data class AddFavoriteRequest(
-    @SerializedName("id_product")
-    val productId: Int,
+    @SerializedName("id_product") val productId: Int,
 )
