@@ -48,15 +48,13 @@ fun OrderComposition(
 fun OrderComposition(
     orderItems: List<OrderItem>,
     onDismiss: () -> Unit,
-    onProductCheckStatus: (CheckProductStatus) -> Boolean,
-    onProductAction: suspend (ProductAction) -> Boolean,
 ) = OrderCompositionHolder().OrderCompositionInternal(
     orderItems = orderItems,
     onDismiss = onDismiss,
     orderStatus = null,
     orderId = null,
-    onProductCheckStatus = onProductCheckStatus,
-    onProductAction = onProductAction,
+    onProductCheckStatus = { false },
+    onProductAction = { false }
 )
 
 private class OrderCompositionHolder {
