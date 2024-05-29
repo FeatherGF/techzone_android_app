@@ -22,11 +22,7 @@ import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
 import com.app.techzone.ui.theme.reviews.ReviewAction
 import com.app.techzone.ui.theme.server_response.ServerResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -268,28 +264,17 @@ class UserViewModel @Inject constructor(
         return !isRemoved
     }
 
-    private suspend fun clearCart(): Boolean {
-        return try {
-            coroutineScope {
-                _cartItems.value.map {
-                    async {
-                        userRepo.removeFromCart(it.product.id)
-                    }
-                }.awaitAll()
-            }
-            _cartItems.update { emptyList() }
-            true
-        } catch (e: CancellationException){
-            // if coroutines were cancelled load cart to represent items
-            // that weren't deleted
-            val response: AuthResult<Cart> = userRepo.getCart()
-            if(response is AuthResult.Authorized){
-                response.data?.let { cart ->
-                    _cartItems.update { cart.items }
-                }
-            }
-            false
+    private suspend fun clearCart(snackbarHostState: SnackbarHostState): Boolean {
+        val isDeleted = userRepo.clearCart()
+        if (isDeleted == null){
+            snackbarHostState.showSnackbar(
+                "Что-то пошло не так\nПроверьте подключение к интернету"
+            )
+            return false
         }
+        if (isDeleted)
+            _cartItems.update { emptyList() }
+        return isDeleted
     }
 
     private fun changeQuantityInCart(productId: Int, quantity: Int) {
@@ -368,7 +353,7 @@ class UserViewModel @Inject constructor(
                 return true
             }
             is ProductAction.ClearCart -> {
-                return clearCart()
+                return clearCart(action.snackbarHostState)
             }
 
             is ProductAction.AddToFavorites -> {

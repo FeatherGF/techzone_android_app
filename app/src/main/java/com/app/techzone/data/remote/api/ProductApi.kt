@@ -2,7 +2,7 @@ package com.app.techzone.data.remote.api
 
 import com.app.techzone.data.remote.model.Accessory
 import com.app.techzone.data.remote.model.BaseProduct
-import com.app.techzone.data.remote.model.FiltersType
+import com.app.techzone.data.remote.model.Filters
 import com.app.techzone.data.remote.model.Laptop
 import com.app.techzone.data.remote.model.ProductList
 import com.app.techzone.data.remote.model.ProductType
@@ -38,7 +38,7 @@ interface ProductApi {
 
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.productsFilters)
-    suspend fun getFilters(@Query("model") category: String): FiltersType
+    suspend fun getFilters(@Query("model") category: String): Filters?
 
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.suggestions)

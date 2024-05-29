@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,26 +40,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.app.techzone.data.remote.model.IFilter
-import com.app.techzone.data.remote.model.PriceFilter
+import com.app.techzone.data.remote.model.IPriceFilter
+import com.app.techzone.data.remote.model.IProductFilter
 import com.app.techzone.data.remote.model.PriceVariant
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.reusables.PriceRangeField
 import com.app.techzone.utils.DEFAULT_MAX_PRICE
 import com.app.techzone.utils.DEFAULT_MIN_PRICE
 import com.app.techzone.utils.formatPrice
-import com.app.techzone.utils.getDateObject
 import com.google.gson.internal.LinkedTreeMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import java.util.Locale
 import kotlin.math.roundToInt
 
 
 @Composable
 fun FiltersView(
-    priceFilters: PriceFilter?,
-    filtersExceptPrice: Map<String, IFilter>?,
+    priceFilters: IPriceFilter?,
+    productFilters: List<IProductFilter>,
     selectedPriceRanges: SnapshotStateList<PriceVariant>,
     mutableSelectedFilters: MutableStateFlow<MutableMap<String, MutableList<Any>>>,
     selectedFilters: MutableMap<String, MutableList<Any>>,
@@ -111,46 +110,9 @@ fun FiltersView(
         onBackClicked()
         clearFilters()
     }
-    Box {
-        Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
-            Surface(
-                modifier = Modifier
-                    .height(120.dp)
-                    .fillMaxWidth(),
-                color = MaterialTheme.colorScheme.tertiary,
-                border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(start = 16.dp, top = 56.dp, end = 16.dp, bottom = 16.dp)
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
-                    Text(
-                        "Фильтры",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                    )
-                    IconButton(onClick = {
-                        clearFilters()
-                        onBackClicked()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                        )
-                    }
-                }
-            }
-
+    Box(Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background)) {
+        Column {
+            FiltersTopBar(clearFilters = clearFilters, onBackClicked = onBackClicked)
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
@@ -219,7 +181,8 @@ fun FiltersView(
                                         )
                                     }
                                 }
-                            })
+                            }
+                        )
                     }
                     RangeSlider(
                         value = sliderPosition,
@@ -328,11 +291,11 @@ fun FiltersView(
                 }
 
                 // Other filters
-                filtersExceptPrice?.let {
-                    it.forEach { (title, filter) ->
+                if (productFilters.isNotEmpty()) {
+                    productFilters.forEach { filter ->
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             Text(
-                                title,
+                                filter.label,
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                             )
@@ -350,7 +313,8 @@ fun FiltersView(
                                     val filterValue = parseFilterValue(value)
                                     var selected by remember {
                                         mutableStateOf(
-                                            selectedFilters.getOrDefault(filter.id, mutableListOf())
+                                            selectedFilters
+                                                .getOrDefault(filter.id, mutableListOf())
                                                 .contains(filterValue)
                                         )
                                     }
@@ -387,11 +351,8 @@ fun FiltersView(
                                         )
                                     }
 
-                                    if (index != filter.variants.size - 1) HorizontalDivider(
-                                        color = ForStroke.copy(
-                                            alpha = 0.1f
-                                        )
-                                    )
+                                    if (index != filter.variants.size - 1)
+                                        HorizontalDivider(color = ForStroke)
                                 }
                             }
                         }
@@ -436,15 +397,54 @@ fun FiltersView(
     }
 }
 
+@Composable
+fun FiltersTopBar(
+    clearFilters: () -> Unit,
+    onBackClicked: () -> Unit,
+) =
+    Surface(
+        modifier = Modifier
+            .height(120.dp)
+            .fillMaxWidth(),
+        color = MaterialTheme.colorScheme.tertiary,
+        border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(start = 16.dp, top = 56.dp, end = 16.dp, bottom = 16.dp)
+                .fillMaxWidth()
+                .height(48.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary
+            )
+            Text(
+                "Фильтры",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+            )
+            IconButton(onClick = {
+                clearFilters()
+                onBackClicked()
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
+                )
+            }
+        }
+    }
+
 fun parseFilterValue(value: Any): Any {
     val strValue = value.toString()
     strValue.toDoubleOrNull()?.let {
         if (it % 1.0 == 0.0) return it.roundToInt()
         return it
-    }
-    getDateObject(strValue)?.let {
-        val dateFormatter = java.text.SimpleDateFormat("yyyy", Locale("ru"))
-        return dateFormatter.format(it)
     }
     return strValue
 }

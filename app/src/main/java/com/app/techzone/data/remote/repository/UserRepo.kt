@@ -426,4 +426,18 @@ class UserRepo @Inject constructor(
             null
         }
     }
+
+    suspend fun clearCart(): Boolean? {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
+        return try {
+            userApi.clearCart(token = accessToken)
+            true
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
+            false
+        }
+    }
+
 }

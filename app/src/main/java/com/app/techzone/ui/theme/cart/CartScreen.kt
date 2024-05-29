@@ -344,7 +344,7 @@ private fun CartItemsList(
                 confirmationText = "Вы действительно хотите удалить все товары из корзины?",
                 onConfirm = {
                     scope.launch {
-                        onProductAction(ProductAction.ClearCart)
+                        onProductAction(ProductAction.ClearCart(snackbarHostState))
                         clearCart = false
                     }
                 },

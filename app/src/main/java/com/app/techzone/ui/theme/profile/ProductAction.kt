@@ -13,7 +13,7 @@ sealed class ProductAction {
 
     data class ChangeQuantityInCart(val productId: Int, val quantity: Int): ProductAction()
 
-    data object ClearCart: ProductAction()
+    data class ClearCart(val snackbarHostState: SnackbarHostState): ProductAction()
 
     data class AddToFavorites(
         val productId: Int,

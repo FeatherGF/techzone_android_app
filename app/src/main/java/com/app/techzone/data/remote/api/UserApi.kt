@@ -169,4 +169,8 @@ interface UserApi {
         @Body request: ChangeQuantityRequest
     ): ProductInCartResponse
 
+    @Headers("Accept: application/json")
+    @DELETE(ApiConstants.Endpoints.cart)
+    suspend fun clearCart(@Header("Authorization") token: String)
+
 }

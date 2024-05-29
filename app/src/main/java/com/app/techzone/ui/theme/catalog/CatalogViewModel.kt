@@ -7,8 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.techzone.data.remote.model.BaseProduct
-import com.app.techzone.data.remote.model.IFilter
-import com.app.techzone.data.remote.model.PriceFilter
+import com.app.techzone.data.remote.model.IPriceFilter
+import com.app.techzone.data.remote.model.IProductFilter
 import com.app.techzone.data.remote.model.PriceVariant
 import com.app.techzone.model.ProductTypeEnum
 import com.app.techzone.model.getProductType
@@ -18,11 +18,7 @@ import com.app.techzone.ui.theme.server_response.ServerResponse
 import com.app.techzone.ui.theme.server_response.ServerResponseState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -38,29 +34,11 @@ class CatalogViewModel @Inject constructor(
     private val _products = MutableStateFlow(emptyList<BaseProduct>())
     val products = _products.asStateFlow()
 
-    private val _filters = MutableStateFlow<Map<String, IFilter>?>(null)
+    private val _productFilters = MutableStateFlow<List<IProductFilter>>(emptyList())
+    val productFilters = _productFilters.asStateFlow()
 
-    val priceFilters: StateFlow<PriceFilter?> =
-        _filters.map {
-            it?.let{ filtersMapping ->
-                filtersMapping["Цена"] as PriceFilter
-            }
-        }.stateIn(
-            viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = null
-        )
-
-    val filtersExceptPrice: StateFlow<Map<String, IFilter>?> =
-        _filters.map {
-            it?.let { catalogFilters ->
-                catalogFilters.filterKeys { title -> title != "Цена" }
-            }
-        }.stateIn(
-            viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = null
-        )
+    private val _priceFilters = MutableStateFlow<IPriceFilter?>(null)
+    val priceFilters = _priceFilters.asStateFlow()
 
     val mutableSelectedFilters = MutableStateFlow(mutableMapOf<String, MutableList<Any>>())
     val selectedFilters = mutableSelectedFilters.asStateFlow()
@@ -91,14 +69,15 @@ class CatalogViewModel @Inject constructor(
     private fun getQueryFilters(): Map<String, String> {
         val filters = selectedFilters.value.map { (queryName, queryParams)  ->
             if (queryParams.isEmpty()) return@map "" to ""
-            "${queryName}_in" to queryParams.joinToString(prefix = "[", postfix = "]") {
-                // TODO: remove after backend fix.
-                //  needed for screen diagonal with this BS ["6.1", "20"]
-                if (queryName == "screen_diagonal") {
-                    "\"$it\""
-                } else {
-                    it.toString().toIntOrNull()?.toString() ?: "\"$it\""
+            "${queryName}_in" to queryParams.joinToString(prefix = "[", postfix = "]") { param ->
+                val parameter = param.toString()
+                parameter.toDoubleOrNull()?.let{
+                    return@joinToString it.toString()
                 }
+                parameter.toIntOrNull()?.let {
+                    return@joinToString it.toString()
+                }
+                "\"$parameter\""
             }
         }.toMap()
         val priceFilters = mutableMapOf<String, String>().apply {
@@ -118,7 +97,10 @@ class CatalogViewModel @Inject constructor(
         viewModelScope.launch {
             val workaround = if (type == ProductTypeEnum.ACCESSORY) ProductTypeEnum.PRODUCT else type
             productRepo.getFilters(workaround.name.lowercase())?.let { filters ->
-                _filters.update { filters }
+                _productFilters.update {
+                    filters.productFilters ?: emptyList()
+                }
+                _priceFilters.update { filters.price }
             }
         }
     }

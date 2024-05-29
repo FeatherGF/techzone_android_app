@@ -39,7 +39,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -64,9 +63,7 @@ import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.payment_selection.Card
 import com.app.techzone.ui.theme.payment_selection.PaymentViewModel
 import com.app.techzone.ui.theme.payment_selection.emptyPayment
-import com.app.techzone.ui.theme.profile.CheckProductStatus
 import com.app.techzone.ui.theme.profile.LoadingBox
-import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.profile.UserViewModel
 import com.app.techzone.ui.theme.reusables.OrderComposition
 import com.app.techzone.ui.theme.reusables.UserInfoFields

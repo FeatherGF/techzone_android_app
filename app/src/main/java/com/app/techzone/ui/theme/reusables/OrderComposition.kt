@@ -2,6 +2,7 @@ package com.app.techzone.ui.theme.reusables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -125,19 +128,31 @@ private class OrderCompositionHolder {
                                 ) {
                                     when (it) {
                                         OrderStatus.GOT -> {
+                                            val text: String
+                                            val colors: ButtonColors
+                                            if (orderItem.product.reviewId != null) {
+                                                text = "Изменить отзыв"
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                                    contentColor = MaterialTheme.colorScheme.primary
+                                                )
+                                            } else {
+                                                text = "Оставить отзыв"
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = MaterialTheme.colorScheme.primary,
+                                                    contentColor = MaterialTheme.colorScheme.tertiary
+                                                )
+                                            }
                                             Button(
                                                 onClick = {
                                                     navController.navigate(
                                                         ScreenRoutes.ADD_REVIEW + "?orderId=${orderId}&productId=${orderItem.product.id}"
                                                     )
-                                                }
+                                                },
+                                                contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
+                                                colors = colors
                                             ) {
-                                                Text(
-                                                    if (orderItem.product.reviewId != null)
-                                                        "Изменить отзыв"
-                                                    else
-                                                        "Оставить отзыв"
-                                                )
+                                                Text(text, style = MaterialTheme.typography.labelLarge)
                                             }
                                         }
 
