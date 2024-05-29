@@ -37,7 +37,7 @@ fun CatalogCategoryScreen(
 ) {
     val products by catalogViewModel.products.collectAsStateWithLifecycle()
     val priceFilters by catalogViewModel.priceFilters.collectAsState()
-    val filtersExceptPrice by catalogViewModel.filtersExceptPrice.collectAsState()
+    val productFilters by catalogViewModel.productFilters.collectAsState()
     val selectedFilters by catalogViewModel.selectedFilters.collectAsState()
     val selectedPriceRanges = catalogViewModel.selectedPriceRanges
     val (selectedSorting, onSortingSelected) = remember { catalogViewModel.selectedSorting }
@@ -62,14 +62,15 @@ fun CatalogCategoryScreen(
                 onSortingSelected = onSortingSelected,
                 onRefreshSearch = {
                     catalogViewModel.loadByString(searchText)
-                })
+                }
+            )
         }
 
         CatalogScreenEnum.FILTERS -> {
             onChangeView(SearchTopBarState.HIDDEN)
             FiltersView(
                 priceFilters = priceFilters,
-                filtersExceptPrice = filtersExceptPrice,
+                productFilters = productFilters,
                 selectedPriceRanges = selectedPriceRanges,
                 mutableSelectedFilters = catalogViewModel.mutableSelectedFilters,
                 selectedFilters = selectedFilters,

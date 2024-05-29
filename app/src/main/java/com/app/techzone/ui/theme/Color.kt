@@ -11,7 +11,7 @@ val ForStroke = Color(39, 39, 39, 10)
 val ErrorRed = Color(0xFFB3261E)
 
 val AccentBlue = Color(0xFF006FEE)
-val LightBlue = Color(0, 111, 238, 10)
+val LightBlue = Color(0, 111, 238, 20)
 val ActiveBlue = Color(0xFF2768D3)
 val DarkText = Color(0xFF49454F)
 val DarkBlueText = Color(49, 58, 92, 50)

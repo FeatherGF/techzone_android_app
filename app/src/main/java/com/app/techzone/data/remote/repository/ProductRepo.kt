@@ -2,7 +2,7 @@ package com.app.techzone.data.remote.repository
 
 import com.app.techzone.data.remote.api.ProductApi
 import com.app.techzone.data.remote.model.BaseProduct
-import com.app.techzone.data.remote.model.IFilter
+import com.app.techzone.data.remote.model.IFilters
 import com.app.techzone.data.remote.model.ProductList
 import com.app.techzone.data.remote.model.ProductType
 import com.app.techzone.model.ProductTypeEnum
@@ -37,7 +37,7 @@ class ProductRepo @Inject constructor(
         }
     }
 
-    suspend fun getFilters(category: String): Map<String, IFilter>? {
+    suspend fun getFilters(category: String): IFilters? {
         return try {
             productApi.getFilters(category)
         } catch (e: IOException) {

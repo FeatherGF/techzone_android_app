@@ -5,23 +5,25 @@ import androidx.compose.runtime.mutableIntStateOf
 import com.app.techzone.utils.calculateDiscount
 import com.google.gson.annotations.SerializedName
 
-interface IReviewableProduct : IBaseProduct {
+interface IOrderItemProduct : IBaseProduct {
+    val quantity: Int
     val reviewId: Int?
 }
 
-data class ReviewableProduct(
+data class OrderItemProduct(
     override val id: Int,
     override val name: String,
     override val price: Int,
     override val photos: List<Photo>?,
+    override val quantity: Int,
     @SerializedName("discount") override val discountPercentage: Int,
     @SerializedName("reviews_count") override val reviewsCount: Int,
     @SerializedName("average_rating") override val rating: Float?,
     @SerializedName("id_review") override val reviewId: Int?,
-) : IReviewableProduct
+) : IOrderItemProduct
 
 data class OrderItem(
-    val id: Int, val product: ReviewableProduct, val quantity: Int,
+    val id: Int, val product: OrderItemProduct, val quantity: Int,
 
     var mutableQuantity: MutableIntState = mutableIntStateOf(quantity)
 )

@@ -1,10 +1,12 @@
 package com.app.techzone.ui.theme.reusables
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ConfirmationModalSheet(
     confirmationText: String,
+    confirmOptionText: String = "Удалить",
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -31,12 +34,14 @@ fun ConfirmationModalSheet(
                 .fillMaxWidth()
                 .padding(start = 23.dp, end = 23.dp, bottom = 23.dp),
         ) {
-            Text(
-                confirmationText,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (confirmationText.isNotEmpty()) {
+                Text(
+                    confirmationText,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -45,7 +50,7 @@ fun ConfirmationModalSheet(
                 onClick = onConfirm
             ) {
                 Text(
-                    "Удалить",
+                    confirmOptionText,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.tertiary
                 )
@@ -54,6 +59,75 @@ fun ConfirmationModalSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp),
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text(
+                    "Отменить",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ConfirmationModalSheet(
+    confirmationText: String,
+    confirmOptionText: String = "Удалить",
+    thirdActionOptionText: String,
+    onThirdAction: () -> Unit,
+    thirdActionButtonColors: ButtonColors = ButtonDefaults.buttonColors(
+        containerColor = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.error
+    ),
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.tertiary
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 23.dp, end = 23.dp, bottom = 23.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (confirmationText.isNotEmpty()) {
+                Text(
+                    confirmationText,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onConfirm
+            ) {
+                Text(
+                    confirmOptionText,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onThirdAction,
+                colors = thirdActionButtonColors
+            ) {
+                Text(
+                    thirdActionOptionText,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+            Button(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer

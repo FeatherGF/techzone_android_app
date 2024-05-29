@@ -14,6 +14,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.app.techzone.ui.theme.TechZoneTheme
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // market places don't support landscape orientations
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        installSplashScreen()
         setContent {
             TechZoneTheme {
                 // support transparent status bar and appropriately

@@ -1,9 +1,6 @@
 package com.app.techzone.data.remote.model
 
-interface IFilter {
-    val id: String
-    val variants: List<Any>
-}
+import com.google.gson.annotations.SerializedName
 
 data class PriceVariant(
     val label: String = "",
@@ -11,18 +8,42 @@ data class PriceVariant(
     val max: Int? = null,
 )
 
-interface IPriceFilters : IFilter {
-    override val id: String
+interface IPriceFilter {
+    val id: String
+    val label: String
     val min: String?
     val max: String?
-    override val variants: List<Any>
+    val variants: List<Any>
 }
+
+interface IProductFilter {
+    val id: String
+    val label: String
+    val variants: List<Any>
+}
+
+
+interface IFilters {
+    val productFilters: List<IProductFilter>?
+    val price: IPriceFilter?
+}
+
+data class ProductFilter(
+    override val id: String,
+    override val label: String,
+    override val variants: List<Any>
+) : IProductFilter
 
 data class PriceFilter(
     override val id: String,
+    override val label: String,
     override val max: String?,
     override val min: String?,
     override val variants: List<Any>
-) : IPriceFilters
+) : IPriceFilter
 
-typealias FiltersType = Map<String, PriceFilter>
+data class Filters(
+    override val price: PriceFilter?,
+    @SerializedName("product_filters") override val productFilters: List<ProductFilter>?
+) : IFilters
+

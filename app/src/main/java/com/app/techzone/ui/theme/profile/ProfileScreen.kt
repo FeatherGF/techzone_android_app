@@ -118,11 +118,16 @@ fun EditUserProfile(userViewModel: UserViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             imageUri = uri
         }
-    val userPhotoUrl by remember { mutableStateOf(user?.photoUrl) }
+    var userPhotoUrl by remember { mutableStateOf(user?.photoUrl) }
     val (firstName, onFirstNameChange) = remember { mutableStateOf(user?.firstName ?: "") }
     val (lastName, onLastNameChange) = remember { mutableStateOf(user?.lastName ?: "") }
     val (phoneNumber, onPhoneNumberChange) = remember { mutableStateOf(user?.phoneNumber ?: "") }
+    var showPhotoActionModal by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val isPressed by interactionSource.collectIsPressedAsState()
 
     suspend fun saveUserChanges() {
         val (isValid, reason) = validateUserInfo(firstName, lastName, phoneNumber)
@@ -178,21 +183,18 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    val interactionSource = remember { MutableInteractionSource() }
-                    val isHovered by interactionSource.collectIsHoveredAsState()
-                    val isPressed by interactionSource.collectIsPressedAsState()
                     ProfilePicture(
                         Modifier
                             .size(100.dp)
                             .clickable(
                                 interactionSource = interactionSource,
                                 indication = null,
-                                onClick = { launcher.launch("image/*") }
+                                onClick = { showPhotoActionModal = true }
                             ),
                         userPhotoUrl = userPhotoUrl,
                         imageUri = imageUri
                     )
-                    if (isHovered || isPressed) {
+                    if (isPressed || isHovered) {
                         val size = if (userPhotoUrl != null || imageUri != null) 100.dp else 84.dp
                         Box(
                             Modifier
@@ -259,6 +261,44 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                     )
                 }
             }
+        }
+        if (showPhotoActionModal) {
+            userPhotoUrl?.let {
+                ConfirmationModalSheet(
+                    confirmationText = "",
+                    confirmOptionText = "Выбрать фото",
+                    onConfirm = {
+                        launcher.launch("image/*")
+                        showPhotoActionModal = false
+                    },
+                    thirdActionOptionText = "Удалить фото",
+                    onThirdAction = {
+                        coroutineScope.launch {
+                            if (userViewModel.deleteUserPhoto()) {
+                                userPhotoUrl = null
+                                snackbarHostState.showSnackbar(
+                                    "Фотография успешно удалена"
+                                )
+                            } else {
+                                snackbarHostState.showSnackbar(
+                                    "Что-то пошло не так." +
+                                            "\nПроверьте подключение к интернету и попробуйте снова"
+                                )
+                            }
+                        }
+                        showPhotoActionModal = false
+                    },
+                    onDismiss = { showPhotoActionModal = false }
+                )
+            } ?: ConfirmationModalSheet(
+                confirmationText = "",
+                confirmOptionText = "Выбрать фото",
+                onConfirm = {
+                    launcher.launch("image/*")
+                    showPhotoActionModal = false
+                },
+                onDismiss = { showPhotoActionModal = false }
+            )
         }
         Surface(
             Modifier

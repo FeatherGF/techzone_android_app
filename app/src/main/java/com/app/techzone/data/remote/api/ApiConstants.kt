@@ -29,6 +29,7 @@ object ApiConstants {
 
         // user
         const val users = "users"
+        const val userPhoto = "users/photo"
 
         // authentication
         const val sendAuthCode = "users/send-authentication-code"
