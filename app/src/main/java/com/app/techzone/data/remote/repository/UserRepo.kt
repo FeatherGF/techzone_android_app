@@ -140,6 +140,19 @@ class UserRepo @Inject constructor(
         }
     }
 
+    suspend fun deleteUserPhoto(): Boolean {
+        authenticate()
+        val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return false
+        return try {
+            userApi.deleteUserPhoto(accessToken)
+            true
+        } catch (e: IOException) {
+            false
+        } catch (e: HttpException) {
+            false
+        }
+    }
+
     override suspend fun sendAuthenticationCode(email: String): AuthResult<Unit> {
         return handleExceptions {
             userApi.sendAuthenticationCode(

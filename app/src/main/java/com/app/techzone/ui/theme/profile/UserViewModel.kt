@@ -99,6 +99,8 @@ class UserViewModel @Inject constructor(
         state = state.copy(response = ServerResponse.SUCCESS)
     }
 
+    suspend fun deleteUserPhoto() = userRepo.deleteUserPhoto()
+
     fun loadUser() {
         state = state.copy(response = ServerResponse.LOADING)
         viewModelScope.launch{

@@ -95,8 +95,7 @@ class CatalogViewModel @Inject constructor(
 
     private fun loadFilters(type: ProductTypeEnum) {
         viewModelScope.launch {
-            val workaround = if (type == ProductTypeEnum.ACCESSORY) ProductTypeEnum.PRODUCT else type
-            productRepo.getFilters(workaround.name.lowercase())?.let { filters ->
+            productRepo.getFilters(type.name.lowercase())?.let { filters ->
                 _productFilters.update {
                     filters.productFilters ?: emptyList()
                 }

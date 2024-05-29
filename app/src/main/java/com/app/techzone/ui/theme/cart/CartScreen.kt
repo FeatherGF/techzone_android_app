@@ -364,6 +364,8 @@ private fun CartItemCard(
     onShowModal: (Int) -> Unit,
 ) {
     val navController = LocalNavController.current
+    val snackbarHostState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
     var quantity by orderItem.mutableQuantity
     var isFirstComposition by remember { mutableStateOf(true) }
     LaunchedEffect(quantity) {
@@ -471,7 +473,17 @@ private fun CartItemCard(
                         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                     )
                     IconButton(
-                        onClick = { quantity++ },
+                        onClick = {
+                            quantity++
+                            if (quantity == orderItem.product.quantity) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Достигнуто максимальное количество товаров на складе"
+                                    )
+                                }
+                            }
+                        },
+                        enabled = quantity < orderItem.product.quantity,
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.primary

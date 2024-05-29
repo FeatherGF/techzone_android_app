@@ -63,6 +63,10 @@ interface UserApi {
     @POST(ApiConstants.Endpoints.users)
     suspend fun deleteUser(@Header("Authorization") token: String): User
 
+    @Headers("Accept: application/json")
+    @DELETE(ApiConstants.Endpoints.userPhoto)
+    suspend fun deleteUserPhoto(@Header("Authorization") token: String)
+
 
     // Authentication
     @Headers("Accept: application/json")
