@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.ColorVariation
 import com.app.techzone.data.remote.model.IDetailedProduct
@@ -101,11 +102,11 @@ fun ProductDetailScreen(
 
     LaunchedEffect(detailProductViewModel) {
         detailProductViewModel.loadProduct(productId)
-        recommendations.loadBestSellerProducts()
     }
 
     val product by detailProductViewModel.product.collectAsStateWithLifecycle()
-    val recommendedProducts by recommendations.popularProducts.collectAsStateWithLifecycle()
+    val popularProducts = recommendations.popularProductsPagingFlow.collectAsLazyPagingItems()
+
     val state = detailProductViewModel.state
 
     val lazyListState = rememberLazyListState()
@@ -186,8 +187,9 @@ fun ProductDetailScreen(
                     }
                     item {
                         ProductCarousel(
-                            products = recommendedProducts,
-                            onProductAction = onProductAction
+                            products = popularProducts,
+                            onProductAction = onProductAction,
+                            onProductCheckStatus = onProductCheckStatus
                         )
                     }
                 }

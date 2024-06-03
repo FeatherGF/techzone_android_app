@@ -51,6 +51,8 @@ interface ProductApi {
         @Query("query") query: String,
         @Query("sort") sort: String? = null,
         @QueryMap(encoded = true) queryParams: Map<String, String>,
+        @Query("size_page") pageSize: Int? = null,
+        @Query("number_page") pageNumber: Int? = null,
     ): ProductList<BaseProduct>
 
 

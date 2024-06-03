@@ -21,25 +21,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.app.techzone.R
-import com.app.techzone.data.remote.model.IBaseProduct
+import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.model.Benefit
 import com.app.techzone.model.benefits
 import com.app.techzone.ui.theme.RoundBorder24
 import com.app.techzone.ui.theme.profile.CheckProductStatus
-import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.ProductAction
 import com.app.techzone.ui.theme.reusables.ProductCarousel
-import com.app.techzone.ui.theme.server_response.ErrorScreen
-import com.app.techzone.ui.theme.server_response.ServerResponse
 
 
 @Composable
@@ -48,40 +44,21 @@ fun MainScreenRoot(
     onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
-    LaunchedEffect(Unit) {
-        productViewModel.loadBestSellerProducts()
-        productViewModel.loadNewProducts()
-    }
-    val popularProducts by productViewModel.popularProducts.collectAsStateWithLifecycle()
-    val newProducts by productViewModel.newProducts.collectAsStateWithLifecycle()
-    when (productViewModel.state.response) {
-        ServerResponse.LOADING -> {
-            LoadingBox()
-        }
-
-        ServerResponse.ERROR -> {
-            ErrorScreen {
-                productViewModel.loadNewProducts()
-                productViewModel.loadBestSellerProducts()
-            }
-        }
-
-        else -> {
-            MainScreen(
-                popularProducts = popularProducts,
-                newProducts = newProducts,
-                onProductCheckStatus = onProductCheckStatus,
-                onProductAction = onProductAction
-            )
-        }
-    }
+    val newProducts = productViewModel.productPagingFlow.collectAsLazyPagingItems()
+    val popularProducts = productViewModel.popularProductsPagingFlow.collectAsLazyPagingItems()
+    MainScreen(
+        popularProducts = popularProducts,
+        newProducts = newProducts,
+        onProductCheckStatus = onProductCheckStatus,
+        onProductAction = onProductAction
+    )
 }
 
 
 @Composable
 private fun MainScreen(
-    popularProducts: List<IBaseProduct>,
-    newProducts: List<IBaseProduct>,
+    popularProducts: LazyPagingItems<BaseProduct>,
+    newProducts: LazyPagingItems<BaseProduct>,
     onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {

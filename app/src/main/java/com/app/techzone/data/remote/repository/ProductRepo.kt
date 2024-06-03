@@ -71,8 +71,8 @@ class ProductRepo @Inject constructor(
 
     suspend fun getByCategoryOrAllProducts(
         category: ProductTypeEnum,
-        queryFilters: Map<String, String> = mapOf(),
         sorting: SortingOptions? = null,
+        queryFilters: Map<String, String> = mapOf(),
         pageSize: Int? = null,
         pageNumber: Int? = null,
     ): ProductList<BaseProduct>? {
@@ -101,13 +101,17 @@ class ProductRepo @Inject constructor(
     suspend fun searchProducts(
         text: String,
         sorting: SortingOptions,
-        queryFilters: Map<String, String>
+        queryFilters: Map<String, String>,
+        pageSize: Int? = null,
+        pageNumber: Int? = null,
     ) = callApiWithOptionalAccessToken { token ->
         productApi.search(
             token = token,
             query = text,
             queryParams = queryFilters,
-            sort = sorting.name.lowercase()
+            sort = sorting.name.lowercase(),
+            pageSize = pageSize,
+            pageNumber = pageNumber
         )
     }
 }
