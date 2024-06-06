@@ -13,11 +13,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.model.Sorting
 import com.app.techzone.ui.theme.app_bars.SearchTopBarState
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.profile.CheckProductStatus
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.ProductAction
@@ -111,10 +111,13 @@ fun DefaultCatalogView(
             LazyColumn(
                 modifier = Modifier.background(MaterialTheme.colorScheme.background),
                 contentPadding = PaddingValues(
-                    start = 16.dp, top = 16.dp, end = 16.dp, bottom = 40.dp
+                    start = MaterialTheme.dimension.extendedMedium,
+                    top = MaterialTheme.dimension.extendedMedium,
+                    end = MaterialTheme.dimension.extendedMedium,
+                    bottom = MaterialTheme.dimension.extraLarge
                 ),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)
             ) {
                 item {
                     FiltersAndSorting(selectedSorting, onSortingSelected) {

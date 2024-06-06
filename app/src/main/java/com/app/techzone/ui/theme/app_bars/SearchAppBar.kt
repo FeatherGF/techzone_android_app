@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -37,9 +36,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
 import com.app.techzone.ui.theme.RoundBorder28
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,9 +58,7 @@ fun SearchAppBar(
         color = MaterialTheme.colorScheme.background
     ) {
         SearchBar(
-            modifier = Modifier
-                .focusRequester(focusRequester)
-                .width(255.dp),
+            modifier = Modifier.focusRequester(focusRequester),
             shape = RoundBorder28,
             query = searchState.searchText,
             onQueryChange = { onEvent(SearchUiEvent.SearchTextChanged(it)) },
@@ -124,7 +121,10 @@ fun SearchAppBar(
                             onEvent(SearchUiEvent.SearchClosed)
                         },
                         border = null,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                        contentPadding = PaddingValues(
+                            horizontal = MaterialTheme.dimension.medium,
+                            vertical = MaterialTheme.dimension.small
+                        )
                     ) {
                         Text(
                             text = "Отменить",
@@ -150,7 +150,7 @@ fun SearchAppBar(
                         horizontalArrangement = Arrangement.Absolute.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .padding(vertical = 20.dp, horizontal = 20.dp)
+                            .padding(MaterialTheme.dimension.mediumLarge)
                             .fillMaxSize()
                             .clickable {
                                 onEvent(SearchUiEvent.SearchClicked(suggestion))

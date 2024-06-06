@@ -1,8 +1,6 @@
 package com.app.techzone.ui.theme.product_detail
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -19,7 +17,7 @@ fun TextSplitter(
     color: Color,
     modifier: Modifier = Modifier,
     thickness: Dp = 1.dp,
-) = Canvas(modifier.fillMaxWidth().height(thickness)) {
+) = Canvas(modifier) {
     drawLine(
         color = color,
         strokeWidth = thickness.toPx(),

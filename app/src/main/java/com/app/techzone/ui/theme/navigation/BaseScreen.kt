@@ -21,10 +21,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.app.techzone.LocalSnackbarHostState
+import com.app.techzone.ui.theme.dimension
 
 @Composable
 fun BaseScreen(
@@ -53,7 +57,7 @@ fun BaseScreen(
                 modifier = Modifier.imePadding()
             ){ data ->
                 Snackbar(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(MaterialTheme.dimension.extendedMedium),
                     containerColor = MaterialTheme.colorScheme.tertiary,
                     action = {
                         data.visuals.actionLabel?.let{
@@ -107,7 +111,17 @@ fun BaseScreen(
                                     )
                                 }
                             },
-                            label = { Text(text = screen.title) },
+                            label = {
+                                if (LocalConfiguration.current.screenWidthDp > 360) {
+                                    Text(
+                                        screen.title,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Visible
+                                    )
+                                }
+                            },
                             colors = NavigationBarItemDefaults.colors(
                                 indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
                             )

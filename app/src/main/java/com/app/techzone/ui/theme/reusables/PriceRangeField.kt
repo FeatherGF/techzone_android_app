@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.utils.priceMask
 
 @Composable
@@ -37,5 +38,5 @@ fun PriceRangeField(
     },
     modifier = modifier
         .background(MaterialTheme.colorScheme.tertiary)
-        .height(56.dp),
+        .height(MaterialTheme.dimension.huge),
 )

@@ -1,10 +1,10 @@
 package com.app.techzone.ui.theme.product_detail.characteristics
 
-import com.app.techzone.utils.boolToString
 import com.app.techzone.data.remote.model.Television
+import com.app.techzone.utils.boolToString
 
-data class TelevisionCharacteristics(val television: Television): ICharacteristicClass{
-    inner class Common: ICharacteristic {
+data class TelevisionCharacteristics(val television: Television) : ICharacteristicClass {
+    inner class Common : ICharacteristic {
         override val label: String = "Заводские данные о товаре"
         override val items: Map<String, String> = mapOf(
             "Модель" to television.model,
@@ -14,7 +14,7 @@ data class TelevisionCharacteristics(val television: Television): ICharacteristi
         )
     }
 
-    inner class Main: ICharacteristic {
+    inner class Main : ICharacteristic {
         override val label: String = "Основные характеристики"
         override val items: Map<String, String> = mapOf(
             "Цвет товара" to television.colorMain,
@@ -35,16 +35,16 @@ data class TelevisionCharacteristics(val television: Television): ICharacteristi
         )
     }
 
-    inner class Measurements: ICharacteristic {
+    inner class Measurements : ICharacteristic {
         override val label: String = "Размеры"
         override val items = mapOf(
-            "Высота, в сантиметрах" to television.height.toString(),
-            "Длина, в сантиметрах" to television.width.toString(),
-            "Толщина, в сантиметрах" to television.thickness.toString(),
+            "Высота, в миллиметрах" to television.height.toString(),
+            "Длина, в миллиметрах" to television.width.toString(),
+            "Толщина, в миллиметрах" to television.thickness.toString(),
         )
     }
 
-    inner class Display: ICharacteristic {
+    inner class Display : ICharacteristic {
         override val label: String = "Экран"
         override val items: Map<String, String> = mapOf(
             "Разрешение экрана" to television.screenResolution,
@@ -57,7 +57,7 @@ data class TelevisionCharacteristics(val television: Television): ICharacteristi
         )
     }
 
-    inner class Sound: ICharacteristic {
+    inner class Sound : ICharacteristic {
         override val label: String = "Звук"
         override val items: Map<String, String> = mapOf(
             "Мощность звука" to television.soundPower,
@@ -69,7 +69,7 @@ data class TelevisionCharacteristics(val television: Television): ICharacteristi
         )
     }
 
-    inner class Memory: ICharacteristic {
+    inner class Memory : ICharacteristic {
         override val label: String = "Память"
         override val items: Map<String, String> = mapOf(
             "Оперативная память, в ГБ" to television.memoryRam.toString(),

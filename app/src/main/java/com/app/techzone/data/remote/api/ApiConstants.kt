@@ -9,6 +9,7 @@ object ApiConstants {
         const val products = "products"
         const val productType = "products/type/{id_product}"
         const val productsFilters = "products/filters"
+        const val banners = "products/banners"
 
         // search
         const val suggestions = "products/suggestions"

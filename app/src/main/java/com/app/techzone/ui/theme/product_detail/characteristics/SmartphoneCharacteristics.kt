@@ -1,10 +1,10 @@
 package com.app.techzone.ui.theme.product_detail.characteristics
 
-import com.app.techzone.utils.boolToString
 import com.app.techzone.data.remote.model.Smartphone
+import com.app.techzone.utils.boolToString
 
 data class SmartphoneCharacteristics(val smartphone: Smartphone) : ICharacteristicClass {
-    inner class Common: ICharacteristic {
+    inner class Common : ICharacteristic {
         override val label: String = "Заводские данные о товаре"
         override val items: Map<String, String> = mapOf(
             "Модель" to smartphone.model,
@@ -14,7 +14,7 @@ data class SmartphoneCharacteristics(val smartphone: Smartphone) : ICharacterist
         )
     }
 
-    inner class Main: ICharacteristic {
+    inner class Main : ICharacteristic {
         override val label: String = "Основные характеристики"
         override val items: Map<String, String> = mapOf(
             "Цвет товара" to smartphone.colorMain,
@@ -28,7 +28,7 @@ data class SmartphoneCharacteristics(val smartphone: Smartphone) : ICharacterist
         )
     }
 
-    inner class Battery: ICharacteristic {
+    inner class Battery : ICharacteristic {
         override val label: String = "Питание"
         override val items: Map<String, String> = mapOf(
             "Быстрая зарядка (Fast-charge)" to boolToString(smartphone.fastCharge),
@@ -37,7 +37,7 @@ data class SmartphoneCharacteristics(val smartphone: Smartphone) : ICharacterist
         )
     }
 
-    inner class MemoryAndProcessor: ICharacteristic {
+    inner class MemoryAndProcessor : ICharacteristic {
         override val label: String = "Память и процессор"
         override val items: Map<String, String> = mapOf(
             "Оперативная память, в ГБ" to smartphone.memoryRam.toString(),
@@ -48,16 +48,16 @@ data class SmartphoneCharacteristics(val smartphone: Smartphone) : ICharacterist
         )
     }
 
-    inner class Measurements: ICharacteristic {
+    inner class Measurements : ICharacteristic {
         override val label: String = "Размеры"
         override val items = mapOf(
-            "Высота, в сантиметрах" to smartphone.height.toString(),
-            "Длина, в сантиметрах" to smartphone.width.toString(),
-            "Толщина, в сантиметрах" to smartphone.thickness.toString(),
+            "Высота, в миллиметрах" to smartphone.height.toString(),
+            "Длина, в миллиметрах" to smartphone.width.toString(),
+            "Толщина, в миллиметрах" to smartphone.thickness.toString(),
         )
     }
 
-    inner class Display: ICharacteristic {
+    inner class Display : ICharacteristic {
         override val label: String = "Экран"
         override val items: Map<String, String> = mapOf(
             "Разрешение экрана" to smartphone.screenResolution,
@@ -69,7 +69,7 @@ data class SmartphoneCharacteristics(val smartphone: Smartphone) : ICharacterist
         )
     }
 
-    inner class Communication: ICharacteristic {
+    inner class Communication : ICharacteristic {
         override val label: String = "Связь"
         override val items: Map<String, String> = mapOf(
             "Поддержка Lte" to boolToString(smartphone.supportLte),
@@ -81,7 +81,7 @@ data class SmartphoneCharacteristics(val smartphone: Smartphone) : ICharacterist
         )
     }
 
-    inner class Camera: ICharacteristic {
+    inner class Camera : ICharacteristic {
         override val label: String = "Камера"
         override val items: Map<String, String> = mapOf(
             "Количество основных камер" to smartphone.numberCameras.toString(),

@@ -42,12 +42,14 @@ import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.data.remote.model.ReviewShort
 import com.app.techzone.ui.theme.DarkText
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.profile.LoadingBox
 import com.app.techzone.ui.theme.profile.UserViewModel
 import com.app.techzone.ui.theme.reusables.ProductCrossedPrice
 import com.app.techzone.ui.theme.reusables.ProductImageOrPreview
 import com.app.techzone.ui.theme.server_response.ErrorScreen
 import com.app.techzone.ui.theme.server_response.ServerResponse
+import com.app.techzone.utils.calculateDiscount
 import com.app.techzone.utils.formatPrice
 import kotlinx.coroutines.launch
 
@@ -90,7 +92,12 @@ private fun ReviewTopBar() {
         Modifier
             .fillMaxWidth()
             .background(color = MaterialTheme.colorScheme.tertiary)
-            .padding(start = 20.dp, top = 56.dp, bottom = 16.dp, end = 28.dp),
+            .padding(
+                start = MaterialTheme.dimension.mediumLarge,
+                top = MaterialTheme.dimension.huge,
+                bottom = MaterialTheme.dimension.extendedMedium,
+                end = MaterialTheme.dimension.large
+            ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -138,11 +145,14 @@ private fun ReviewScreen(
                 .background(MaterialTheme.colorScheme.tertiary)
                 .fillMaxWidth()
                 .border(width = 1.dp, color = ForStroke)
-                .padding(vertical = 12.dp, horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(
+                    vertical = MaterialTheme.dimension.medium,
+                    horizontal = MaterialTheme.dimension.extendedMedium
+                ),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium)
         ) {
             ProductImageOrPreview(
-                Modifier.size(60.dp),
+                Modifier.size(MaterialTheme.dimension.huge),
                 photos = orderItem.product.photos,
                 filterQuality = FilterQuality.None,
             )
@@ -151,7 +161,7 @@ private fun ReviewScreen(
                 letterSpacing = 0.15.sp
             )
             val color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)) {
                 Text(
                     "${orderItem.product.name} (${orderItem.quantity} шт.)",
                     style = style,
@@ -159,7 +169,7 @@ private fun ReviewScreen(
                 )
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ProductCrossedPrice(
@@ -167,7 +177,16 @@ private fun ReviewScreen(
                         discountPercentage = orderItem.product.discountPercentage,
                         large = true
                     )
-                    Text(formatPrice(orderItem.product.price), style = style, color = color)
+                    Text(
+                        formatPrice(
+                            calculateDiscount(
+                                orderItem.product.price,
+                                orderItem.product.discountPercentage
+                            )
+                        ),
+                        style = style,
+                        color = color
+                    )
                 }
             }
         }
@@ -178,8 +197,11 @@ private fun ReviewScreen(
             Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(vertical = 28.dp, horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(
+                    vertical = MaterialTheme.dimension.large,
+                    horizontal = MaterialTheme.dimension.extendedMedium
+                ),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.mediumLarge)
         ) {
             OutlinedTextField(
                 value = reviewText,
@@ -207,7 +229,7 @@ private fun ReviewScreen(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = MaterialTheme.dimension.extendedMedium),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -221,14 +243,14 @@ private fun ReviewScreen(
                     ) {
                         if (state.value) {
                             Icon(
-                                modifier = Modifier.size(40.dp),
+                                modifier = Modifier.size(MaterialTheme.dimension.extraLarge),
                                 imageVector = Icons.Filled.StarRate,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         } else {
                             Icon(
-                                modifier = Modifier.size(40.dp),
+                                modifier = Modifier.size(MaterialTheme.dimension.extraLarge),
                                 imageVector = Icons.Outlined.StarRate,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)

@@ -1,6 +1,7 @@
 package com.app.techzone.data.remote.api
 
 import com.app.techzone.data.remote.model.Accessory
+import com.app.techzone.data.remote.model.Banner
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.Filters
 import com.app.techzone.data.remote.model.Laptop
@@ -35,6 +36,10 @@ interface ProductApi {
     suspend fun getProductType(
         @Path("id_product") productId: Int
     ): ProductType
+
+    @Headers("Accept: application/json")
+    @GET(ApiConstants.Endpoints.banners)
+    suspend fun getBanners(): ArrayList<Banner>
 
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.productsFilters)

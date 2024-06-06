@@ -1,5 +1,6 @@
 package com.app.techzone.ui.theme.reusables
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,11 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.Order
 import com.app.techzone.data.remote.model.OrderItem
 import com.app.techzone.data.remote.model.OrderStatus
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.CheckProductStatus
 import com.app.techzone.ui.theme.profile.ProductAction
@@ -80,28 +81,39 @@ private class OrderCompositionHolder {
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                    .padding(
+                        start = MaterialTheme.dimension.extendedMedium,
+                        end = MaterialTheme.dimension.extendedMedium,
+                        bottom = MaterialTheme.dimension.extendedMedium
+                    )
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.mediumLarge)
             ) {
                 Text("Состав заказа", style = MaterialTheme.typography.titleLarge)
                 orderItems.forEach { orderItem ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium),
+                        modifier = if (!orderItem.product.isDeleted) Modifier.clickable {
+                            navController.navigate(
+                                "${ScreenRoutes.PRODUCT_DETAIL}/${orderItem.product.id}"
+                            )
+                        } else Modifier
+                    ) {
                         ProductImageOrPreview(
-                            Modifier.size(60.dp),
+                            Modifier.size(MaterialTheme.dimension.huge),
                             photos = orderItem.product.photos,
-                            filterQuality = FilterQuality.None
+                            filterQuality = FilterQuality.Low
                         )
                         Column(
                             Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)
                         ) {
                             Text(
                                 "${orderItem.product.name} (${orderItem.quantity} шт.)",
                                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                             )
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 ProductCrossedPrice(
@@ -124,7 +136,7 @@ private class OrderCompositionHolder {
                             orderStatus?.let {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium)
                                 ) {
                                     when (it) {
                                         OrderStatus.GOT -> {
@@ -149,7 +161,10 @@ private class OrderCompositionHolder {
                                                         ScreenRoutes.ADD_REVIEW + "?orderId=${orderId}&productId=${orderItem.product.id}"
                                                     )
                                                 },
-                                                contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
+                                                contentPadding = PaddingValues(
+                                                    horizontal = MaterialTheme.dimension.extendedMedium,
+                                                    vertical = MaterialTheme.dimension.small
+                                                ),
                                                 colors = colors
                                             ) {
                                                 Text(text, style = MaterialTheme.typography.labelLarge)
@@ -157,17 +172,27 @@ private class OrderCompositionHolder {
                                         }
 
                                         else -> {
-                                            ProductBuyButton(
-                                                productId = orderItem.product.id,
-                                                onProductCheckStatus = onProductCheckStatus,
-                                                onProductAction = onProductAction
-                                            )
-                                            ProductFavoriteIcon(
-                                                Modifier.size(32.dp),
-                                                productId = orderItem.product.id,
-                                                onProductCheckStatus = onProductCheckStatus,
-                                                onProductAction = onProductAction
-                                            )
+                                            if (orderItem.product.isDeleted){
+                                                Button(onClick = {}, enabled = false) {
+                                                    Text(
+                                                        "Продажи прекращены",
+                                                        style = MaterialTheme.typography.labelMedium
+                                                    )
+                                                }
+                                            } else {
+                                                ProductBuyButton(
+                                                    productId = orderItem.product.id,
+                                                    isActive = orderItem.product.isActive,
+                                                    onProductCheckStatus = onProductCheckStatus,
+                                                    onProductAction = onProductAction
+                                                )
+                                                ProductFavoriteIcon(
+                                                    Modifier.size(MaterialTheme.dimension.larger),
+                                                    productId = orderItem.product.id,
+                                                    onProductCheckStatus = onProductCheckStatus,
+                                                    onProductAction = onProductAction
+                                                )
+                                            }
                                         }
                                     }
                                 }

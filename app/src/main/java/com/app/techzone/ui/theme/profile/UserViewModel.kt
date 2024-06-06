@@ -336,10 +336,8 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    suspend fun createOrder(orderItemIds: List<Int>, paymentMethod: String): Boolean {
-        val order = userRepo.createOrder(orderItemIds, paymentMethod)
-        return order != null
-    }
+    suspend fun createOrder(orderItemIds: List<Int>, paymentMethod: String, cost: Int) =
+        userRepo.createOrder(orderItemIds, paymentMethod, cost)
 
     suspend fun onProductAction(action: ProductAction): Boolean {
         when (action){

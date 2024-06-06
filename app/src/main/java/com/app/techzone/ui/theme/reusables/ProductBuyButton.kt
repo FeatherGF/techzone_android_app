@@ -14,8 +14,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalSnackbarHostState
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.profile.CheckProductStatus
 import com.app.techzone.ui.theme.profile.ProductAction
 import kotlinx.coroutines.launch
@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 fun ProductBuyButton(
     modifier: Modifier = Modifier,
     productId: Int,
+    isActive: Boolean,
     onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean
 ) {
@@ -34,32 +35,47 @@ fun ProductBuyButton(
     val text: String
     val colors: ButtonColors
     val action: ProductAction
-    if (isInCartState) {
+    if (!isActive) {
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0, 111, 238, 12),
             contentColor = MaterialTheme.colorScheme.primary
         )
-        text = "В корзине"
-        action = ProductAction.RemoveFromCart(productId, LocalSnackbarHostState.current)
-    } else {
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.tertiary
-        )
-        text = "В корзину"
+        text = "Нет в наличии"
+        // button will be disabled
         action = ProductAction.AddToCart(productId, LocalSnackbarHostState.current)
+    } else {
+        if (isInCartState) {
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0, 111, 238, 12),
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+            text = "В корзине"
+            action = ProductAction.RemoveFromCart(productId, LocalSnackbarHostState.current)
+        } else {
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.tertiary
+            )
+            text = "В корзину"
+            action = ProductAction.AddToCart(productId, LocalSnackbarHostState.current)
+        }
     }
+
     Button(
         onClick = {
             scope.launch {
                 isInCartState = onProductAction(action)
             }
         },
-        contentPadding = PaddingValues(vertical = 10.dp, horizontal = 29.dp),
+        contentPadding = PaddingValues(
+            vertical = MaterialTheme.dimension.medium,
+            horizontal = MaterialTheme.dimension.large
+        ),
         colors = colors,
-        modifier = modifier
+        modifier = modifier,
+        enabled = isActive
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelLarge)
+        Text(text, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -71,6 +87,7 @@ product detail view and those two separate add to cart buttons
 fun ProductBuyButton(
     modifier: Modifier = Modifier,
     productId: Int,
+    isActive: Boolean,
     isInCart: Boolean,
     onInCartChange: (Boolean) -> Unit,
     onProductAction: suspend (ProductAction) -> Boolean
@@ -79,20 +96,30 @@ fun ProductBuyButton(
     val text: String
     val colors: ButtonColors
     val action: ProductAction
-    if (isInCart) {
+    if (!isActive) {
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0, 111, 238, 12),
             contentColor = MaterialTheme.colorScheme.primary
         )
-        text = "В корзине"
-        action = ProductAction.RemoveFromCart(productId, LocalSnackbarHostState.current)
-    } else {
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.tertiary
-        )
-        text = "В корзину"
+        text = "Товара нет в наличии"
+        // button will be disabled
         action = ProductAction.AddToCart(productId, LocalSnackbarHostState.current)
+    } else {
+        if (isInCart) {
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0, 111, 238, 12),
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+            text = "В корзине"
+            action = ProductAction.RemoveFromCart(productId, LocalSnackbarHostState.current)
+        } else {
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.tertiary
+            )
+            text = "В корзину"
+            action = ProductAction.AddToCart(productId, LocalSnackbarHostState.current)
+        }
     }
     Button(
         onClick = {
@@ -100,10 +127,14 @@ fun ProductBuyButton(
                 onInCartChange(onProductAction(action))
             }
         },
-        contentPadding = PaddingValues(vertical = 10.dp, horizontal = 29.dp),
+        contentPadding = PaddingValues(
+            vertical = MaterialTheme.dimension.medium,
+            horizontal = MaterialTheme.dimension.large
+        ),
         colors = colors,
-        modifier = modifier
+        modifier = modifier,
+        enabled = isActive
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelLarge)
+        Text(text, style = MaterialTheme.typography.labelLarge)
     }
 }

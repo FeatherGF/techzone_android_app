@@ -1,10 +1,10 @@
 package com.app.techzone.ui.theme.product_detail.characteristics
 
-import com.app.techzone.utils.boolToString
 import com.app.techzone.data.remote.model.Smartwatch
+import com.app.techzone.utils.boolToString
 
-data class SmartwatchCharacteristics(val smartwatch: Smartwatch): ICharacteristicClass {
-    inner class Common: ICharacteristic {
+data class SmartwatchCharacteristics(val smartwatch: Smartwatch) : ICharacteristicClass {
+    inner class Common : ICharacteristic {
         override val label: String = "Заводские данные о товаре"
         override val items = mapOf(
             "Модель" to smartwatch.model,
@@ -14,7 +14,7 @@ data class SmartwatchCharacteristics(val smartwatch: Smartwatch): ICharacteristi
         )
     }
 
-    inner class Main: ICharacteristic {
+    inner class Main : ICharacteristic {
         override val label: String = "Основные характеристики"
         override val items = mapOf(
             "Цвет товара" to smartwatch.colorMain,
@@ -32,7 +32,7 @@ data class SmartwatchCharacteristics(val smartwatch: Smartwatch): ICharacteristi
         )
     }
 
-    inner class Battery: ICharacteristic {
+    inner class Battery : ICharacteristic {
         override val label: String = "Питание"
         override val items: Map<String, String> = mapOf(
             "Быстрая зарядка (Fast-charge)" to boolToString(smartwatch.fastCharge),
@@ -41,7 +41,7 @@ data class SmartwatchCharacteristics(val smartwatch: Smartwatch): ICharacteristi
         )
     }
 
-    inner class Display: ICharacteristic {
+    inner class Display : ICharacteristic {
         override val label: String = "Экран"
         override val items = mapOf(
             "Разрешение экрана" to smartwatch.screenResolution,
@@ -54,23 +54,23 @@ data class SmartwatchCharacteristics(val smartwatch: Smartwatch): ICharacteristi
         )
     }
 
-    inner class Measurements: ICharacteristic {
+    inner class Measurements : ICharacteristic {
         override val label: String = "Размеры"
         override val items = mapOf(
-            "Высота, в сантиметрах" to smartwatch.height.toString(),
-            "Длина, в сантиметрах" to smartwatch.width.toString(),
-            "Толщина, в сантиметрах" to smartwatch.thickness.toString(),
+            "Высота, в миллиметрах" to smartwatch.height.toString(),
+            "Длина, в миллиметрах" to smartwatch.width.toString(),
+            "Толщина, в миллиметрах" to smartwatch.thickness.toString(),
         )
     }
 
-    inner class Memory: ICharacteristic {
+    inner class Memory : ICharacteristic {
         override val label: String = "Память"
         override val items = mapOf(
             "Встроенная память, в ГБ" to smartwatch.memory.toString(),
             "Оперативная память, в ГБ" to smartwatch.memoryRam.toString(),
         )
     }
-    
+
     override val allInfo: List<ICharacteristic> = listOf(
         Main(),
         Common(),

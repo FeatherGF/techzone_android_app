@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.app.techzone.model.Sorting
 import com.app.techzone.model.sortingOptions
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.dimension
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -51,21 +52,27 @@ fun FiltersAndSorting(
     var showSortingSheet by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
-            .padding(bottom = 8.dp)
+            .padding(bottom = MaterialTheme.dimension.small)
             .fillMaxWidth()
-            .height(40.dp),
+            .height(MaterialTheme.dimension.extraLarge),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        CatalogButton(text = selectedSorting.text,
+        CatalogButton(
+            text = selectedSorting.text,
             icon = Icons.AutoMirrored.Filled.Sort,
-            onClick = { showSortingSheet = true })
-        CatalogButton(text = "Фильтры", icon = Icons.Outlined.FilterAlt, onClick = suspend {
-            // let button animation take place before changing ui state,
-            // which blocks button animation completely
-            delay(70L)
-            showFilters()
-        })
+            onClick = { showSortingSheet = true }
+        )
+        CatalogButton(
+            text = "Фильтры",
+            icon = Icons.Outlined.FilterAlt,
+            onClick = suspend {
+                // let button animation take place before changing ui state,
+                // which blocks button animation completely
+                delay(70L)
+                showFilters()
+            }
+        )
     }
     if (showSortingSheet) {
         ModalBottomSheet(
@@ -75,8 +82,12 @@ fun FiltersAndSorting(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 36.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                    .padding(
+                        start = MaterialTheme.dimension.extendedMedium,
+                        end = MaterialTheme.dimension.extendedMedium,
+                        bottom = MaterialTheme.dimension.larger
+                    ),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.mediumLarge)
             ) {
                 Text(
                     "Сортировка",
@@ -96,7 +107,7 @@ fun FiltersAndSorting(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
+                                .height(MaterialTheme.dimension.huge)
                                 .selectable(
                                     selected = selectedSorting.text == sortingOption.text,
                                     onClick = {
@@ -107,7 +118,7 @@ fun FiltersAndSorting(
                                 ), verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
-                                modifier = Modifier.padding(start = 34.dp, end = 34.dp),
+                                modifier = Modifier.padding(horizontal = MaterialTheme.dimension.larger),
                                 checked = selectedSorting.text == sortingOption.text,
                                 onCheckedChange = null
                             )
@@ -133,17 +144,19 @@ fun FiltersAndSorting(
 private fun CatalogButton(text: String, icon: ImageVector, onClick: suspend () -> Unit) {
     val scope = rememberCoroutineScope()
     OutlinedButton(
-        onClick = {
-            scope.launch { onClick() }
-        }, border = null, colors = ButtonDefaults.buttonColors(
+        onClick = { scope.launch { onClick() } },
+        border = null, colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.background,
             contentColor = MaterialTheme.colorScheme.primary
-        ), contentPadding = PaddingValues(start = 12.dp, end = 16.dp)
+        ),
+        contentPadding = PaddingValues(
+            start = MaterialTheme.dimension.medium, end = MaterialTheme.dimension.extendedMedium
+        )
     ) {
         Icon(
             modifier = Modifier
-                .padding(end = 8.dp)
-                .size(18.dp),
+                .padding(end = MaterialTheme.dimension.small)
+                .size(MaterialTheme.dimension.mediumLarge),
             imageVector = icon,
             contentDescription = text,
         )

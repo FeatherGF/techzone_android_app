@@ -36,13 +36,13 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import com.app.techzone.LocalNavController
 import com.app.techzone.R
 import com.app.techzone.data.remote.model.AuthResult
 import com.app.techzone.ui.theme.RoundBorder100
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.auth.AuthState
 import com.app.techzone.ui.theme.profile.auth.AuthUiEvent
@@ -77,7 +77,7 @@ fun AuthTopBar() {
             tint = MaterialTheme.colorScheme.primary
         )
     }
-    LoginText(paddingTop = 28.dp)
+    LoginText(paddingTop = MaterialTheme.dimension.large)
 }
 
 @Composable
@@ -91,7 +91,7 @@ fun EnterEmailAddress(
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 20.dp),
+            .padding(top = MaterialTheme.dimension.mediumLarge),
         value = state.authEmail,
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedContainerColor = Color.Companion.White,
@@ -113,7 +113,7 @@ fun EnterEmailAddress(
     )
     Button(
         modifier = Modifier
-            .padding(bottom = 20.dp)
+            .padding(bottom = MaterialTheme.dimension.mediumLarge)
             .fillMaxWidth(),
         onClick = {
             if (!android.util.Patterns.EMAIL_ADDRESS.matcher(state.authEmail).matches()) {
@@ -165,7 +165,7 @@ fun EnterAuthCode(
     Row(
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier
-            .padding(12.dp)
+            .padding(MaterialTheme.dimension.medium)
             .fillMaxWidth()
     ) {
         Text(
@@ -187,7 +187,7 @@ fun EnterAuthCode(
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 20.dp)
+            .padding(top = MaterialTheme.dimension.mediumLarge)
             .background(MaterialTheme.colorScheme.tertiary),
         value = state.authCode,
         onValueChange = {
@@ -195,7 +195,7 @@ fun EnterAuthCode(
             if (errorText.isNotBlank()){
                 errorText = ""
             }
-            if (state.authCode.length == 5){
+            if (state.authCode.length in 5..6){
                 if (!state.authCode.isDigitsOnly()){
                     errorText = "Неверный формат. Принимаются только цифры"
                     return@OutlinedTextField
@@ -228,13 +228,13 @@ fun EnterAuthCode(
     if (resendAuthCodeCountDown > 0){
         Text(
             "Отправить повторно через $resendAuthCodeCountDown сек.",
-            modifier = Modifier.padding(top = 26.dp),
+            modifier = Modifier.padding(top = MaterialTheme.dimension.large),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
         )
     } else {
         OutlinedButton(
-            modifier = Modifier.padding(top = 16.dp),
+            modifier = Modifier.padding(top = MaterialTheme.dimension.extendedMedium),
             onClick = {
                 resendAuthCodeCountDown = 60
                 onEmailResend()
@@ -280,7 +280,11 @@ fun Authorization(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.tertiary)
             .fillMaxSize()
-            .padding(top = 36.dp, start = 16.dp, end = 16.dp),
+            .padding(
+                top = MaterialTheme.dimension.larger,
+                start = MaterialTheme.dimension.extendedMedium,
+                end = MaterialTheme.dimension.extendedMedium
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         when (authResultState){

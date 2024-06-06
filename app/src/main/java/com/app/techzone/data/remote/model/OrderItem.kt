@@ -8,6 +8,7 @@ import com.google.gson.annotations.SerializedName
 interface IOrderItemProduct : IBaseProduct {
     val quantity: Int
     val reviewId: Int?
+    val isDeleted: Boolean
 }
 
 data class OrderItemProduct(
@@ -16,10 +17,12 @@ data class OrderItemProduct(
     override val price: Int,
     override val photos: List<Photo>?,
     override val quantity: Int,
+    @SerializedName("is_active") override val isActive: Boolean,
     @SerializedName("discount") override val discountPercentage: Int,
     @SerializedName("reviews_count") override val reviewsCount: Int,
     @SerializedName("average_rating") override val rating: Float?,
     @SerializedName("id_review") override val reviewId: Int?,
+    @SerializedName("is_deleted") override val isDeleted: Boolean,
 ) : IOrderItemProduct
 
 data class OrderItem(
@@ -37,6 +40,7 @@ fun List<OrderItem>.totalDiscountPrice(): Int {
     if (isEmpty()) return 0
     return this
         .associate {
+            if (it.mutableQuantity.intValue == null) return 0
             (it.product.price to it.product.discountPercentage) to it.mutableQuantity.intValue
         }.map { (pair, quantity) ->
             calculateDiscount(

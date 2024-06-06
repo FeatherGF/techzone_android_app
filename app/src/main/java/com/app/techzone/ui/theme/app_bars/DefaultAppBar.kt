@@ -21,10 +21,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.app.techzone.R
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.dimension
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,17 +38,27 @@ fun DefaultAppBar(onSearchOpened: () -> Unit) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp, top = 60.dp)
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.mediumLarge),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    bottom = MaterialTheme.dimension.large,
+                    top = MaterialTheme.dimension.huge,
+                    start = MaterialTheme.dimension.extendedMedium,
+                    end = MaterialTheme.dimension.extendedMedium
+                )
         ) {
             Row(Modifier.fillMaxWidth(0.42f)) {
                 Image(
                     painter = painterResource(R.drawable.ic_logo),
                     contentDescription = null,
+                    contentScale = ContentScale.FillWidth
                 )
             }
             SearchBar(
-                modifier = Modifier.consumeWindowInsets(PaddingValues(10000.dp)),
+                modifier = Modifier
+                    .consumeWindowInsets(PaddingValues(10000.dp))
+                    .fillMaxWidth(),
                 query = "",
                 onQueryChange = {},
                 onSearch = {},

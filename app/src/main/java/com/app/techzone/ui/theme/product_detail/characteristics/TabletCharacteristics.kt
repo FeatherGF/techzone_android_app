@@ -1,10 +1,10 @@
 package com.app.techzone.ui.theme.product_detail.characteristics
 
-import com.app.techzone.utils.boolToString
 import com.app.techzone.data.remote.model.Tablet
+import com.app.techzone.utils.boolToString
 
-data class TabletCharacteristics(val tablet: Tablet): ICharacteristicClass {
-    inner class Common: ICharacteristic {
+data class TabletCharacteristics(val tablet: Tablet) : ICharacteristicClass {
+    inner class Common : ICharacteristic {
         override val label: String = "Заводские данные о товаре"
         override val items: Map<String, String> = mapOf(
             "Модель" to tablet.model,
@@ -14,7 +14,7 @@ data class TabletCharacteristics(val tablet: Tablet): ICharacteristicClass {
         )
     }
 
-    inner class Main: ICharacteristic {
+    inner class Main : ICharacteristic {
         override val label: String = "Основные характеристики"
         override val items: Map<String, String> = mapOf(
             "Цвет товара" to tablet.colorMain,
@@ -28,7 +28,7 @@ data class TabletCharacteristics(val tablet: Tablet): ICharacteristicClass {
         )
     }
 
-    inner class Battery: ICharacteristic {
+    inner class Battery : ICharacteristic {
         override val label: String = "Питание"
         override val items: Map<String, String> = mapOf(
             "Быстрая зарядка (Fast-charge)" to boolToString(tablet.fastCharge),
@@ -37,7 +37,7 @@ data class TabletCharacteristics(val tablet: Tablet): ICharacteristicClass {
         )
     }
 
-    inner class Camera: ICharacteristic {
+    inner class Camera : ICharacteristic {
         override val label: String = "Камера"
         override val items: Map<String, String> = mapOf(
             "Количество основных камер" to tablet.numberCameras.toString(),
@@ -48,7 +48,7 @@ data class TabletCharacteristics(val tablet: Tablet): ICharacteristicClass {
         )
     }
 
-    inner class Display: ICharacteristic {
+    inner class Display : ICharacteristic {
         override val label: String = "Экран"
         override val items: Map<String, String> = mapOf(
             "Разрешение экрана" to tablet.screenResolution,
@@ -60,7 +60,7 @@ data class TabletCharacteristics(val tablet: Tablet): ICharacteristicClass {
         )
     }
 
-    inner class Communication: ICharacteristic {
+    inner class Communication : ICharacteristic {
         override val label: String = "Связь"
         override val items: Map<String, String> = mapOf(
             "Поддержка Lte" to boolToString(tablet.supportLte),
@@ -69,7 +69,7 @@ data class TabletCharacteristics(val tablet: Tablet): ICharacteristicClass {
         )
     }
 
-    inner class MemoryAndProcessor: ICharacteristic {
+    inner class MemoryAndProcessor : ICharacteristic {
         override val label: String = "Память и процессор"
         override val items: Map<String, String> = mapOf(
             "Оперативная память, в ГБ" to tablet.memoryRam.toString(),
@@ -80,15 +80,15 @@ data class TabletCharacteristics(val tablet: Tablet): ICharacteristicClass {
         )
     }
 
-    inner class Measurements: ICharacteristic {
+    inner class Measurements : ICharacteristic {
         override val label: String = "Размеры"
         override val items = mapOf(
-            "Высота, в сантиметрах" to tablet.height.toString(),
-            "Длина, в сантиметрах" to tablet.width.toString(),
-            "Толщина, в сантиметрах" to tablet.thickness.toString(),
+            "Высота, в миллиметрах" to tablet.height.toString(),
+            "Длина, в миллиметрах" to tablet.width.toString(),
+            "Толщина, в миллиметрах" to tablet.thickness.toString(),
         )
     }
-    
+
     override val allInfo: List<ICharacteristic> = listOf(
         Main(),
         Common(),

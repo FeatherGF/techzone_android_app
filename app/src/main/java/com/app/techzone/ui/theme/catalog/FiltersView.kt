@@ -44,6 +44,7 @@ import com.app.techzone.data.remote.model.IPriceFilter
 import com.app.techzone.data.remote.model.IProductFilter
 import com.app.techzone.data.remote.model.PriceVariant
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.reusables.PriceRangeField
 import com.app.techzone.utils.DEFAULT_MAX_PRICE
 import com.app.techzone.utils.DEFAULT_MIN_PRICE
@@ -110,14 +111,22 @@ fun FiltersView(
         onBackClicked()
         clearFilters()
     }
-    Box(Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background)) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background)) {
         Column {
             FiltersTopBar(clearFilters = clearFilters, onBackClicked = onBackClicked)
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 144.dp),
-                verticalArrangement = Arrangement.spacedBy(28.dp)
+                    .padding(
+                        start = MaterialTheme.dimension.extendedMedium,
+                        end = MaterialTheme.dimension.extendedMedium,
+                        top = MaterialTheme.dimension.large,
+                        bottom = MaterialTheme.dimension.extraLarge * 3.6f
+                    ),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.large)
             ) {
                 Column {
                     Text(
@@ -128,8 +137,8 @@ fun FiltersView(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(top = MaterialTheme.dimension.extendedMedium),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)
                     ) {
                         PriceRangeField(
                             Modifier.weight(0.45f),
@@ -189,7 +198,8 @@ fun FiltersView(
                         steps = steps,
                         valueRange = minPrice.toFloat()..maxPrice.toFloat(),
                         onValueChange = { range ->
-                            sliderPosition = range
+                            if (minPrice != maxPrice)
+                                sliderPosition = range
 
                             val rangeStart = range.start.roundToInt()
                             val rangeEnd = range.endInclusive.roundToInt()
@@ -240,7 +250,7 @@ fun FiltersView(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(56.dp)
+                                        .height(MaterialTheme.dimension.huge)
                                         .selectable(
                                             selected = selectedPriceRanges.any { it.label == label },
                                             onClick = {
@@ -266,10 +276,11 @@ fun FiltersView(
                                                     ?: maxPrice).toFloat()
                                             },
                                             role = Role.Checkbox
-                                        ), verticalAlignment = Alignment.CenterVertically
+                                        ),
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Checkbox(
-                                        modifier = Modifier.padding(start = 34.dp, end = 34.dp),
+                                        modifier = Modifier.padding(horizontal = MaterialTheme.dimension.larger),
                                         checked = selectedPriceRanges.any { it.label == label },
                                         onCheckedChange = null
                                     )
@@ -280,11 +291,8 @@ fun FiltersView(
                                     )
                                 }
 
-                                if (index != prices.variants.size - 1) HorizontalDivider(
-                                    color = ForStroke.copy(
-                                        alpha = 0.1f
-                                    )
-                                )
+                                if (index != prices.variants.size - 1)
+                                    HorizontalDivider(color = ForStroke)
                             }
                         }
                     }
@@ -293,7 +301,7 @@ fun FiltersView(
                 // Other filters
                 if (productFilters.isNotEmpty()) {
                     productFilters.forEach { filter ->
-                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extendedMedium)) {
                             Text(
                                 filter.label,
                                 style = MaterialTheme.typography.titleLarge,
@@ -321,7 +329,7 @@ fun FiltersView(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .height(56.dp)
+                                            .height(MaterialTheme.dimension.huge)
                                             .selectable(
                                                 selected = selected, onClick = {
                                                     mutableSelectedFilters.update { mapping ->
@@ -340,7 +348,7 @@ fun FiltersView(
                                             ), verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Checkbox(
-                                            modifier = Modifier.padding(start = 34.dp, end = 34.dp),
+                                            modifier = Modifier.padding(horizontal = MaterialTheme.dimension.larger),
                                             checked = selected,
                                             onCheckedChange = null
                                         )
@@ -368,7 +376,10 @@ fun FiltersView(
             shadowElevation = 12.dp,
             border = BorderStroke(width = 1.dp, color = ForStroke),
         ) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            Column(
+                Modifier.padding(MaterialTheme.dimension.extendedMedium),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(), onClick = {
                         clearFilters()
@@ -404,16 +415,21 @@ fun FiltersTopBar(
 ) =
     Surface(
         modifier = Modifier
-            .height(120.dp)
+            .height(MaterialTheme.dimension.huge * 2)
             .fillMaxWidth(),
         color = MaterialTheme.colorScheme.tertiary,
         border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
     ) {
         Row(
             modifier = Modifier
-                .padding(start = 16.dp, top = 56.dp, end = 16.dp, bottom = 16.dp)
+                .padding(
+                    start = MaterialTheme.dimension.extendedMedium,
+                    top = MaterialTheme.dimension.huge,
+                    end = MaterialTheme.dimension.extendedMedium,
+                    bottom = MaterialTheme.dimension.extendedMedium
+                )
                 .fillMaxWidth()
-                .height(48.dp),
+                .height(MaterialTheme.dimension.extraLarge),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

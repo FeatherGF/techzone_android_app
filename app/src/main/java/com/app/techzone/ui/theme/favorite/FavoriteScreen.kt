@@ -23,9 +23,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
 import com.app.techzone.data.remote.model.BaseProduct
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.reusables.WideProductCard
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.CheckProductStatus
@@ -80,13 +80,17 @@ private fun EmptyFavoriteScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(start = 16.dp, end = 16.dp, top = 120.dp),
+            .padding(
+                start = MaterialTheme.dimension.extendedMedium,
+                end = MaterialTheme.dimension.extendedMedium,
+                top = MaterialTheme.dimension.huge * 2
+            ),
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
                 imageVector = Icons.Outlined.FavoriteBorder,
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
+                modifier = Modifier.size(MaterialTheme.dimension.huge),
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
@@ -94,10 +98,10 @@ private fun EmptyFavoriteScreen() {
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
                 modifier = Modifier.padding(
-                    top = 12.dp,
-                    bottom = 16.dp,
-                    end = 43.dp,
-                    start = 43.dp
+                    top = MaterialTheme.dimension.medium,
+                    bottom = MaterialTheme.dimension.extendedMedium,
+                    end = MaterialTheme.dimension.extraLarge,
+                    start = MaterialTheme.dimension.extraLarge
                 ),
                 textAlign = TextAlign.Center
             )
@@ -123,8 +127,12 @@ private fun FavoriteList(
 ) {
     LazyColumn(
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(start = 16.dp, top = 32.dp, end = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(
+            start = MaterialTheme.dimension.extendedMedium,
+            top = MaterialTheme.dimension.larger,
+            end = MaterialTheme.dimension.extendedMedium
+        ),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)
     ) {
         item {
             Row {

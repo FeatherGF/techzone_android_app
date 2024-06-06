@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -22,8 +23,8 @@ import com.app.techzone.ui.theme.favorite.FavoriteScreen
 import com.app.techzone.ui.theme.main.MainScreenRoot
 import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.ui.theme.orders.OrderScreenRoot
-import com.app.techzone.ui.theme.payment_selection.PaymentSelectionRoot
-import com.app.techzone.ui.theme.payment_selection.PaymentViewModel
+import com.app.techzone.ui.theme.payment_selection.PaymentSelection
+import com.app.techzone.ui.theme.payment_selection.PaymentSelectionViewmodel
 import com.app.techzone.ui.theme.privacy_policy.PrivacyPolicy
 import com.app.techzone.ui.theme.product_detail.ProductDetailScreen
 import com.app.techzone.ui.theme.profile.UserViewModel
@@ -37,9 +38,10 @@ import com.app.techzone.ui.theme.reviews.ReviewScreenRoot
 fun Main(navController: NavHostController) {
     val userViewModel = hiltViewModel<UserViewModel>()
     val searchViewModel = hiltViewModel<SearchViewModel>()
-    val paymentViewModel = hiltViewModel<PaymentViewModel>()
     val catalogViewModel = hiltViewModel<CatalogViewModel>()
     val productViewModel = hiltViewModel<ProductViewModel>()
+
+    val paymentViewModel = viewModel<PaymentSelectionViewmodel>()
 
     val authResultState by userViewModel.authResults.collectAsState(userViewModel.initialState)
 
@@ -50,6 +52,7 @@ fun Main(navController: NavHostController) {
             userViewModel.loadCart()
             userViewModel.loadFavorites()
         }
+        productViewModel.loadBanners()
     }
     val cartItems by userViewModel.cartItems.collectAsState()
     val favorites by userViewModel.favorites.collectAsState()
@@ -113,15 +116,17 @@ fun Main(navController: NavHostController) {
             }
             composable(
                 ScreenRoutes.PURCHASE + "?orderItem={orderItem}",
-                arguments = listOf(navArgument("orderItem") {type = NavType.IntArrayType})
+                arguments = listOf(navArgument("orderItem") { type = NavType.IntArrayType })
             ) { backStackEntry ->
                 val orderItemIds = backStackEntry.arguments?.getIntArray("orderItem")
                 searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
-                PurchaseScreenRoot(
-                    userViewModel = userViewModel,
-                    paymentViewModel = paymentViewModel,
-                    orderItemIds = orderItemIds!!.toList()
-                )
+                orderItemIds?.let {
+                    PurchaseScreenRoot(
+                        userViewModel = userViewModel,
+                        paymentViewModel = paymentViewModel,
+                        orderItemIds = it.toList()
+                    )
+                }
             }
             composable(ScreenRoutes.ORDERS) {
                 searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
@@ -149,7 +154,7 @@ fun Main(navController: NavHostController) {
             }
             composable(ScreenRoutes.PAY_METHOD){
                 searchViewModel.updateSearchTopBarState(SearchTopBarState.HIDDEN)
-                PaymentSelectionRoot(paymentViewModel)
+                PaymentSelection(paymentViewModel)
             }
             composable(ScreenRoutes.FAVORITE) {
                 searchViewModel.updateSearchTopBarState(SearchTopBarState.CLOSED)

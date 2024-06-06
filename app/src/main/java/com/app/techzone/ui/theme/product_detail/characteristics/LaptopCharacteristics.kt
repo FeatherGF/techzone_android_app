@@ -1,10 +1,10 @@
 package com.app.techzone.ui.theme.product_detail.characteristics
 
-import com.app.techzone.utils.boolToString
 import com.app.techzone.data.remote.model.Laptop
+import com.app.techzone.utils.boolToString
 
-data class LaptopCharacteristics(val laptop: Laptop): ICharacteristicClass {
-    inner class Common: ICharacteristic {
+data class LaptopCharacteristics(val laptop: Laptop) : ICharacteristicClass {
+    inner class Common : ICharacteristic {
         override val label: String = "Заводские данные о товаре"
         override val items = mapOf(
             "Модель" to laptop.model,
@@ -14,7 +14,7 @@ data class LaptopCharacteristics(val laptop: Laptop): ICharacteristicClass {
         )
     }
 
-    inner class Main: ICharacteristic {
+    inner class Main : ICharacteristic {
         override val label: String = "Основные характеристики"
         override val items = mapOf(
             "Цвет товара" to laptop.colorMain,
@@ -29,16 +29,16 @@ data class LaptopCharacteristics(val laptop: Laptop): ICharacteristicClass {
         )
     }
 
-    inner class Measurements: ICharacteristic {
+    inner class Measurements : ICharacteristic {
         override val label: String = "Размеры"
         override val items = mapOf(
-            "Высота, в сантиметрах" to laptop.height.toString(),
-            "Длина, в сантиметрах" to laptop.width.toString(),
-            "Толщина, в сантиметрах" to laptop.thickness.toString(),
+            "Высота, в миллиметрах" to laptop.height.toString(),
+            "Длина, в миллиметрах" to laptop.width.toString(),
+            "Толщина, в миллиметрах" to laptop.thickness.toString(),
         )
     }
 
-    inner class Memory: ICharacteristic {
+    inner class Memory : ICharacteristic {
         override val label: String = "Память"
         override val items = mapOf(
             "Встроенная память, в ГБ" to laptop.memory.toString(),
@@ -46,7 +46,7 @@ data class LaptopCharacteristics(val laptop: Laptop): ICharacteristicClass {
         )
     }
 
-    inner class InputDevices: ICharacteristic {
+    inner class InputDevices : ICharacteristic {
         override val label: String = "Устройства ввода"
         override val items = mapOf(
             "Раскладка клавиатуры" to laptop.keyboardLayout,
@@ -64,7 +64,7 @@ data class LaptopCharacteristics(val laptop: Laptop): ICharacteristicClass {
         )
     }
 
-    inner class Display: ICharacteristic {
+    inner class Display : ICharacteristic {
         override val label: String = "Экран"
         override val items = mapOf(
             "Разрешение экрана" to laptop.screenResolution,
@@ -76,7 +76,7 @@ data class LaptopCharacteristics(val laptop: Laptop): ICharacteristicClass {
         )
     }
 
-    inner class GraphicAccelerator: ICharacteristic {
+    inner class GraphicAccelerator : ICharacteristic {
         override val label: String = "Графический ускоритель"
         override val items = mapOf(
             "Вид графического ускорителя" to laptop.typeGraphicsAccelerator,

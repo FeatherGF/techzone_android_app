@@ -48,6 +48,7 @@ import com.app.techzone.data.remote.model.OrderStatus
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.Success
 import com.app.techzone.ui.theme.SuccessHalfOpacity
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.reusables.ProductImageOrPreview
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.CheckProductStatus
@@ -107,21 +108,28 @@ private fun EmptyOrderHistory() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(start = 16.dp, end = 16.dp, top = 120.dp),
+                .padding(
+                    start = MaterialTheme.dimension.extendedMedium,
+                    end = MaterialTheme.dimension.extendedMedium,
+                    top = MaterialTheme.dimension.huge * 2
+                ),
             contentAlignment = Alignment.TopCenter
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
                     imageVector = Icons.Outlined.Inventory2,
                     contentDescription = null,
-                    modifier = Modifier.size(80.dp),
+                    modifier = Modifier.size(MaterialTheme.dimension.extraLarge * 2),
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     "У вас пока нет заказов",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
-                    modifier = Modifier.padding(top = 12.dp, bottom = 16.dp),
+                    modifier = Modifier.padding(
+                        top = MaterialTheme.dimension.medium,
+                        bottom = MaterialTheme.dimension.extendedMedium
+                    ),
                     textAlign = TextAlign.Center
                 )
                 Button(onClick = { navController.navigate(ScreenRoutes.CATALOG) }) {
@@ -145,7 +153,12 @@ private fun OrdersTopBar() {
             .fillMaxWidth()
             .border(width = 1.dp, color = ForStroke)
             .background(color = MaterialTheme.colorScheme.tertiary)
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 40.dp),
+            .padding(
+                start = MaterialTheme.dimension.extendedMedium,
+                end = MaterialTheme.dimension.extendedMedium,
+                bottom = MaterialTheme.dimension.extendedMedium,
+                top = MaterialTheme.dimension.extraLarge
+            ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -193,12 +206,12 @@ private fun OrderHistory(
                 Modifier
                     .background(MaterialTheme.colorScheme.tertiary)
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(MaterialTheme.dimension.extendedMedium),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraSmall)) {
                         Text(
                             "№ ${order.id}",
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
@@ -233,7 +246,11 @@ private fun OrderHistory(
                             containerColor = SuccessHalfOpacity
                             textColor = Success
                         }
-
+                        OrderStatus.NOT_PAID -> {
+                            text = "Не оплачен"
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                            textColor = MaterialTheme.colorScheme.error
+                        }
                         else -> { // not possible here
                             text = ""
                             containerColor = Color.Unspecified
@@ -248,14 +265,17 @@ private fun OrderHistory(
                         Text(
                             text,
                             style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(
+                                horizontal = MaterialTheme.dimension.medium,
+                                vertical = MaterialTheme.dimension.small
+                            )
                         )
                     }
 
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium)) {
                         order.orderItems.forEach { orderItem ->
                             ProductImageOrPreview(
-                                Modifier.size(60.dp),
+                                Modifier.size(MaterialTheme.dimension.huge),
                                 photos = orderItem.product.photos,
                                 filterQuality = FilterQuality.None
                             )

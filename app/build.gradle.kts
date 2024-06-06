@@ -25,7 +25,6 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-//            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -59,6 +58,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 
+    // Open browser inside app for payment
+    implementation("androidx.browser:browser:1.8.0")
+
     // splash screen
     implementation("androidx.core:core-splashscreen:1.0.1")
 
@@ -68,14 +70,19 @@ dependencies {
     // Material design
     implementation("androidx.compose.material3:material3:1.2.1")
 
+    // Adaptive
+    implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
+    implementation("androidx.compose.material3:material3-adaptive-android:1.0.0-alpha06")
+
     // EncryptedSharedPreferences
     implementation("androidx.security:security-crypto:1.0.0")
+    implementation("com.google.crypto.tink:tink-android:1.8.0")
 
     // Jetpack Compose
     val composeBom = platform("androidx.compose:compose-bom:2024.03.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
-    implementation("androidx.compose.material:material-icons-extended:1.6.7")
+    implementation("androidx.compose.material:material-icons-extended:1.6.8")
 
     // Android Studio Preview support
     implementation("androidx.compose.ui:ui-tooling-preview")

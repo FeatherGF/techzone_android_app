@@ -25,6 +25,7 @@ import com.app.techzone.LocalNavController
 import com.app.techzone.model.categories
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.app_bars.SearchUiEvent
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 
 
@@ -34,13 +35,20 @@ fun CatalogScreen(onEvent: (SearchUiEvent) -> Unit) {
     Column(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
         Text(
             text = "Каталог",
-            modifier = Modifier.padding(start = 16.dp, top = 28.dp),
+            modifier = Modifier.padding(
+                start = MaterialTheme.dimension.extendedMedium,
+                top = MaterialTheme.dimension.large
+            ),
             style = MaterialTheme.typography.titleLarge,
         )
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                .padding(
+                    start = MaterialTheme.dimension.extendedMedium,
+                    end = MaterialTheme.dimension.extendedMedium,
+                    top = MaterialTheme.dimension.medium
+                )
                 .border(
                     color = ForStroke.copy(alpha = 0.1f),
                     width = 1.dp,
@@ -58,7 +66,7 @@ fun CatalogScreen(onEvent: (SearchUiEvent) -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
+                            .height(MaterialTheme.dimension.huge)
                             .clickable {
                                 navController.navigate(
                                     "${ScreenRoutes.CATALOG}/${category.endpoint}"
@@ -68,7 +76,7 @@ fun CatalogScreen(onEvent: (SearchUiEvent) -> Unit) {
                     ) {
                         Row {
                             Icon(
-                                modifier = Modifier.padding(horizontal = 28.dp),
+                                modifier = Modifier.padding(horizontal = MaterialTheme.dimension.large),
                                 imageVector = category.imageVector,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
@@ -82,7 +90,7 @@ fun CatalogScreen(onEvent: (SearchUiEvent) -> Unit) {
                         Icon(
                             imageVector = Icons.Outlined.ChevronRight,
                             contentDescription = null,
-                            modifier = Modifier.padding(end = 36.dp)
+                            modifier = Modifier.padding(end = MaterialTheme.dimension.larger)
                         )
                     }
                     // don't render divider after last, because border will do it

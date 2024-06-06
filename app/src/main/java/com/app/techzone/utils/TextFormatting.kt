@@ -11,13 +11,6 @@ fun formatPrice(price: Int): String {
     return dec.format(price).replace(',', ' ')
 }
 
-fun formatMaskedCard(cardNumber: String): String {
-    return cardNumber
-        .replace(Regex("[0-9](?=.*.{4})"), "*")
-        .chunked(4)
-        .joinToString(separator = " ")
-}
-
 /**
  * @param phoneNumber phone number containing something like `79221110033`
  * @return string representation of a phone number in specified format `+7 (922) 111-00-33`

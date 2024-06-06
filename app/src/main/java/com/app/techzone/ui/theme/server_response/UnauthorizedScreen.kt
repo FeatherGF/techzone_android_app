@@ -17,8 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.LoginText
 
@@ -28,19 +28,19 @@ fun UnauthorizedScreen() {
     Column(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background)
-            .padding(start = 16.dp, top = 100.dp, end = 16.dp)
+            .padding(start = MaterialTheme.dimension.extendedMedium, top = MaterialTheme.dimension.huge, end = MaterialTheme.dimension.extendedMedium)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
-            modifier = Modifier.size(80.dp),
+            modifier = Modifier.size(MaterialTheme.dimension.huge),
             imageVector = Icons.Outlined.Person,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary
         )
         LoginText()
         Text(
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = MaterialTheme.dimension.small),
             textAlign = TextAlign.Center,
             text = "Чтобы сохранять товары\n и совершать покупки",
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
@@ -48,7 +48,7 @@ fun UnauthorizedScreen() {
         )
         Button(
             modifier = Modifier
-                .padding(top = 16.dp)
+                .padding(top = MaterialTheme.dimension.extendedMedium)
                 .fillMaxWidth(),
             onClick = { navController.navigate(ScreenRoutes.PROFILE_REGISTRATION) }
         ) {

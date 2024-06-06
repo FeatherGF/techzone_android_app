@@ -68,6 +68,7 @@ import com.app.techzone.data.remote.model.validateUserInfo
 import com.app.techzone.data.remote.repository.ContentUriRequestBody
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder100
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.reusables.ConfirmationModalSheet
 import com.app.techzone.ui.theme.reusables.ProfilePicture
@@ -156,8 +157,13 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                 Modifier
                     .fillMaxWidth()
                     .background(color = MaterialTheme.colorScheme.tertiary)
-                    .padding(start = 20.dp, top = 40.dp, bottom = 16.dp, end = 28.dp),
-                horizontalArrangement = Arrangement.spacedBy(48.dp),
+                    .padding(
+                        start = MaterialTheme.dimension.mediumLarge,
+                        top = MaterialTheme.dimension.extraLarge,
+                        bottom = MaterialTheme.dimension.extendedMedium,
+                        end = MaterialTheme.dimension.large
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraLarge),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = navController::popBackStack) {
@@ -175,7 +181,11 @@ fun EditUserProfile(userViewModel: UserViewModel) {
             }
             Column(
                 modifier = Modifier
-                    .padding(start = 16.dp, top = 28.dp, end = 16.dp)
+                    .padding(
+                        start = MaterialTheme.dimension.extendedMedium,
+                        top = MaterialTheme.dimension.large,
+                        end = MaterialTheme.dimension.extendedMedium
+                    )
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.Center
             ) {
@@ -185,7 +195,7 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                 ) {
                     ProfilePicture(
                         Modifier
-                            .size(100.dp)
+                            .size(MaterialTheme.dimension.mediumLarge * 5)
                             .clickable(
                                 interactionSource = interactionSource,
                                 indication = null,
@@ -195,7 +205,10 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                         imageUri = imageUri
                     )
                     if (isPressed || isHovered) {
-                        val size = if (userPhotoUrl != null || imageUri != null) 100.dp else 84.dp
+                        val size =
+                            if (userPhotoUrl != null || imageUri != null)
+                                MaterialTheme.dimension.mediumLarge * 5
+                            else MaterialTheme.dimension.extraLarge * 2
                         Box(
                             Modifier
                                 .size(size)
@@ -231,10 +244,13 @@ fun EditUserProfile(userViewModel: UserViewModel) {
 
                 var isBottomSheetDeleteUserShown by remember { mutableStateOf(false) }
                 OutlinedButton(
-                    modifier = Modifier.padding(top = 16.dp),
+                    modifier = Modifier.padding(top = MaterialTheme.dimension.extendedMedium),
                     onClick = { isBottomSheetDeleteUserShown = true },
                     border = null,
-                    contentPadding = PaddingValues(start = 12.dp, end = 16.dp)
+                    contentPadding = PaddingValues(
+                        start = MaterialTheme.dimension.medium,
+                        end = MaterialTheme.dimension.extendedMedium
+                    )
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -242,8 +258,8 @@ fun EditUserProfile(userViewModel: UserViewModel) {
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onError,
                             modifier = Modifier
-                                .size(26.dp)
-                                .padding(end = 8.dp)
+                                .size(MaterialTheme.dimension.large)
+                                .padding(end = MaterialTheme.dimension.small)
                         )
                         Text(
                             "Удалить профиль",
@@ -304,7 +320,10 @@ fun EditUserProfile(userViewModel: UserViewModel) {
             Modifier
                 .fillMaxWidth()
                 .border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(
+                    horizontal = MaterialTheme.dimension.extendedMedium,
+                    vertical = MaterialTheme.dimension.small
+                ),
             contentColor = MaterialTheme.colorScheme.tertiary,
         ) {
             Button(
@@ -341,7 +360,10 @@ private fun UserProfile(userViewModel: UserViewModel) {
             Modifier
                 .fillMaxWidth()
                 .background(color = MaterialTheme.colorScheme.tertiary)
-                .padding(top = 40.dp, bottom = 16.dp),
+                .padding(
+                    top = MaterialTheme.dimension.extraLarge,
+                    bottom = MaterialTheme.dimension.extendedMedium
+                ),
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
@@ -352,24 +374,27 @@ private fun UserProfile(userViewModel: UserViewModel) {
         }
         val verticalSpacing =
             if (user?.firstName == null && user?.lastName == null && user?.phoneNumber == null)
-                12.dp
-            else 24.dp
+                MaterialTheme.dimension.medium
+            else MaterialTheme.dimension.large
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .background(color = MaterialTheme.colorScheme.tertiary)
                 .border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f))
-                .padding(horizontal = 16.dp, vertical = verticalSpacing),
+                .padding(
+                    horizontal = MaterialTheme.dimension.extendedMedium,
+                    vertical = verticalSpacing
+                ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ProfilePicture(
-                    Modifier.size(80.dp),
+                    Modifier.size(MaterialTheme.dimension.extraLarge * 2),
                     userPhotoUrl = user?.photoUrl,
                     imageUri = null,
                     iconTint = ForStroke
@@ -382,14 +407,14 @@ private fun UserProfile(userViewModel: UserViewModel) {
                             Row {
                                 Text(
                                     firstName,
-                                    modifier = Modifier.height(28.dp),
+                                    modifier = Modifier.height(MaterialTheme.dimension.larger),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                                 )
                                 it.lastName?.let { lastName ->
                                     Text(
                                         " $lastName",
-                                        modifier = Modifier.height(28.dp),
+                                        modifier = Modifier.height(MaterialTheme.dimension.larger),
                                         style = MaterialTheme.typography.titleLarge,
                                         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                                     )
@@ -398,14 +423,14 @@ private fun UserProfile(userViewModel: UserViewModel) {
                         }
                         Text(
                             it.email,
-                            modifier = Modifier.height(24.dp),
+                            modifier = Modifier.height(MaterialTheme.dimension.large),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.primary
                         )
                         it.phoneNumber?.let { phoneNumber ->
                             Text(
                                 formatPhoneNumber(phoneNumber),
-                                modifier = Modifier.height(20.dp),
+                                modifier = Modifier.height(MaterialTheme.dimension.large),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                             )
@@ -414,13 +439,13 @@ private fun UserProfile(userViewModel: UserViewModel) {
                 }
             }
             IconButton(
-                modifier = Modifier.padding(end = 12.dp),
+                modifier = Modifier.padding(end = MaterialTheme.dimension.medium),
                 onClick = {
                     navController.navigate(ScreenRoutes.EDIT_PROFILE)
                 }
             ) {
                 Icon(
-                    modifier = Modifier.size(30.dp),
+                    modifier = Modifier.size(MaterialTheme.dimension.larger),
                     imageVector = Icons.Outlined.ChevronRight,
                     contentDescription = null,
                 )
@@ -432,8 +457,12 @@ private fun UserProfile(userViewModel: UserViewModel) {
             "Способ оплаты" to ScreenRoutes.PAY_METHOD
         )
         Column(
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(28.dp)
+            modifier = Modifier.padding(
+                start = MaterialTheme.dimension.extendedMedium,
+                end = MaterialTheme.dimension.extendedMedium,
+                top = MaterialTheme.dimension.large
+            ),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.large)
         ) {
             Column(
                 modifier = Modifier
@@ -449,8 +478,8 @@ private fun UserProfile(userViewModel: UserViewModel) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
-                            .padding(start = 16.dp),
+                            .height(MaterialTheme.dimension.huge)
+                            .padding(start = MaterialTheme.dimension.extendedMedium),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -460,11 +489,11 @@ private fun UserProfile(userViewModel: UserViewModel) {
                             color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                         )
                         IconButton(
-                            modifier = Modifier.padding(end = 36.dp),
+                            modifier = Modifier.padding(end = MaterialTheme.dimension.larger),
                             onClick = { navController.navigate(route) }
                         ) {
                             Icon(
-                                modifier = Modifier.size(30.dp),
+                                modifier = Modifier.size(MaterialTheme.dimension.larger),
                                 imageVector = Icons.Outlined.ChevronRight,
                                 contentDescription = null,
                             )
@@ -476,11 +505,11 @@ private fun UserProfile(userViewModel: UserViewModel) {
                 }
             }
             val magazineInfo = mapOf(
-                Icons.Outlined.Place to "Ростов-на-Дону, Пушкина, 1",
-                Icons.Outlined.Phone to "8 (800) 500-26-12",
-                Icons.Outlined.Email to "hello@techzone.ru"
+                Icons.Outlined.Place to "Ростов-на-Дону, 18-линия 8",
+                Icons.Outlined.Phone to "8 (904) 340-55-56",
+                Icons.Outlined.Email to "office@wis.software"
             )
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extendedMedium)) {
                 Text(
                     "О магазине",
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
@@ -499,15 +528,15 @@ private fun UserProfile(userViewModel: UserViewModel) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
-                                .padding(start = 28.dp),
+                                .height(MaterialTheme.dimension.huge)
+                                .padding(start = MaterialTheme.dimension.large),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(end = 28.dp)
+                                modifier = Modifier.padding(end = MaterialTheme.dimension.large)
                             )
                             Text(
                                 text,
@@ -523,10 +552,16 @@ private fun UserProfile(userViewModel: UserViewModel) {
             }
         }
         OutlinedButton(
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+            modifier = Modifier.padding(
+                start = MaterialTheme.dimension.extendedMedium,
+                top = MaterialTheme.dimension.extendedMedium
+            ),
             onClick = { userViewModel.logoutUser() },
             border = null,
-            contentPadding = PaddingValues(start = 12.dp, end = 16.dp)
+            contentPadding = PaddingValues(
+                start = MaterialTheme.dimension.medium,
+                end = MaterialTheme.dimension.extendedMedium
+            )
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -534,8 +569,8 @@ private fun UserProfile(userViewModel: UserViewModel) {
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .size(26.dp)
-                        .padding(end = 8.dp)
+                        .size(MaterialTheme.dimension.large)
+                        .padding(end = MaterialTheme.dimension.small)
                 )
                 Text(
                     "Выйти из профиля",
@@ -549,7 +584,7 @@ private fun UserProfile(userViewModel: UserViewModel) {
 
 
 @Composable
-internal fun LoginText(paddingTop: Dp = 12.dp) =
+internal fun LoginText(paddingTop: Dp = MaterialTheme.dimension.medium) =
     Text(
         modifier = Modifier.padding(top = paddingTop),
         textAlign = TextAlign.Center,

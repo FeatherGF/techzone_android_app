@@ -15,7 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import com.app.techzone.ui.theme.dimension
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +32,11 @@ fun ConfirmationModalSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 23.dp, end = 23.dp, bottom = 23.dp),
+                .padding(
+                    start = MaterialTheme.dimension.large,
+                    end = MaterialTheme.dimension.large,
+                    bottom = MaterialTheme.dimension.large
+                ),
         ) {
             if (confirmationText.isNotEmpty()) {
                 Text(
@@ -45,8 +49,11 @@ fun ConfirmationModalSheet(
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 8.dp)
-                    .height(40.dp),
+                    .padding(
+                        top = MaterialTheme.dimension.medium,
+                        bottom = MaterialTheme.dimension.small
+                    )
+                    .height(MaterialTheme.dimension.extraLarge),
                 onClick = onConfirm
             ) {
                 Text(
@@ -58,7 +65,7 @@ fun ConfirmationModalSheet(
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp),
+                    .height(MaterialTheme.dimension.extraLarge),
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -95,8 +102,12 @@ fun ConfirmationModalSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 23.dp, end = 23.dp, bottom = 23.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+                .padding(
+                    start = MaterialTheme.dimension.large,
+                    end = MaterialTheme.dimension.large,
+                    bottom = MaterialTheme.dimension.large
+                ),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraSmall)
         ) {
             if (confirmationText.isNotEmpty()) {
                 Text(

@@ -51,13 +51,13 @@ fun ProductFavoriteIcon(
                 }
             }
         },
-        modifier = modifier
+        modifier = modifier,
     ) {
         Icon(
             imageVector = if (isFavorite) Icons.Filled.Favorite else {
                 Icons.Outlined.FavoriteBorder
             },
-            contentDescription = null,
+            contentDescription = "favorite icon",
             tint = MaterialTheme.colorScheme.primary,
             modifier = modifier
         )

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.app.techzone.LocalNavController
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.dimension
 
 
 @Composable
@@ -42,7 +43,12 @@ fun PrivacyPolicy() {
                 .fillMaxWidth()
                 .border(width = 1.dp, color = ForStroke)
                 .background(color = MaterialTheme.colorScheme.tertiary)
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 40.dp),
+                .padding(
+                    start = MaterialTheme.dimension.extendedMedium,
+                    end = MaterialTheme.dimension.extendedMedium,
+                    bottom = MaterialTheme.dimension.extendedMedium,
+                    top = MaterialTheme.dimension.extraLarge
+                ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -68,8 +74,13 @@ fun PrivacyPolicy() {
         val privacyPolicyText = PrivacyPolicyText()
         LazyColumn(
             Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 40.dp)
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.large),
+            contentPadding = PaddingValues(
+                start = MaterialTheme.dimension.extendedMedium,
+                end = MaterialTheme.dimension.extendedMedium,
+                top = MaterialTheme.dimension.large,
+                bottom = MaterialTheme.dimension.extraLarge
+            )
         ) {
             items(privacyPolicyText.paragraphs, key = { it.hashCode() }) { paragraph ->
                 PrivacyParagraph(paragraph)
@@ -85,17 +96,15 @@ private fun PrivacyParagraph(paragraph: IPrivacyPolicyParagraph) {
         paragraph.title,
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
-        modifier = Modifier.padding(bottom = 12.dp)
+        modifier = Modifier.padding(bottom = MaterialTheme.dimension.medium)
     )
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)) {
         paragraph.subParagraphs.forEach { subParagraph ->
             Text(
                 subParagraph,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.15f.sp,
-                    lineHeight = 24.sp
-                ),
+                style = MaterialTheme.typography.bodyLarge,
+                letterSpacing = 0.1.sp,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f)
             )
         }

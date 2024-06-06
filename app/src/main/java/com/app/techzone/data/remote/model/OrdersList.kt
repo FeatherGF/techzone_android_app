@@ -14,6 +14,11 @@ data class Order(
 data class CreateOrderRequest(
     @SerializedName("ids_order_items") val orderItemIds: List<Int>,
     @SerializedName("payment_method") val paymentMethod: String,
+    val cost: Int,
+)
+
+data class PaymentRedirect(
+    val url: String?,
 )
 
 data class OrderCreated(

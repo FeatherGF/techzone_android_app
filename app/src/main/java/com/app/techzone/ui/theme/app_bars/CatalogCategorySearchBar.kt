@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
 import com.app.techzone.ui.theme.ForStroke
+import com.app.techzone.ui.theme.dimension
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,9 +42,13 @@ fun CatalogCategorySearchBar(
         Column {
             Row(
                 modifier = Modifier
-                    .padding(bottom = 4.dp)
                     .fillMaxWidth()
-                    .padding(top = 52.dp, start = 16.dp, end = 16.dp),
+                    .padding(
+                        top = MaterialTheme.dimension.extraLarge,
+                        start = MaterialTheme.dimension.extendedMedium,
+                        end = MaterialTheme.dimension.extendedMedium,
+                        bottom = MaterialTheme.dimension.extraSmall
+                    ),
                 horizontalArrangement = Arrangement.Absolute.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -68,7 +73,11 @@ fun CatalogCategorySearchBar(
             SearchBar(
                 modifier = Modifier
                     .consumeWindowInsets(PaddingValues(100.dp))
-                    .padding(start = 16.dp, bottom = 16.dp),
+                    .fillMaxWidth()
+                    .padding(
+                        start = MaterialTheme.dimension.extendedMedium,
+                        bottom = MaterialTheme.dimension.extendedMedium
+                    ),
                 query = "",
                 onQueryChange = {},
                 onSearch = { },

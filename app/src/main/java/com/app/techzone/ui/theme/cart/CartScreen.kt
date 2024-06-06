@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.app.techzone.LocalNavController
 import com.app.techzone.LocalSnackbarHostState
@@ -55,6 +56,7 @@ import com.app.techzone.data.remote.model.totalDiscountPrice
 import com.app.techzone.data.remote.model.totalPrice
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder24
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.CheckProductStatus
 import com.app.techzone.ui.theme.profile.LoadingBox
@@ -120,21 +122,28 @@ private fun EmptyCartScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(start = 16.dp, end = 16.dp, top = 120.dp),
+            .padding(
+                start = MaterialTheme.dimension.extendedMedium,
+                end = MaterialTheme.dimension.extendedMedium,
+                top = MaterialTheme.dimension.huge * 2
+            ),
         contentAlignment = Alignment.TopCenter
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
                 imageVector = Icons.Outlined.ShoppingCart,
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
+                modifier = Modifier.size(MaterialTheme.dimension.huge * 1.2f),
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
                 "Ваша корзина пуста",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
-                modifier = Modifier.padding(top = 12.dp, bottom = 16.dp),
+                modifier = Modifier.padding(
+                    top = MaterialTheme.dimension.medium,
+                    bottom = MaterialTheme.dimension.extendedMedium
+                ),
                 textAlign = TextAlign.Center
             )
             Button(onClick = { navController.navigate(ScreenRoutes.CATALOG) }) {
@@ -158,7 +167,7 @@ private fun CartItemsList(
     val snackbarHostState = LocalSnackbarHostState.current
     val stateProductMapping: Map<MutableState<Boolean>, OrderItem> =
         cartItems.associate { orderItem ->
-            remember { mutableStateOf(true) } to orderItem.also {
+            remember { mutableStateOf(orderItem.product.isActive) } to orderItem.also {
                 it.mutableQuantity = remember { mutableIntStateOf(it.quantity) }
             }
         }
@@ -171,7 +180,9 @@ private fun CartItemsList(
         .filter { (state, _) -> state.value }
         .map { it.value }
         .toList()
-    val bottomPadding = if (selectedItems.isNotEmpty()) (12 + 72).dp else 12.dp
+    val bottomPadding =
+        if (selectedItems.isNotEmpty()) MaterialTheme.dimension.huge + MaterialTheme.dimension.medium
+        else MaterialTheme.dimension.medium
     var deleteProductId: Int? by remember { mutableStateOf(null) }
     var clearCart by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -183,9 +194,14 @@ private fun CartItemsList(
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .padding(start = 11.dp, top = 32.dp, bottom = bottomPadding, end = 16.dp),
+                .padding(
+                    start = MaterialTheme.dimension.medium,
+                    top = MaterialTheme.dimension.larger,
+                    bottom = bottomPadding,
+                    end = MaterialTheme.dimension.extendedMedium
+                ),
         ) {
-            Row(modifier = Modifier.padding(bottom = 12.dp)) {
+            Row(modifier = Modifier.padding(bottom = MaterialTheme.dimension.medium)) {
                 Text(
                     text = "Корзина ",
                     style = MaterialTheme.typography.titleLarge,
@@ -202,16 +218,22 @@ private fun CartItemsList(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 16.dp)
+                    .padding(
+                        top = MaterialTheme.dimension.extendedMedium,
+                        bottom = MaterialTheme.dimension.extendedMedium
+                    )
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Checkbox(
                         checked = areAllChosen,
                         onCheckedChange = {
-                            stateProductMapping.keys.map { state -> state.value = it }
+                            stateProductMapping.map { (state, orderItem) ->
+                                state.value = if (orderItem.product.isActive) it else false
+                            }
+//                            stateProductMapping.keys.map { state -> state.value = it }
                         }
                     )
                     Text(
@@ -222,7 +244,10 @@ private fun CartItemsList(
                 OutlinedButton(
                     onClick = { clearCart = true },
                     border = null,
-                    contentPadding = PaddingValues(start = 12.dp, end = 16.dp)
+                    contentPadding = PaddingValues(
+                        start = MaterialTheme.dimension.medium,
+                        end = MaterialTheme.dimension.extendedMedium
+                    )
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -230,8 +255,8 @@ private fun CartItemsList(
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
-                                .size(26.dp)
-                                .padding(end = 8.dp)
+                                .size(MaterialTheme.dimension.large)
+                                .padding(end = MaterialTheme.dimension.small)
                         )
                         Text(
                             "Удалить все",
@@ -242,18 +267,19 @@ private fun CartItemsList(
                 }
             }
 
-            stateProductMapping.forEach { (state, product) ->
+            stateProductMapping.forEach { (state, orderItem) ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium),
+                    modifier = Modifier.padding(bottom = MaterialTheme.dimension.small)
                 ) {
                     Checkbox(
                         checked = state.value,
+                        enabled = orderItem.product.isActive,
                         onCheckedChange = { state.value = it }
                     )
                     CartItemCard(
-                        orderItem = product,
+                        orderItem = orderItem,
                         onProductCheckStatus = onProductCheckStatus,
                         onProductAction = onProductAction,
                         onShowModal = { deleteProductId = it }
@@ -267,7 +293,7 @@ private fun CartItemsList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .height(72.dp),
+                    .height(MaterialTheme.dimension.huge + MaterialTheme.dimension.medium),
                 shadowElevation = 12.dp,
                 color = MaterialTheme.colorScheme.tertiary,
                 contentColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
@@ -276,12 +302,15 @@ private fun CartItemsList(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(
+                            horizontal = MaterialTheme.dimension.medium,
+                            vertical = MaterialTheme.dimension.small
+                        ),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraSmall),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -296,7 +325,7 @@ private fun CartItemsList(
                         }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)
                         ) {
                             val totalDiscountPrice = selectedItems.totalDiscountPrice()
                             val totalPrice = selectedItems.totalPrice()
@@ -316,7 +345,10 @@ private fun CartItemsList(
                             navController.navigate("${ScreenRoutes.PURCHASE}?$orderItemIdsQuery")
                         },
                         modifier = Modifier.wrapContentWidth(),
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                        contentPadding = PaddingValues(
+                            horizontal = MaterialTheme.dimension.large,
+                            vertical = MaterialTheme.dimension.medium
+                        )
                     ) {
                         Text(
                             "К оформлению",
@@ -391,19 +423,24 @@ private fun CartItemCard(
         border = BorderStroke(width = 1.dp, color = ForStroke.copy(alpha = 0.1f)),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            modifier = Modifier.padding(MaterialTheme.dimension.extendedMedium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.mediumLarge)
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ProductImageOrPreview(Modifier.size(110.dp), photos = orderItem.product.photos)
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ProductImageOrPreview(
+                    Modifier.size(MaterialTheme.dimension.huge * 2),
+                    photos = orderItem.product.photos
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)) {
                     Text(
                         orderItem.product.name,
                         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
                     )
                     ProductCrossedPrice(
                         price = orderItem.product.price,
@@ -424,24 +461,24 @@ private fun CartItemCard(
             }
             Row(
                 modifier = Modifier
-                    .height(40.dp)
+                    .height(MaterialTheme.dimension.extraLarge)
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extendedMedium),
                 ) {
                     ProductFavoriteIcon(
-                        Modifier.size(28.dp),
+                        Modifier.size(MaterialTheme.dimension.larger),
                         productId = orderItem.product.id,
                         onProductCheckStatus = onProductCheckStatus,
                         onProductAction = onProductAction,
                     )
                     IconButton(
                         onClick = { onShowModal(orderItem.product.id) },
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(MaterialTheme.dimension.larger)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteOutline,
@@ -451,48 +488,56 @@ private fun CartItemCard(
                     }
                 }
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { quantity-- },
-                        enabled = quantity > 1,
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.primary
+                    if (!orderItem.product.isActive){
+                        Text(
+                            "Товара нет в наличии",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                         )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Remove,
-                            contentDescription = null,
+                    } else {
+                        IconButton(
+                            onClick = { quantity-- },
+                            enabled = quantity > 1,
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Remove,
+                                contentDescription = null,
+                            )
+                        }
+                        Text(
+                            quantity.toString(),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                         )
-                    }
-                    Text(
-                        quantity.toString(),
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                    )
-                    IconButton(
-                        onClick = {
-                            quantity++
-                            if (quantity == orderItem.product.quantity) {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        "Достигнуто максимальное количество товаров на складе"
-                                    )
+                        IconButton(
+                            onClick = {
+                                quantity++
+                                if (quantity == orderItem.product.quantity) {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            "Достигнуто максимальное количество товаров на складе"
+                                        )
+                                    }
                                 }
-                            }
-                        },
-                        enabled = quantity < orderItem.product.quantity,
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                        )
+                            },
+                            enabled = quantity < orderItem.product.quantity,
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                            )
+                        }
                     }
                 }
             }

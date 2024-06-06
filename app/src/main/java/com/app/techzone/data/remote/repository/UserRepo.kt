@@ -14,8 +14,8 @@ import com.app.techzone.data.remote.model.ChangeQuantityRequest
 import com.app.techzone.data.remote.model.CreateOrderRequest
 import com.app.techzone.data.remote.model.FavoritesList
 import com.app.techzone.data.remote.model.Order
-import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
+import com.app.techzone.data.remote.model.PaymentRedirect
 import com.app.techzone.data.remote.model.ProductInCartResponse
 import com.app.techzone.data.remote.model.ReviewShort
 import com.app.techzone.data.remote.model.User
@@ -289,14 +289,20 @@ class UserRepo @Inject constructor(
         }
     }
 
-    suspend fun createOrder(orderItemIds: List<Int>, paymentMethod: String): OrderCreated? {
+    suspend fun createOrder(
+        orderItemIds: List<Int>,
+        paymentMethod: String,
+        cost: Int,
+    ): PaymentRedirect? {
         authenticate()
         val accessToken = prefs.getKey(PreferencesKey.accessToken) ?: return null
         return try {
             userApi.createOrder(
                 token = accessToken,
                 request = CreateOrderRequest(
-                    orderItemIds, paymentMethod
+                    orderItemIds,
+                    paymentMethod,
+                    cost
                 )
             )
         } catch (e: IOException) {

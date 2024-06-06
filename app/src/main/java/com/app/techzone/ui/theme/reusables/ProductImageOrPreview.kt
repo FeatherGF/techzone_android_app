@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
@@ -17,7 +18,8 @@ fun ProductImageOrPreview(
     photos: List<Photo>? = null,
     photoIndex: Int = 0,
     filterQuality: FilterQuality = FilterQuality.Low,
-    description: String? = null
+    description: String? = null,
+    contentScale: ContentScale = ContentScale.Fit
 ) {
     if (photos != null) {
         AsyncImage(
@@ -26,7 +28,8 @@ fun ProductImageOrPreview(
                 .build(),
             contentDescription = description,
             filterQuality = filterQuality,
-            modifier = modifier
+            modifier = modifier,
+            contentScale = contentScale
         )
     } else {
         Image(

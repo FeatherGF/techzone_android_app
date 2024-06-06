@@ -1,6 +1,7 @@
 package com.app.techzone.data.remote.repository
 
 import com.app.techzone.data.remote.api.ProductApi
+import com.app.techzone.data.remote.model.Banner
 import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.IFilters
 import com.app.techzone.data.remote.model.ProductList
@@ -41,6 +42,16 @@ class ProductRepo @Inject constructor(
         return try {
             productApi.getFilters(category)
         } catch (e: IOException) {
+            null
+        }
+    }
+
+    suspend fun getBanners(): List<Banner>? {
+        return try {
+            productApi.getBanners()
+        } catch (e: IOException) {
+            null
+        } catch (e: HttpException) {
             null
         }
     }

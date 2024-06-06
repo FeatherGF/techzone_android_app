@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -33,6 +34,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
@@ -40,9 +42,10 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.app.techzone.LocalNavController
-import com.app.techzone.data.remote.model.BaseProduct
 import com.app.techzone.data.remote.model.IBaseProduct
+import com.app.techzone.data.remote.model.PagingBaseProduct
 import com.app.techzone.ui.theme.RoundBorder24
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.profile.CheckProductStatus
 import com.app.techzone.ui.theme.profile.ProductAction
@@ -51,28 +54,17 @@ import com.app.techzone.utils.formatPrice
 
 @Composable
 fun ProductCarousel(
-    products: LazyPagingItems<BaseProduct>,
+    products: LazyPagingItems<PagingBaseProduct>,
     onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean,
 ) {
     LazyRow(
-        contentPadding = PaddingValues(end = 16.dp, start = 16.dp, top = 16.dp, bottom = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(MaterialTheme.dimension.extendedMedium),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small),
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
     ) {
-//        items(
-//            products,
-//            key = { it.id },
-//            contentType = { it::class }
-//        ) { product ->
-//            ProductCompactCard(
-//                product = product,
-//                onProductCheckStatus = onProductCheckStatus,
-//                onProductAction = onProductAction
-//            )
-//        }
         if (products.loadState.refresh is LoadState.Loading) {
             items(3) {
                 ProductCardPlaceholder()
@@ -80,8 +72,8 @@ fun ProductCarousel(
         }
         items(
             count = products.itemCount,
-            key = products.itemKey { it.id },
-            contentType = products.itemContentType { "BaseProduct" }
+            key = products.itemKey { it.pk },
+            contentType = products.itemContentType { "PagingBaseProduct" }
         ) { index ->
             val product = products[index]
             product?.let {
@@ -113,38 +105,43 @@ private fun ProductCardPlaceholder() {
             contentColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
         ),
         modifier = Modifier
-            .height(323.dp)
-            .width(154.dp),
+            .height(MaterialTheme.dimension.extraLarge * 9)
+            .width(MaterialTheme.dimension.huge * 3),
     ) {
         Column(
-            modifier = Modifier.padding(start = 14.dp, top = 12.dp, end = 14.dp)
+            modifier = Modifier.padding(
+                start = MaterialTheme.dimension.extendedMedium,
+                top = MaterialTheme.dimension.medium,
+                end = MaterialTheme.dimension.extendedMedium
+            )
         ) {
             Box(
                 Modifier
-                    .size(127.dp)
+                    .fillMaxWidth()
+                    .height(MaterialTheme.dimension.huge * 2)
                     .shimmerEffect())
             Column(
                 modifier = Modifier
-                    .padding(top = 12.dp)
-                    .height(112.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .padding(top = MaterialTheme.dimension.mediumLarge)
+                    .height(MaterialTheme.dimension.huge * 2),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraSmall)
             ) {
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(38.dp)
+                        .height(MaterialTheme.dimension.extraLarge)
                         .shimmerEffect())
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(70.dp)
+                        .height(MaterialTheme.dimension.huge)
                         .shimmerEffect())
             }
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
-                    .padding(top = 8.dp)
+                    .height(MaterialTheme.dimension.extraLarge)
+                    .padding(top = MaterialTheme.dimension.small)
                     .shimmerEffect())
         }
     }
@@ -172,14 +169,15 @@ fun Modifier.shimmerEffect(): Modifier = composed {
             ),
             start = Offset(startOffsetX, 0f),
             end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
-        )
+        ),
+        shape = RoundedCornerShape(10.dp)
     ).onGloballyPositioned {
         size = it.size
     }
 }
 
 @Composable
-private fun ProductCompactCard(
+fun ProductCompactCard(
     product: IBaseProduct,
     onProductCheckStatus: (CheckProductStatus) -> Boolean,
     onProductAction: suspend (ProductAction) -> Boolean
@@ -197,24 +195,30 @@ private fun ProductCompactCard(
             contentColor = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
         ),
         modifier = Modifier
-            .height(323.dp)
-            .width(154.dp)
-            .fillMaxWidth(),
+            .height(MaterialTheme.dimension.extraLarge * 9)
+            .width(MaterialTheme.dimension.huge * 3),
     ) {
         Column(
-            modifier = Modifier.padding(start = 14.dp, top = 12.dp, end = 14.dp)
+            modifier = Modifier.padding(
+                start = MaterialTheme.dimension.extendedMedium,
+                top = MaterialTheme.dimension.medium,
+                end = MaterialTheme.dimension.extendedMedium
+            ),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ProductImageOrPreview(Modifier.size(127.dp), photos = product.photos)
+            ProductImageOrPreview(
+                Modifier.size(MaterialTheme.dimension.huge * 2),
+                photos = product.photos
+            )
             Column(
                 modifier = Modifier
-                    .padding(top = 12.dp)
-                    .height(112.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .padding(top = MaterialTheme.dimension.medium)
+                    .weight(1f)
+                ,
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraSmall)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(32.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column {
@@ -233,7 +237,7 @@ private fun ProductCompactCard(
                         )
                     }
                     ProductFavoriteIcon(
-                        Modifier.size(24.dp),
+                        Modifier.size(MaterialTheme.dimension.large),
                         productId = product.id,
                         onProductCheckStatus = onProductCheckStatus,
                         onProductAction = onProductAction
@@ -242,23 +246,31 @@ private fun ProductCompactCard(
                 Text(
                     text = product.name,
                     style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.height(48.dp)
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 5.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ProductRating(rating = product.rating)
-                    ProductReviewCount(reviewsCount = product.reviewsCount)
-                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimension.extraSmall),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ProductRating(rating = product.rating)
+                ProductReviewCount(reviewsCount = product.reviewsCount)
             }
             ProductBuyButton(
                 productId = product.id,
+                isActive = product.isActive,
                 onProductCheckStatus = onProductCheckStatus,
-                onProductAction = onProductAction
+                onProductAction = onProductAction,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        bottom = MaterialTheme.dimension.extendedMedium,
+                        top = MaterialTheme.dimension.small
+                    )
             )
         }
     }

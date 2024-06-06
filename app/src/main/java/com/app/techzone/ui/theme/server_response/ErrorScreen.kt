@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.utils.PullToRefresh
 
 @Composable
@@ -41,7 +41,11 @@ fun ErrorScreen(onRefreshApiCall: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(start = 16.dp, end = 16.dp, top = 104.dp),
+                .padding(
+                    start = MaterialTheme.dimension.extendedMedium,
+                    end = MaterialTheme.dimension.extendedMedium,
+                    top = MaterialTheme.dimension.huge
+                ),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -50,13 +54,16 @@ fun ErrorScreen(onRefreshApiCall: () -> Unit = {}) {
                 imageVector = Icons.Outlined.ErrorOutline,
                 contentDescription = "Error Icon",
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(80.dp)
+                modifier = Modifier.size(MaterialTheme.dimension.huge)
             )
             Text(
                 "Что-то пошло не так",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
-                modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
+                modifier = Modifier.padding(
+                    top = MaterialTheme.dimension.medium,
+                    bottom = MaterialTheme.dimension.small
+                )
             )
             Text(
                 "Проверьте подключение \nк интернету и обновите страницу",
@@ -68,7 +75,7 @@ fun ErrorScreen(onRefreshApiCall: () -> Unit = {}) {
                 onClick = { isRefreshing = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 13.dp)
+                    .padding(top = MaterialTheme.dimension.medium)
             ) {
                 Text(
                     "Обновить",

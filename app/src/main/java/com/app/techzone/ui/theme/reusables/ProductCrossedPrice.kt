@@ -6,7 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.dp
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.utils.formatPrice
 
 @Composable
@@ -19,7 +19,7 @@ fun ProductCrossedPrice(price: Int, discountPercentage: Int, large: Boolean = fa
             style = style,
             color = MaterialTheme.colorScheme.scrim,
             textDecoration = TextDecoration.LineThrough,
-            modifier = Modifier.padding(bottom = 2.dp)
+            modifier = Modifier.padding(bottom = MaterialTheme.dimension.extraSmall)
         )
     }
 }
@@ -33,6 +33,6 @@ fun ProductCrossedPrice(price: Int, large: Boolean = false) {
         style = style,
         color = MaterialTheme.colorScheme.scrim,
         textDecoration = TextDecoration.LineThrough,
-        modifier = Modifier.padding(bottom = 2.dp)
+        modifier = Modifier.padding(bottom = MaterialTheme.dimension.extraSmall)
     )
 }

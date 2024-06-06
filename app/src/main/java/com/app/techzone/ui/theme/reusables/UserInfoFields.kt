@@ -12,12 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.utils.MaskVisualTransformation
 
 @Composable
 fun UserInfoFields(
-    // TODO: rewrite to AuthUIEvent
     firstName: String,
     onFirstNameChange: (String) -> Unit,
     lastName: String,
@@ -32,7 +31,7 @@ fun UserInfoFields(
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 26.dp)
+            .padding(top = MaterialTheme.dimension.large)
             .background(MaterialTheme.colorScheme.tertiary),
         value = firstName,
         onValueChange = { onFirstNameChange(it) },
@@ -47,7 +46,7 @@ fun UserInfoFields(
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp)
+            .padding(top = MaterialTheme.dimension.medium)
             .background(MaterialTheme.colorScheme.tertiary),
         value = lastName,
         onValueChange = { onLastNameChange(it) },
@@ -62,7 +61,7 @@ fun UserInfoFields(
     OutlinedTextField(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp)
+            .padding(top = MaterialTheme.dimension.medium)
             .background(MaterialTheme.colorScheme.tertiary),
         value = phoneNumber,
         onValueChange = { textPhone ->
@@ -89,7 +88,7 @@ fun UserInfoFields(
         enabled = false,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp)
+            .padding(top = MaterialTheme.dimension.medium)
             .background(MaterialTheme.colorScheme.tertiary),
     )
 }

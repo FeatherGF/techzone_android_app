@@ -15,7 +15,7 @@ data class Accessory(
     val height: Double,
     override val id: Int,
     @SerializedName("id_provider") val idProvider: Int,
-    @SerializedName("is_active") val isActive: Boolean,
+    @SerializedName("is_active") override val isActive: Boolean,
     val material: String,
     val model: String,
     override val name: String,
@@ -30,5 +30,5 @@ data class Accessory(
     val width: Double,
     // accessories won't have any memory, can't think of a better approach
     override val memory: Int? = null,
-    @SerializedName("memory_variations") override val memoryVariations: MemoryVariations,
+    @SerializedName("memory_variations") override val memoryVariations: List<MemoryVariations>?,
 ) : IDetailedProduct

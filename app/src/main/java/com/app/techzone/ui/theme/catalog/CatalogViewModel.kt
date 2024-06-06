@@ -63,7 +63,7 @@ class CatalogViewModel @Inject constructor(
             }
         }
         selectedPriceRanges.clear()
-        selectedSorting.value = sortingOptions.first()
+//        selectedSorting.value = sortingOptions.first()
     }
 
     private fun getQueryFilters(): Map<String, String> {

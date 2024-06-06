@@ -12,24 +12,26 @@ interface IBaseProduct {
     val discountPercentage: Int
     val reviewsCount: Int
     val rating: Float?
+    val isActive: Boolean
 }
 
-private typealias MemoryCapacity = String
-private typealias ProductId = Int
-typealias MemoryVariations = Map<MemoryCapacity, ProductId>?
+data class MemoryVariations(
+    val memory: Int,
+    @SerializedName("id_product") val productId: Int,
+)
 
 interface IDetailedProduct : IBaseProduct {
     val type: String
     val reviews: List<Review>
     val colorMain: String
     val colorVariations: List<ColorVariation>
-    val memoryVariations: MemoryVariations
+    val memoryVariations: List<MemoryVariations>?
     val memory: Int?
 }
 
 data class ColorVariation(
-    @SerializedName("color") val colorName: String,
-    @SerializedName("hex") val colorHex: String,
+    @SerializedName("color_main") val colorName: String,
+    @SerializedName("color_hex") val colorHex: String,
     @SerializedName("id_product") val productId: Int,
 )
 
@@ -38,11 +40,24 @@ data class BaseProduct(
     override val name: String,
     override val price: Int,
     override val photos: List<Photo>?,
+    @SerializedName("is_active") override val isActive: Boolean = true,
     @SerializedName("discount") override val discountPercentage: Int,
     @SerializedName("reviews_count") override val reviewsCount: Int,
     @SerializedName("average_rating") override val rating: Float?,
 ) : IBaseProduct
 
+
+data class PagingBaseProduct(
+    val pk: Int,  // unique identifier for LazyRow key
+    override val id: Int,
+    override val name: String,
+    override val price: Int,
+    override val photos: List<Photo>?,
+    @SerializedName("is_active") override val isActive: Boolean = true,
+    @SerializedName("discount") override val discountPercentage: Int,
+    @SerializedName("reviews_count") override val reviewsCount: Int,
+    @SerializedName("average_rating") override val rating: Float?,
+): IBaseProduct
 
 data class ProductType(
     val id: Int, val type: String

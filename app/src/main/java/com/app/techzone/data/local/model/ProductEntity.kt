@@ -16,6 +16,7 @@ data class ProductEntity(
     val reviewsCount: Int,
     val rating: Float?,
     val lastUpdated: Long,
+    val isActive: Boolean,
 
     val sorting: String,
 

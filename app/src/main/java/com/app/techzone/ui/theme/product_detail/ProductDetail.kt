@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -52,8 +54,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -67,6 +71,7 @@ import com.app.techzone.data.remote.model.Review
 import com.app.techzone.ui.theme.ForStroke
 import com.app.techzone.ui.theme.RoundBorder100
 import com.app.techzone.ui.theme.RoundBorder28
+import com.app.techzone.ui.theme.dimension
 import com.app.techzone.ui.theme.main.ProductViewModel
 import com.app.techzone.ui.theme.navigation.ScreenRoutes
 import com.app.techzone.ui.theme.product_detail.characteristics.ICharacteristic
@@ -131,9 +136,14 @@ fun ProductDetailScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(110.dp)
+                                .height(MaterialTheme.dimension.huge * 2)
                                 .background(color = MaterialTheme.colorScheme.tertiary)
-                                .padding(end = 28.dp, top = 50.dp, bottom = 20.dp, start = 28.dp),
+                                .padding(
+                                    end = MaterialTheme.dimension.large,
+                                    top = MaterialTheme.dimension.extraLarge,
+                                    bottom = MaterialTheme.dimension.mediumLarge,
+                                    start = MaterialTheme.dimension.large
+                                ),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -153,8 +163,8 @@ fun ProductDetailScreen(
                     }
                     item {
                         Column(
-                            modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            modifier = Modifier.padding(horizontal = MaterialTheme.dimension.extendedMedium),
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extendedMedium)
                         ) {
                             ProductDetail(
                                 product = it,
@@ -166,8 +176,8 @@ fun ProductDetailScreen(
                     }
                     item {
                         Column(
-                            modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            modifier = Modifier.padding(horizontal = MaterialTheme.dimension.extendedMedium),
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extendedMedium)
                         ) {
                             ReviewAndCharacteristicsTabs(it)
                         }
@@ -178,10 +188,10 @@ fun ProductDetailScreen(
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
                             modifier = Modifier.padding(
-                                start = 16.dp,
-                                top = 40.dp,
-                                end = 16.dp,
-                                bottom = 12.dp
+                                start = MaterialTheme.dimension.extendedMedium,
+                                top = MaterialTheme.dimension.extraLarge,
+                                end = MaterialTheme.dimension.extendedMedium,
+                                bottom = MaterialTheme.dimension.medium
                             ),
                         )
                     }
@@ -200,12 +210,16 @@ fun ProductDetailScreen(
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.tertiary)
                         .border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f))
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(
+                            horizontal = MaterialTheme.dimension.extendedMedium,
+                            vertical = MaterialTheme.dimension.small
+                        ),
                     contentColor = MaterialTheme.colorScheme.tertiary,
                 ) {
                     ProductBuyButton(
                         modifier = Modifier.background(MaterialTheme.colorScheme.tertiary),
                         productId = it.id,
+                        isActive = it.isActive,
                         isInCart = isInCart,
                         onInCartChange = onIsInCartChange,
                         onProductAction = onProductAction,
@@ -237,25 +251,27 @@ fun ProductDetailScreen(
 private fun ProductImagesPager(product: IDetailedProduct) {
     val pageCount = product.photos?.size ?: 1
     val pagerState = rememberPagerState(pageCount = { pageCount })
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
-            .padding(top = 16.dp)
             .fillMaxWidth()
-            .height(205.dp)
             .background(color = MaterialTheme.colorScheme.background)
+            .padding(top = MaterialTheme.dimension.extendedMedium)
     ) {
         HorizontalPager(
+            modifier = Modifier.height(maxHeight * 0.1f),
             state = pagerState,
-            pageSize = PageSize.Fixed(316.dp),
-            pageSpacing = 8.dp,
+            pageSize = PageSize.Fixed(maxWidth * 0.75f),
+            pageSpacing = MaterialTheme.dimension.small,
         ) { index ->
             ProductImageOrPreview(
                 Modifier
                     .fillMaxWidth()
+                    .clip(RoundBorder28)
                     .background(color = Color.White, shape = RoundBorder28),
                 photos = product.photos,
                 photoIndex = index,
-                filterQuality = FilterQuality.Medium
+                filterQuality = FilterQuality.Low,
+                contentScale = ContentScale.FillWidth
             )
         }
     }
@@ -277,20 +293,25 @@ private fun ProductVariantsAndPrice(
         modifier = Modifier
             .background(color = MaterialTheme.colorScheme.tertiary, shape = RoundBorder28)
             .border(width = 1.dp, color = ForStroke.copy(alpha = 0.1f), shape = RoundBorder28)
-            .padding(top = 24.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(
+                top = MaterialTheme.dimension.large,
+                start = MaterialTheme.dimension.extendedMedium,
+                end = MaterialTheme.dimension.extendedMedium,
+                bottom = MaterialTheme.dimension.extendedMedium
+            ),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium)
     ) {
         Column(
             modifier = Modifier
-                .padding(start = 12.dp, end = 12.dp)
+                .padding(horizontal = MaterialTheme.dimension.medium)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.large)
         ) {
             if (product.colorVariations.isNotEmpty()) {
                 Column {
                     Text("Цвет:", style = MaterialTheme.typography.labelLarge, color = dimTextColor)
                     FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small),
                     ) {
                         product.colorVariations.forEach { colorVariation: ColorVariation ->
                             var selected by rememberSaveable {
@@ -320,7 +341,7 @@ private fun ProductVariantsAndPrice(
                                         imageVector = Icons.Filled.Circle,
                                         contentDescription = null,
                                         tint = Color(GraphicsColor.parseColor(colorVariation.colorHex)),
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(MaterialTheme.dimension.extendedMedium)
                                     )
                                 },
                             )
@@ -328,26 +349,27 @@ private fun ProductVariantsAndPrice(
                     }
                 }
             }
-            product.memoryVariations?.let { memoryVariation ->
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            product.memoryVariations?.let { memoryVariations ->
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)) {
                     Text(
                         "Встроенная память:",
                         style = MaterialTheme.typography.labelLarge,
                         color = dimTextColor
                     )
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        memoryVariation.forEach { (capacity, productId) ->
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)) {
+                        memoryVariations.forEach { memoryVariation ->
                             var selected by remember {
-                                mutableStateOf(capacity.toInt() == product.memory)
+                                mutableStateOf(memoryVariation.memory == product.memory)
                             }
                             FilterChip(
                                 modifier = Modifier
-                                    .height(32.dp)
-                                    .width(77.dp),
+                                    .height(MaterialTheme.dimension.larger),
                                 selected = selected,
                                 onClick = {
                                     selected = !selected
-                                    navController.navigate("${ScreenRoutes.PRODUCT_DETAIL}/$productId")
+                                    navController.navigate(
+                                        "${ScreenRoutes.PRODUCT_DETAIL}/${memoryVariation.productId}"
+                                    )
                                 },
                                 border = FilterChipDefaults.filterChipBorder(
                                     enabled = true,
@@ -358,7 +380,7 @@ private fun ProductVariantsAndPrice(
                                 ),
                                 label = {
                                     Text(
-                                        "$capacity ГБ",
+                                        "${memoryVariation.memory} ГБ",
                                         style = MaterialTheme.typography.labelLarge,
                                         color = if (selected) MaterialTheme.colorScheme.primary else Color.Companion.Black
                                     )
@@ -374,7 +396,7 @@ private fun ProductVariantsAndPrice(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraSmall)) {
                     ProductCrossedPrice(
                         price = product.price,
                         discountPercentage = product.discountPercentage,
@@ -394,7 +416,7 @@ private fun ProductVariantsAndPrice(
                 if (product.discountPercentage > 0) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)
                     ) {
                         Text(
                             text = "Скидка",
@@ -407,8 +429,8 @@ private fun ProductVariantsAndPrice(
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                                     shape = RoundedCornerShape(12.dp)
                                 )
-                                .height(32.dp)
-                                .width(52.dp),
+                                .height(MaterialTheme.dimension.larger)
+                                .width(MaterialTheme.dimension.huge),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -425,6 +447,7 @@ private fun ProductVariantsAndPrice(
             modifier = Modifier.fillMaxWidth(),
             productId = product.id,
             isInCart = isInCart,
+            isActive = product.isActive,
             onInCartChange = onInCartChange,
             onProductAction = onProductAction
         )
@@ -500,16 +523,16 @@ private fun Review(review: Review) {
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(vertical = MaterialTheme.dimension.extendedMedium),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)
     ) {
         val textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.medium)
         ) {
             ProfilePicture(
-                Modifier.size(40.dp),
+                Modifier.size(MaterialTheme.dimension.extraLarge),
                 userPhotoUrl = review.photoUrl,
                 imageUri = null,
                 iconTint = ForStroke
@@ -524,12 +547,12 @@ private fun Review(review: Review) {
                         style = textStyle,
                         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraSmall)) {
                         for (index in 0..4) {
                             val starIcon =
                                 if (index < review.rating) Icons.Filled.Star else Icons.Outlined.StarOutline
                             Icon(
-                                modifier = Modifier.size(17.dp),
+                                modifier = Modifier.size(MaterialTheme.dimension.extendedMedium),
                                 imageVector = starIcon,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
@@ -537,7 +560,7 @@ private fun Review(review: Review) {
                         }
                     }
                 }
-                Row(Modifier.padding(top = 4.dp)) {
+                Row(Modifier.padding(top = MaterialTheme.dimension.extraSmall)) {
                     Text(
                         formatDateLong(review.dateCreated),
                         style = MaterialTheme.typography.labelMedium,
@@ -625,7 +648,7 @@ private fun ProductCharacteristics(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 36.dp)
+                    .padding(top = MaterialTheme.dimension.larger)
             ) {
                 Text(
                     "Показать все",
@@ -641,7 +664,7 @@ private fun ProductCharacteristics(
 @Composable
 private fun Characteristic(characteristic: ICharacteristic) {
     Text(
-        modifier = Modifier.padding(top = 28.dp),
+        modifier = Modifier.padding(top = MaterialTheme.dimension.large),
         text = characteristic.label,
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
@@ -651,26 +674,33 @@ private fun Characteristic(characteristic: ICharacteristic) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(top = MaterialTheme.dimension.extendedMedium),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraSmall)
             ) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.scrim
-                )
+                BoxWithConstraints {
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.scrim,
+                        modifier = Modifier.widthIn(max = maxWidth / 1.5f)
+                    )
+                }
                 TextSplitter(
                     color = MaterialTheme.colorScheme.scrim,
                     modifier = Modifier
+                        .fillMaxWidth()
                         .weight(1f)
-                        .padding(horizontal = 4.dp)
-                        .align(Alignment.Bottom),
+                        .align(Alignment.CenterVertically),
                 )
-                Text(
-                    value.takeIf { !it.isNullOrEmpty() } ?: "-",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f)
-                )
+                BoxWithConstraints {
+                    Text(
+                        value.takeIf { !it.isNullOrEmpty() } ?: "-",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 1f),
+                        modifier = Modifier.widthIn(max = maxWidth / 1.5f)
+                    )
+                }
             }
         }
     }
@@ -699,7 +729,7 @@ private fun ProductDetail(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.extraSmall)
         ) {
             Text(
                 "Код товара:",
@@ -713,7 +743,7 @@ private fun ProductDetail(
             )
         }
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.dimension.small)
         ) {
             ProductRating(
                 product.rating,

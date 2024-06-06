@@ -9,8 +9,8 @@ import com.app.techzone.data.remote.model.CreateOrderRequest
 import com.app.techzone.data.remote.model.FavoriteItem
 import com.app.techzone.data.remote.model.FavoritesList
 import com.app.techzone.data.remote.model.Order
-import com.app.techzone.data.remote.model.OrderCreated
 import com.app.techzone.data.remote.model.OrdersList
+import com.app.techzone.data.remote.model.PaymentRedirect
 import com.app.techzone.data.remote.model.ProductInCartResponse
 import com.app.techzone.data.remote.model.ReviewShort
 import com.app.techzone.data.remote.model.User
@@ -112,7 +112,7 @@ interface UserApi {
     suspend fun createOrder(
         @Header("Authorization") token: String,
         @Body request: CreateOrderRequest
-    ): OrderCreated
+    ): PaymentRedirect
 
     @Headers("Accept: application/json")
     @GET(ApiConstants.Endpoints.ordersDetail)
